@@ -27,19 +27,10 @@ use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
+
+use RoadRunnerAnalytics\NodeBuilder;
+
 class MapBuilder extends NodeVisitorAbstract {
-
-  const NODE_ID         = 'id';
-  const NODE_NAME       = 'name';
-  const NODE_TYPE       = 'type';
-  const NODE_EXTRA_DATA = 'extraData';
-
-  const NODE_TYPE_CLASS     = 'class';
-  const NODE_TYPE_INTERFACE = 'interface';
-  const NODE_TYPE_FILE      = 'sourcefile';
-  const NODE_TYPE_CONSTANT  = 'constant';
-  const NODE_TYPE_NAMESPACE = 'namespace';
-  const NODE_TYPE_UNDEFINED = 'unspecified';
 
   const EDGE_SOURCE = 'source';
   const EDGE_TARGET = 'target';
@@ -69,7 +60,7 @@ class MapBuilder extends NodeVisitorAbstract {
   /**
    * @var string[]
    */
-  private $currentRequires = array();
+  private $currentIncludePartialFilename = array();
 
   /**
    * @var ClassLike[]
@@ -95,9 +86,9 @@ class MapBuilder extends NodeVisitorAbstract {
   private function addNode($nodeId, $nodeName, $nodeType, $extraData = array()) {
 
     $this->nodes[$nodeId] = array(
-      self::NODE_ID => $nodeId,
-      self::NODE_NAME => $nodeName,
-      self::NODE_TYPE => $nodeType
+      NodeBuilder::NODE_ID => $nodeId,
+      NodeBuilder::NODE_NAME => $nodeName,
+      NodeBuilder::NODE_TYPE => $nodeType
     );
 
   }
@@ -115,12 +106,12 @@ class MapBuilder extends NodeVisitorAbstract {
 
     if (empty($this->nodes[$edgeSource])) {
 
-      $this->addNode($edgeSource, $edgeSource, self::NODE_TYPE_UNDEFINED);
+      $this->addNode($edgeSource, $edgeSource, NodeBuilder::NODE_TYPE_UNDEFINED);
     }
 
     if (empty($this->nodes[$edgeDestination])) {
 
-      $this->addNode($edgeDestination, $edgeDestination, self::NODE_TYPE_UNDEFINED);
+      $this->addNode($edgeDestination, $edgeDestination, NodeBuilder::NODE_TYPE_UNDEFINED);
     }
   }
 
@@ -130,11 +121,18 @@ class MapBuilder extends NodeVisitorAbstract {
   public function setFilename($filename)
   {
 
-    $this->filename = $filename;
-    $this->currentUse_ = array();
-    $this->currentRequires = array();
+    if (!empty($this->currentIncludePartialFilename)) {
+      echo $this->filename . ":\n";
+      echo "\tIncluded files:\n";
+      var_dump($this->currentIncludePartialFilename);
+      echo "\n\n";
+    }
 
-    $this->addNode($filename, basename($filename), self::NODE_TYPE_FILE);
+    $this->filename                      = $filename;
+    $this->currentUse_                   = array();
+    $this->currentIncludePartialFilename = array();
+
+    $this->addNode($filename, basename($filename), NodeBuilder::NODE_TYPE_FILE);
   }
 
   /**
@@ -276,13 +274,19 @@ class MapBuilder extends NodeVisitorAbstract {
     }
   }
 
+  private function findClassNode(Name $parentClass, $potentialFileMatches = array()) {
+
+
+    echo "findClassNode"; die;
+  }
+
   private function enterClass_(Class_ $node) {
 
-    $classId = $this->getQualifiedNameForClassLike($node);
+    $classId = $this->getClassId($node);
     //$this->getClassId($node);
     $className = $this->getQualifiedNameForClassLike($node);
 
-    $this->addNode($classId, $className, self::NODE_TYPE_CLASS);
+    $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_CLASS);
 //    $this->addEdge($classId, $this->filename, self::EDGE_TYPE_SOURCE_FILE);
 
     if ($node->extends) {
@@ -340,29 +344,30 @@ class MapBuilder extends NodeVisitorAbstract {
 
     echo $this->filename . ":\n";
     if ($expr instanceof ConstFetch) {
-      echo "\tconst " . $expr->name->toString() . "\n";
+//      echo "\tconst " . $expr->name->toString() . "\n";
     } else if ($expr instanceof String_) {
-      echo "\tstring " . $expr->value . "\n";
+//      echo "\tstring " . $expr->value . "\n";
+      $this->currentIncludePartialFilename[] = $expr->value;
     } else if ($expr instanceof Variable) {
-      echo "\tvariable " . $expr->name . "\n";
+//      echo "\tvariable " . $expr->name . "\n";
     } else if ($expr instanceof PropertyFetch) {
       if ($expr->var instanceof Variable) {
-        echo "\tproperty fetch " . $expr->var->name . "::" . $expr->name . "\n";
+//        echo "\tproperty fetch " . $expr->var->name . "::" . $expr->name . "\n";
       } else {
         var_dump($expr);
-        die;
+        echo "arrrrggg...."; die;
       }
     } else if ($expr instanceof ArrayDimFetch) {
 
-      echo "Array dimension fetch: ";
-      var_dump($expr->dim);
-      echo "\n";
+//      echo "Array dimension fetch: ";
+//      var_dump($expr->dim);
+//      echo "\n";
 
     } else if ($expr instanceof ClassConstFetch) {
 
-      echo "Class constant fetch: ";
-      var_dump($expr);
-      echo "\n";
+//      echo "Class constant fetch: ";
+//      var_dump($expr);
+//      echo "\n";
 
     } else if ($expr instanceof Node\Expr\FuncCall) {
 
@@ -376,21 +381,22 @@ class MapBuilder extends NodeVisitorAbstract {
           }
 
           if ($subExpr instanceof String_) {
-            echo "\tstring " . $subExpr->value . "\n";
+//            echo "\tstring " . $subExpr->value . "\n";
+            $this->currentIncludePartialFilename[] = $subExpr->value;
           }
 
         } else {
-          echo "Func call: ";
-          var_dump($expr);
+//          echo "Func call: ";
+//          var_dump($expr);
         }
       } else {
-        echo "Func call: ";
-        var_dump($expr);
+//        echo "Func call: ";
+//        var_dump($expr);
       }
 
     } else if ($expr instanceof MethodCall) {
-      echo "Method call: ";
-      var_dump($expr);
+//      echo "Method call: ";
+//      var_dump($expr);
       echo "\n";
     } else {
       var_dump($expr);
