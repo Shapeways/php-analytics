@@ -28,25 +28,10 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 
+use RoadRunnerAnalytics\EdgeBuilder;
 use RoadRunnerAnalytics\NodeBuilder;
 
 class MapBuilder extends NodeVisitorAbstract {
-
-  const EDGE_SOURCE = 'source';
-  const EDGE_TARGET = 'target';
-  const EDGE_WEIGHT = 'weight';
-  const EDGE_TYPE   = 'type';
-  const EDGE_LABEL  = 'label';
-
-  const EDGE_TYPE_SOURCE_FILE   = 'sourcefile';
-  const EDGE_TYPE_EXTENDS       = 'extends';
-  const EDGE_TYPE_IMPLEMENTS    = 'implements';
-  const EDGE_TYPE_DEPENDENCY    = 'dependency';
-  const EDGE_TYPE_CONSUMER      = 'consumer';
-  const EDGE_TYPE_CREATES       = 'creates';
-  const EDGE_TYPE_STATIC_ACCESS = 'staticAccess';
-  const EDGE_TYPE_NAMESPACE     = 'namespace';
-  const EDGE_TYPE_SUBNAMESPACE  = 'subnamespace';
 
 
   private $nodes = array();
@@ -97,11 +82,11 @@ class MapBuilder extends NodeVisitorAbstract {
     $edgeKey = "$edgeSource.$edgeDestination.$edgeType";
 
     $this->edges[$edgeKey] = array(
-      self::EDGE_SOURCE => $edgeSource,
-      self::EDGE_TARGET => $edgeDestination,
-      self::EDGE_TYPE => $edgeType,
-      self::EDGE_WEIGHT => $edgeWeight,
-      self::EDGE_LABEL => $edgeLabel
+      EdgeBuilder::EDGE_SOURCE => $edgeSource,
+      EdgeBuilder::EDGE_TARGET => $edgeDestination,
+      EdgeBuilder::EDGE_TYPE => $edgeType,
+      EdgeBuilder::EDGE_WEIGHT => $edgeWeight,
+      EdgeBuilder::EDGE_LABEL => $edgeLabel
     );
 
     if (empty($this->nodes[$edgeSource])) {
@@ -290,7 +275,7 @@ class MapBuilder extends NodeVisitorAbstract {
 //    $this->addEdge($classId, $this->filename, self::EDGE_TYPE_SOURCE_FILE);
 
     if ($node->extends) {
-      $this->addEdge($classId, $this->getQualifiedName($node->extends), self::EDGE_TYPE_EXTENDS);
+      $this->addEdge($classId, $this->getQualifiedName($node->extends), EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
 
     foreach ($node->implements as $name) {
