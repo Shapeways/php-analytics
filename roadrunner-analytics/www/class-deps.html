@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Class Dependencies</title>
+
+  <style>
+
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+    }
+
+    .branch {
+      stroke: #555;
+      stroke-width: 1px;
+      stroke-opacity: 0.4;
+      fill: none;
+    }
+
+    text {
+      font-family: 'Helvetica Neue', 'Helvetica', sans-serif;
+      font-size: 8pt;
+    }
+
+    .leaf {
+      stroke: solid;
+    }
+
+    .dashed {
+      stroke-dasharray: 2, 2;
+    }
+
+  </style>
+
+</head>
+<body>
+  <?xml version="1.0" standalone="no"?>
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+
+  <script src="js/underscore.js"></script>
+  <script src="js/d3/d3.js"></script>
+  <script src="js/d3-force/d3-force.js"></script>
+  <script src="js/class-graph.js"></script>
+
+  <script>
+
+    var countClasses = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
+      if (node.type == 'class') {
+        return memo + 1;
+      }
+      return memo;
+    }, 0);
+
+    var sourceFilesWithClasses = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
+
+      if (edge.type == 'sourcefile') {
+        if ((roadRunnerDeps.nodes[edge.source].type == 'class')
+            || (roadRunnerDeps.nodes[edge.source].type == 'interface')) {
+          memo[edge.target] = 1;
+        }
+      }
+
+      return memo;
+    }, {});
+
+    var classesImplementingInterfaces = _.reduce(roadRunnerDeps.edges, function(memo, edge) {
+      if (edge.type == 'implements') {
+        if ((roadRunnerDeps.nodes[edge.source].type == 'class')) {
+          memo[edge.source] = 1;
+        }
+      }
+
+      return memo;
+    }, {});
+
+    var namespaces = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
+      if (node.type == 'namespace') {
+        memo[node.id] = 1;
+      }
+
+      return memo;
+    }, {});
+
+
+    var namespaceMembers = _.reduce(roadRunnerDeps.edges, function(memo, edge) {
+      if (edge.type == 'namespace') {
+        if (((roadRunnerDeps.nodes[edge.source].type == 'class')
+            || (roadRunnerDeps.nodes[edge.source].type == 'interface'))
+        && (roadRunnerDeps.nodes[edge.target].name != '\\')
+        ){
+          memo[edge.source] = 1;
+        }
+      }
+
+      return memo;
+    }, {});
+
+    var countManagers = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
+      if (node.id.indexOf('Manager') >= 0) {
+        return memo + 1;
+      }
+
+      return memo;
+    }, 0);
+
+
+    var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
+
+      if ((edge.type === 'extends') && (roadRunnerDeps.nodes[edge.target].type === 'class') && (roadRunnerDeps.nodes[edge.source].type === 'class')) {
+        memo.push(edge);
+      }
+
+      return memo;
+
+    }, []);
+
+    var targets = _.uniq(_.reduce(classInheritanceEdges, function(memo, edge) {
+      console.log(edge);
+
+      memo.push(edge.target);
+      return memo;
+    }, []));
+
+    var sources = _.uniq(_.reduce(classInheritanceEdges, function(memo, edge) {
+      memo.push(edge.source);
+      return memo;
+    }, []));
+
+    var leftovers = _.difference(targets, sources);
+
+    var tmpRoot = '';
+    if (leftovers.length > 1) {
+      tmpRoot = '__root';
+    }
+    _.each(leftovers, function(leftover) {
+      classInheritanceEdges.push({
+        source: leftover,
+        target: tmpRoot,
+        type: 'extends'
+      });
+    });
+
+    if (tmpRoot !== '') {
+      classInheritanceEdges.push({
+        source: tmpRoot,
+        target: '',
+        type: 'extends'
+      });
+    }
+
+    var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
+    root.sort(function(a, b) {
+
+      return (a.height - b.height) || a.id.localeCompare(b.id);
+    });
+
+    var width = window.innerWidth;
+    var height = window.innerHeight * 4;
+
+    var svg = d3.select('svg');
+    svg.attr('width', width);
+    svg.attr('height', height);
+    var g = svg.append('g').attr('transform', 'translate(110, 0)');
+
+    var cluster = d3.cluster().size([height, width]);
+    var tree = d3.tree().size([height, width - 400]);
+    tree.separation(function(a, b) {
+      return a.parent == b.parent ? 1 : 2;
+    });
+
+    tree(root);
+
+    var branches = g.selectAll('.branch')
+        .data(root.descendants().slice(1))
+        .enter()
+        .append('path')
+        .attr('class', 'branch')
+        .attr('d', function(d) {
+          console.log(d);
+          return "M" + d.y + "," + d.x
+              + "C" + (d.parent.y + 100) + "," + d.x
+              + " " + (d.parent.y + 100) + "," + d.parent.x
+              + " " + d.parent.y + "," + d.parent.x;
+        })
+    ;
+
+    var leaves = g.selectAll('.leaf')
+        .data(root.descendants())
+        .enter()
+        .append('g')
+        .attr('class', 'leaf')
+        .attr('transform', function (d) {
+          return 'translate(' + d.y + ',' + d.x + ')';
+        });
+
+    leaves.append('circle')
+        .attr('r', 2.5);
+
+    leaves.append('text')
+        .attr('dy', 3)
+        .attr('x', function (d) {
+          return d.children ? -8 : 8;
+        })
+        .style('text-anchor', function (d) {
+          return d.children ? 'end' : 'start';
+        })
+        .text(function (d) {
+          return d.id;
+        });
+
+
+  </script>
+
+</body>
+</html>
