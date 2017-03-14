@@ -459,6 +459,7 @@ $codeEdges = array();
 $codeNodes = array();
 
 $graphVisitor = new MapBuilder();
+$nodeBuilder = new NodeBuilder();
 while ($f = fgets(STDIN)) {
 
   $filename     = str_replace(PHP_EOL, '', $f);
@@ -476,8 +477,8 @@ while ($f = fgets(STDIN)) {
       $stmts = $parser->parse($code);
 
       $traverser = new NodeTraverser();
-      $graphVisitor->setFilename($absolutePath);
-      $traverser->addVisitor($graphVisitor);
+      $nodeBuilder->setFilename($absolutePath);
+      $traverser->addVisitor($nodeBuilder);
       $stmts = $traverser->traverse($stmts);
 
     } catch (Exception $e) {
@@ -509,8 +510,8 @@ foreach ($codeEdges as $edge) {
 
 $js = 'var roadRunnerDeps = ';
 $js .= json_encode(array(
-                     'edges' => $graphVisitor->getEdges(),
-                     'nodes' => $graphVisitor->getNodes()
+//                     'edges' => $graphVisitor->getEdges(),
+                     'nodes' => $nodeBuilder->getNodes()
                    ));
 
 $jsFilename = dirname(__FILE__) . '/www/js/class-graph.js';
