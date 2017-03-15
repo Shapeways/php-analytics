@@ -184,12 +184,14 @@
     }
 
     var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
+    root.x0 = 90;
+    root.y0 = 100;
     root.sort(function(a, b) {
-
       return (a.height - b.height) || a.id.localeCompare(b.id);
     });
 
     function collapse(tData) {
+
       if (tData.children) {
         tData._children = tData.children;
         tData._children.forEach(collapse);
@@ -229,6 +231,7 @@
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 1 : 2;
     });
+    tree.size([1, 1]);
 
 
     var i = 0,
@@ -262,17 +265,33 @@
       var newHeight = nodeHeight * links.length;
       var newWidth = nodes.depth * nodeWidth;
 
-      tree.size([newHeight, newWidth]);
-
-      treeData = tree(root);
+//      tree.size([newHeight, newWidth]);
+//
+//      treeData = tree(root);
 
 //      svg.attr('height', newHeight);
 //      svg.attr('width', newWidth);
 
+      var totalHeight = nodes.length * nodeHeight;
+
+      var startX = 90;
+      var counters = {};
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
         d.y = d.depth * nodeWidth;
+
+        if (!counters[d.depth]) {
+          counters[d.depth] = 1;
+        } else {
+          counters[d.depth] += 1;
+        }
+        d.x = counters[d.depth] * nodeHeight;
       });
+
+
+
+      root.x = 90;
+      root.y = 90;
 
       // ****************** Nodes section ***************************
 
