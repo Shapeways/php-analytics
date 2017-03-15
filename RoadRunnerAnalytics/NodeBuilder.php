@@ -126,11 +126,15 @@ class NodeBuilder extends NodeVisitorAbstract
   private function getQualifiedNameForClass(Class_ $node) {
     $nameStr = $node->name;
 
-    $nameStr = $this->peekCurrentNamespace_() . $nameStr;
+    $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
 
-    return $nameStr;
+    return ltrim($nameStr, '\\');
   }
 
+  /**
+   * @param Class_ $class_
+   * @return string
+   */
   private function getClassId(Class_ $class_) {
     $nameStr = $this->getQualifiedNameForClass($class_);
 
@@ -151,7 +155,7 @@ class NodeBuilder extends NodeVisitorAbstract
   private function enterClass(Class_ $node) {
 
     $classId = $this->getClassId($node);
-    $className = $this->getQualifiedNameForClass($node);
+    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
 
     $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_CLASS);
   }

@@ -443,34 +443,67 @@ class MapBuilder extends NodeVisitorAbstract {
 $codeEdges = array();
 $codeNodes = array();
 
-$graphVisitor = new MapBuilder();
 $nodeBuilder = new NodeBuilder();
+
+$filesToAnalyze = array();
+
+echo "Building file list...\n";
 while ($f = fgets(STDIN)) {
 
   $filename     = str_replace(PHP_EOL, '', $f);
   $filePath     = dirname(__FILE__) . '/' . $filename;
   $absolutePath = realpath($filePath);
 
-  if (true || strstr($absolutePath, 'Component') || strstr($absolutePath, 'Product')) {
+  $filesToAnalyze[] = $absolutePath;
+}
 
 
-    $code = file_get_contents($absolutePath);
+echo "Analyzing nodes...\n";
+foreach ($filesToAnalyze as $absolutePath) {
+  $code = file_get_contents($absolutePath);
 
-    $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+  $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
-    try {
-      $stmts = $parser->parse($code);
+  try {
+    $stmts = $parser->parse($code);
 
-      $traverser = new NodeTraverser();
-      $nodeBuilder->setFilename($absolutePath);
-      $traverser->addVisitor($nodeBuilder);
-      $stmts = $traverser->traverse($stmts);
+    $traverser = new NodeTraverser();
+    $nodeBuilder->setFilename($absolutePath);
+    $traverser->addVisitor($nodeBuilder);
+    $stmts = $traverser->traverse($stmts);
 
-    } catch (Exception $e) {
-      echo $filename . ":\n";
-      echo "\tParse Error: ", $e->getMessage(), "\n";
-    }
+  } catch (Exception $e) {
+    echo basename($absolutePath) . ":\n";
+    echo "\tParse Error: ", $e->getMessage(), "\n";
   }
+}
+
+echo "Analyzing edges...\n";
+$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes());
+foreach ($filesToAnalyze as $absolutePath) {
+  $code = file_get_contents($absolutePath);
+
+  $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+
+  try {
+    $stmts = $parser->parse($code);
+
+    $traverser = new NodeTraverser();
+    $edgeBuilder->setFilename($absolutePath);
+    $traverser->addVisitor($edgeBuilder);
+    $stmts = $traverser->traverse($stmts);
+
+  } catch (Exception $e) {
+    echo basename($absolutePath) . ":\n";
+    echo "\tParse Error: ", $e->getMessage(), "\n";
+  }
+}
+
+$edges = $edgeBuilder->getEdges();
+
+foreach ($edges as $edge) {
+//  var_dump($edge);
+//  echo "\n";
 }
 
 
