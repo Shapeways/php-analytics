@@ -337,7 +337,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
   /**
    * @param Name $className
-   * @return string
+   * @return mixed|string
    */
   private function findClassId(Name $className) {
 
@@ -375,7 +375,8 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
 
     if (count($filteredNodes) === 1) {
-      return $filteredNodes[0][NodeBuilder::NODE_ID];
+      $firstNode = current($filteredNodes);
+      return $firstNode[NodeBuilder::NODE_ID];
     }
 
 
@@ -401,8 +402,6 @@ class EdgeBuilder extends NodeVisitorAbstract
 
       var_dump($filteredNodes);
       var_dump($this->currentIncludePartialFilename);
-
-      die;
 
       return 'undefined:' . $qualifiedName;
     }

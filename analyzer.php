@@ -502,8 +502,8 @@ foreach ($filesToAnalyze as $absolutePath) {
 $edges = $edgeBuilder->getEdges();
 
 foreach ($edges as $edge) {
-//  var_dump($edge);
-//  echo "\n";
+  var_dump($edge);
+  echo "\n";
 }
 
 
