@@ -220,8 +220,8 @@
     var svg = d3.select('svg');
     var width = window.innerWidth;
     var height = window.innerHeight;
-    svg.attr('width', width);
-    svg.attr('height', height);
+    svg.attr('width', 20000);
+    svg.attr('height', 20000);
     var g = svg.append('g').attr('transform', 'translate(110, 0)');
 
     //      var cluster = d3.cluster().size([height, width]);
@@ -236,7 +236,7 @@
 
 
     var nodeHeight = 30;
-    var nodeWidth = 500;
+    var nodeWidth = 480;
 
 
     // Creates a curved (diagonal) path from parent to the child nodes
@@ -266,8 +266,8 @@
 
       treeData = tree(root);
 
-      svg.attr('height', newHeight);
-      svg.attr('width', newWidth);
+//      svg.attr('height', newHeight);
+//      svg.attr('width', newWidth);
 
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
@@ -278,7 +278,9 @@
 
       // Update the nodes...
       var node = svg.selectAll('g.node')
-          .data(nodes, function(d) {return d.id || (d.id = ++i); });
+          .data(nodes, function(d) {
+            return d.id;
+          });
 
       // Enter any new modes at the parent's previous position.
       var nodeEnter = node.enter().append('g')
