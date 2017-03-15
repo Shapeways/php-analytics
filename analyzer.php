@@ -501,34 +501,34 @@ foreach ($filesToAnalyze as $absolutePath) {
 
 $edges = $edgeBuilder->getEdges();
 
-foreach ($edges as $edge) {
-  var_dump($edge);
-  echo "\n";
-}
+//foreach ($edges as $edge) {
+//  var_dump($edge);
+//  echo "\n";
+//}
 
 
-foreach ($codeEdges as $edge) {
-  $source = $edge['source'];
-  if (empty($codeNodes[strtolower($source)])) {
-    $codeNodes[strtolower($source)] = array(
-      'id' => $source,
-      'name' => $source
-    );
-  }
-
-  $target = $edge['target'];
-  if (empty($codeNodes[strtolower($target)])) {
-    $codeNodes[strtolower($target)] = array(
-      'id' => $target,
-      'name' => $target
-    );
-  }
-}
+//foreach ($codeEdges as $edge) {
+//  $source = $edge['source'];
+//  if (empty($codeNodes[strtolower($source)])) {
+//    $codeNodes[strtolower($source)] = array(
+//      'id' => $source,
+//      'name' => $source
+//    );
+//  }
+//
+//  $target = $edge['target'];
+//  if (empty($codeNodes[strtolower($target)])) {
+//    $codeNodes[strtolower($target)] = array(
+//      'id' => $target,
+//      'name' => $target
+//    );
+//  }
+//}
 
 
 $js = 'var roadRunnerDeps = ';
 $js .= json_encode(array(
-//                     'edges' => $graphVisitor->getEdges(),
+                     'edges' => $edgeBuilder->getEdges(),
                      'nodes' => $nodeBuilder->getNodes()
                    ));
 

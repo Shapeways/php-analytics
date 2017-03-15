@@ -23,7 +23,6 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
 
@@ -86,6 +85,11 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $rootNamespace;
 
   /**
+   * @var Class_
+   */
+  private $baseClass;
+
+  /**
    * EdgeBuilder constructor.
    */
   public function __construct($nodes)
@@ -95,6 +99,12 @@ class EdgeBuilder extends NodeVisitorAbstract
     $this->rootNamespace = new Namespace_(
       new Name('')
     );
+
+    $this->baseClass = new Class_(
+      'BaseClass'
+    );
+
+    $this->addEdge($this->baseClass->name, '', EdgeBuilder::EDGE_TYPE_EXTENDS);
   }
 
   /**
@@ -422,6 +432,10 @@ class EdgeBuilder extends NodeVisitorAbstract
     if ($node->extends) {
 
       $parentClassId = $this->findClassId($node->extends);
+
+      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
+    } else {
+      $parentClassId = $this->baseClass->name;
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
