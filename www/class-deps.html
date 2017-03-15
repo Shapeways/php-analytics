@@ -235,6 +235,9 @@
         duration = 750;
 
 
+    var nodeHeight = 30;
+    var nodeWidth = 500;
+
 
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
@@ -248,24 +251,27 @@
     }
 
     function update(source) {
-// Assigns the x and y position for the nodes
+      
+      // Assigns the x and y position for the nodes
       var treeData = tree(root);
 
       // Compute the new tree layout.
       var nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
 
-      var newHeight = 30 * links.length;
+      var newHeight = nodeHeight * links.length;
+      var newWidth = nodes.depth * nodeWidth;
 
-      tree.size([newHeight, width - 400]);
+      tree.size([newHeight, newWidth]);
 
       treeData = tree(root);
 
       svg.attr('height', newHeight);
+      svg.attr('width', newWidth);
 
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
-        d.y = d.depth * 480
+        d.y = d.depth * nodeWidth;
       });
 
       // ****************** Nodes section ***************************
@@ -376,63 +382,6 @@
         d.y0 = d.y;
       });
 
-//      var treeData = tree(source);
-//
-//      var nodes = treeData.descendants();
-//      var edges = treeData.descendants().slice(1);
-//
-//
-//      var node = g.selectAll('.leaf')
-//          .data(nodes, function (d) {
-//            return d.id;
-//          });
-//
-//      var nodeEnter = node.enter().append('g')
-//          .attr('class', 'leaf')
-//          .attr('transform', function(d) {
-//            return 'translate(' + d.y + ',' + d.x + ')';
-//          });
-//
-//      nodeEnter.append('circle')
-//          .attr('class', 'leaf')
-//
-//
-//      var branches = g.selectAll('.branch')
-//              .data(edges)
-//              .enter()
-//              .append('path')
-//              .attr('class', 'branch')
-//              .attr('d', function(d) {
-//                return "M" + d.y + "," + d.x
-//                    + "C" + (d.parent.y + 100) + "," + d.x
-//                    + " " + (d.parent.y + 100) + "," + d.parent.x
-//                    + " " + d.parent.y + "," + d.parent.x;
-//              })
-//          ;
-//
-//      var leaves = g.selectAll('.leaf')
-//          .data(nodes)
-//          .enter()
-//          .append('g')
-//          .attr('class', 'leaf')
-//          .attr('transform', function (d) {
-//            return 'translate(' + d.y + ',' + d.x + ')';
-//          });
-//
-//      leaves.append('circle')
-//          .attr('r', 5);
-//
-//      leaves.append('text')
-//          .attr('dy', 3)
-//          .attr('x', function (d) {
-//            return d.children ? -8 : 8;
-//          })
-//          .style('text-anchor', function (d) {
-//            return d.children ? 'end' : 'start';
-//          })
-//          .text(function (d) {
-//            return d.id;
-//          });
     }
 
 
