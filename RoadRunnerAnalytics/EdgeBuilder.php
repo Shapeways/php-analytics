@@ -301,7 +301,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
 
-    return $nameStr;
+    return ltrim($nameStr, '\\');
   }
 
   /**
