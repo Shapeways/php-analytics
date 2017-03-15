@@ -225,7 +225,7 @@
     var g = svg.append('g').attr('transform', 'translate(110, 0)');
 
     //      var cluster = d3.cluster().size([height, width]);
-    var tree = d3.tree().size([height, width - 400]);
+    var tree = d3.tree();
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 1 : 2;
     });
@@ -255,8 +255,18 @@
       var nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
 
+      var newHeight = 30 * links.length;
+
+      tree.size([newHeight, width - 400]);
+
+      treeData = tree(root);
+
+      svg.attr('height', newHeight);
+
       // Normalize for fixed-depth.
-      nodes.forEach(function(d){ d.y = d.depth * 180});
+      nodes.forEach(function(d){
+        d.y = d.depth * 480
+      });
 
       // ****************** Nodes section ***************************
 
@@ -290,7 +300,8 @@
             return d.children || d._children ? "end" : "start";
           })
           .text(function(d) {
-            return d.id;
+            var parts = d.id.split(':');
+            return (parts.length === 1)? parts[0] : parts[1];
           });
 
       // UPDATE
