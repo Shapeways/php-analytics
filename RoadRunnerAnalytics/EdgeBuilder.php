@@ -103,8 +103,6 @@ class EdgeBuilder extends NodeVisitorAbstract
     $this->baseClass = new Class_(
       'BaseClass'
     );
-
-    $this->addEdge($this->baseClass->name, '', EdgeBuilder::EDGE_TYPE_EXTENDS);
   }
 
   /**
@@ -396,7 +394,6 @@ class EdgeBuilder extends NodeVisitorAbstract
       return 'implicit:' . $qualifiedName;
     }
 
-
     $finalMatch = array();
 
     foreach ($this->currentIncludePartialFilename as $partialFilename) {
@@ -416,7 +413,15 @@ class EdgeBuilder extends NodeVisitorAbstract
       return 'undefined:' . $qualifiedName;
     }
 
-    return $finalMatch[NodeBuilder::NODE_ID];
+    $finalMatchSingle = current($finalMatch);
+
+
+    if ($className->toString() === 'CheckingToolController') {
+      var_dump($finalMatchSingle[NodeBuilder::NODE_ID]);
+      echo "\n\n";
+    }
+
+    return $finalMatchSingle[NodeBuilder::NODE_ID];
   }
 
   /**
@@ -432,6 +437,16 @@ class EdgeBuilder extends NodeVisitorAbstract
     if ($node->extends) {
 
       $parentClassId = $this->findClassId($node->extends);
+
+      if (stristr($classId, 'CheckingContentReviewController') || stristr($parentClassId, 'CheckingContentReviewController')) {
+        var_dump($classId);
+        var_dump($className);
+
+        var_dump($parentClassId);
+        var_dump($node->extends->toString());
+
+        echo "\n\n";
+      }
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     } else {

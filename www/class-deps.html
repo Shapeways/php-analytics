@@ -118,6 +118,10 @@
 
     var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
 
+      if (!roadRunnerDeps.nodes[edge.target]) {
+        console.log(edge);
+      }
+
       if ((edge.type === 'extends') && (roadRunnerDeps.nodes[edge.target].type === 'class') && (roadRunnerDeps.nodes[edge.source].type === 'class')) {
         memo.push(edge);
       }
