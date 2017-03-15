@@ -353,11 +353,11 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     if (empty($filteredNodes)) {
 
-      var_dump($this->filename);
-
-      var_dump("Undefined class: " . $qualifiedName);
-      var_dump("Alternates", $filteredNodes);
-      var_dump("Alternates", $alternateFilteredNodes);
+//      var_dump($this->filename);
+//
+//      var_dump("Undefined class: " . $qualifiedName);
+//      var_dump("Alternates", $filteredNodes);
+//      var_dump("Alternates", $alternateFilteredNodes);
 
       //ConsumerStrategies_SocketConsumer
       //PDOStatement
@@ -371,7 +371,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 //        die;
       }
 
-      return 'undefined:' . $qualifiedName;
+      return 'external:' . $qualifiedName;
     }
 
     if (count($filteredNodes) === 1) {
