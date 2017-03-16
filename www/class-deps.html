@@ -225,10 +225,11 @@
     var height = 40000;
     svg.attr('width', width);
     svg.attr('height', height);
-    var g = svg.append('g').attr('transform', 'translate(100, 10000)');
+    var g = svg.append('g');//.attr('transform', 'translate(20, 20)');
 
     //      var cluster = d3.cluster().size([height, width]);
     var tree = d3.tree();
+//    var tree = d3.cluster();
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 0.5 : 1;
     });
@@ -239,14 +240,11 @@
     var i = 0,
         duration = 750;
 
-
     var nodeHeight = 30;
-    var nodeWidth = 480;
+    var nodeWidth = 380;
 
     root.x0 = 90;
     root.y0 = height / 2;
-
-    console.log(root);
 
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
@@ -264,14 +262,9 @@
       // Assigns the x and y position for the nodes
       var treeData = tree(root);
 
-      console.log(treeData);
-
       // Compute the new tree layout.
       var nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
-
-      var newHeight = nodeHeight * links.length;
-      var newWidth = nodes.depth * nodeWidth;
 
 //      tree.size([newHeight, newWidth]);
 //
@@ -282,15 +275,42 @@
 
       var totalHeight = nodes.length * nodeHeight;
 
+      var maxX = root.x;
+      var minX = root.x;
+      var maxY = root.y;
+      var minY = root.y;
+
+
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
-        d.y = d.depth * nodeWidth;
+        d.y = (d.depth) * nodeWidth;
+
+        if (d.x > maxX) {
+          maxX = d.x;
+        }
+
+        if (d.x < minX) {
+          minX = d.x;
+        }
+
+        if (d.y > maxY) {
+          maxY = d.y;
+        }
+
+        if (d.y < minY) {
+          minY = d.y;
+        }
       });
 
+      var svgHeight = maxY - minY;
+      var svgWidth = maxX - minX;
 
+      svgWidth += 50; // padding
+      svgHeight += 400; // padding
 
-//      root.x = 90;
-//      root.y = 90;
+      g.attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
+      svg.attr('height', svgWidth);
+      svg.attr('width', svgHeight);
 
       // ****************** Nodes section ***************************
 
@@ -301,7 +321,8 @@
           });
 
       // Enter any new modes at the parent's previous position.
-      var nodeEnter = node.enter().append('g')
+      var nodeEnter = node.enter()
+          .append('g')
           .attr('class', 'node')
           .attr("transform", function(d) {
             return "translate(" + source.y0 + "," + source.x0 + ")";
@@ -366,13 +387,17 @@
 
       // Update the links...
       var link = g.selectAll('path.link')
-          .data(links, function(d) { return d.id; });
+          .data(links, function(d) {
+            return d.id;
+          });
 
       // Enter any new links at the parent's previous position.
       var linkEnter = link.enter().insert('path', "g")
           .attr("class", "link")
           .attr('d', function(d){
-            var o = {x: source.x0, y: source.y0}
+            var o = {
+              x: source.x0,
+              y: source.y0}
             return diagonal(o, o)
           });
 
