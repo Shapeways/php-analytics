@@ -307,8 +307,27 @@
       g.transition()
           .duration(duration)
           .attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
-      svg.attr('height', svgWidth);
-      svg.attr('width', svgHeight);
+
+
+      var currentWidth = svg.attr('height');
+      var currentHeight = svg.attr('width');
+
+      if (svgWidth < currentWidth) {
+        window.setTimeout(function () {
+          svg.attr('height', svgWidth);
+        }, duration);
+      } else {
+        svg.attr('height', svgWidth);
+      }
+
+      if (svgHeight < currentHeight) {
+        window.setTimeout(function () {
+          svg.attr('width', svgHeight);
+        }, duration);
+      } else {
+        svg.attr('width', svgHeight);
+      }
+
 
       // ****************** Nodes section ***************************
 
