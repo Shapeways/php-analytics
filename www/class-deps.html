@@ -302,7 +302,7 @@
       var nodeEnter = node.enter().append('g')
           .attr('class', 'node')
           .attr("transform", function(d) {
-            return "translate(" + root.y + "," + root.x + ")";
+            return "translate(" + source.y0 + "," + source.x0 + ")";
           })
           .on('click', click);
 
@@ -348,7 +348,7 @@
       var nodeExit = node.exit().transition()
           .duration(duration)
           .attr("transform", function(d) {
-            return "translate(" + root.y + "," + root.x + ")";
+            return "translate(" + source.y0 + "," + source.x0 + ")";
           })
           .remove();
 
@@ -370,7 +370,7 @@
       var linkEnter = link.enter().insert('path', "g")
           .attr("class", "link")
           .attr('d', function(d){
-            var o = {x: root.x, y: root.y}
+            var o = {x: source.x0, y: source.y0}
             return diagonal(o, o)
           });
 
@@ -386,7 +386,7 @@
       var linkExit = link.exit().transition()
           .duration(duration)
           .attr('d', function(d) {
-            var o = {x: root.x, y: root.y};
+            var o = {x: source.x0, y: source.y0};
             return diagonal(o, o)
           })
           .remove();
