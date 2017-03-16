@@ -231,7 +231,7 @@
 //    var tree = d3.tree();
     var tree = d3.cluster();
     tree.separation(function(a, b) {
-      return a.parent == b.parent ? 0.5 : 1;
+      return a.parent == b.parent ? 0.25 : 0.5;
     });
 //    tree.size([height, width]);
     tree.nodeSize([100, 100]);
