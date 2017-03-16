@@ -265,7 +265,7 @@
       // Compute the new tree layout.
       var nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
-      
+
 
       var totalHeight = nodes.length * nodeHeight;
 
@@ -302,7 +302,9 @@
       svgWidth += 50; // padding
       svgHeight += 400; // padding
 
-      g.attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
+      g.transition()
+          .duration(duration)
+          .attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
       svg.attr('height', svgWidth);
       svg.attr('width', svgHeight);
 
