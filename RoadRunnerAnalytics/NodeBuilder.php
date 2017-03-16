@@ -50,22 +50,11 @@ class NodeBuilder extends NodeVisitorAbstract
    */
   private $rootNamespace;
 
-  /**
-   * @var Class_
-   */
-  private $baseClass;
-
   public function __construct()
   {
     $this->rootNamespace = new Namespace_(
       new Name('')
     );
-
-    $this->baseClass = new Class_(
-      'BaseClass'
-    );
-
-    $this->addNode($this->baseClass->name, $this->baseClass->name, NodeBuilder::NODE_TYPE_CLASS);
 
     $this->addNode('external:Exception', 'external:Exception', NodeBuilder::NODE_TYPE_CLASS);
     $this->addNode('external:ConsumerStrategies_SocketConsumer', 'external:ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS);

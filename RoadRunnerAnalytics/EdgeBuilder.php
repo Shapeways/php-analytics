@@ -85,11 +85,6 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $rootNamespace;
 
   /**
-   * @var Class_
-   */
-  private $baseClass;
-
-  /**
    * EdgeBuilder constructor.
    */
   public function __construct($nodes)
@@ -98,10 +93,6 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     $this->rootNamespace = new Namespace_(
       new Name('')
-    );
-
-    $this->baseClass = new Class_(
-      'BaseClass'
     );
   }
 
@@ -447,10 +438,6 @@ class EdgeBuilder extends NodeVisitorAbstract
 
         echo "\n\n";
       }
-
-      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
-    } else {
-      $parentClassId = $this->baseClass->name;
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
