@@ -47,7 +47,7 @@
 
     .node circle {
       fill: #fff;
-      stroke: steelblue;
+      stroke: #4FC9FF;
       stroke-width: 3px;
     }
 
@@ -379,7 +379,7 @@
       nodeUpdate.select('circle.node')
           .attr('r', 10)
           .style("fill", function(d) {
-            return d._children ? "lightsteelblue" : "#fff";
+            return d._children ? "#9be0ff" : "#fff";
           })
           .attr('cursor', 'pointer');
 
