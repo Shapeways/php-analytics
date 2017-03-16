@@ -228,8 +228,8 @@
     var g = svg.append('g');//.attr('transform', 'translate(20, 20)');
 
     //      var cluster = d3.cluster().size([height, width]);
-    var tree = d3.tree();
-//    var tree = d3.cluster();
+//    var tree = d3.tree();
+    var tree = d3.cluster();
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 0.5 : 1;
     });
@@ -295,6 +295,8 @@
           minY = d.y;
         }
       });
+
+      root.x = minX;
 
       var svgHeight = maxY - minY;
       var svgWidth = maxX - minX;
