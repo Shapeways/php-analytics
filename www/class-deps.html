@@ -184,8 +184,6 @@
     }
 
     var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
-    root.x0 = 90;
-    root.y0 = 100;
     root.sort(function(a, b) {
       return (a.height - b.height) || a.id.localeCompare(b.id);
     });
@@ -220,18 +218,22 @@
 
 
     var svg = d3.select('svg');
-    var width = window.innerWidth;
+//    var width = window.innerWidth;
     var height = window.innerHeight;
-    svg.attr('width', 20000);
-    svg.attr('height', 20000);
-    var g = svg.append('g').attr('transform', 'translate(110, 0)');
+
+    var width = 20000;
+    var height = 40000;
+    svg.attr('width', width);
+    svg.attr('height', height);
+    var g = svg.append('g').attr('transform', 'translate(100, 10000)');
 
     //      var cluster = d3.cluster().size([height, width]);
     var tree = d3.tree();
     tree.separation(function(a, b) {
-      return a.parent == b.parent ? 1 : 2;
+      return a.parent == b.parent ? 0.5 : 1;
     });
-    tree.size([1, 1]);
+//    tree.size([height, width]);
+    tree.nodeSize([100, 100]);
 
 
     var i = 0,
@@ -241,6 +243,10 @@
     var nodeHeight = 30;
     var nodeWidth = 480;
 
+    root.x0 = 90;
+    root.y0 = height / 2;
+
+    console.log(root);
 
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
@@ -274,29 +280,20 @@
 
       var totalHeight = nodes.length * nodeHeight;
 
-      var startX = 90;
-      var counters = {};
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
         d.y = d.depth * nodeWidth;
-
-        if (!counters[d.depth]) {
-          counters[d.depth] = 1;
-        } else {
-          counters[d.depth] += 1;
-        }
-        d.x = counters[d.depth] * nodeHeight;
       });
 
 
 
-      root.x = 90;
-      root.y = 90;
+//      root.x = 90;
+//      root.y = 90;
 
       // ****************** Nodes section ***************************
 
       // Update the nodes...
-      var node = svg.selectAll('g.node')
+      var node = g.selectAll('g.node')
           .data(nodes, function(d) {
             return d.id;
           });
@@ -320,12 +317,9 @@
       // Add labels for the nodes
       nodeEnter.append('text')
           .attr("dy", ".35em")
-          .attr("x", function(d) {
-            return d.children || d._children ? -13 : 13;
-          })
-          .attr("text-anchor", function(d) {
-            return d.children || d._children ? "end" : "start";
-          })
+          .attr("x", 13)
+          .attr("y", 0)
+          .attr("text-anchor", "start")
           .text(function(d) {
             var parts = d.id.split(':');
             return (parts.length === 1)? parts[0] : parts[1];
@@ -369,7 +363,7 @@
       // ****************** links section ***************************
 
       // Update the links...
-      var link = svg.selectAll('path.link')
+      var link = g.selectAll('path.link')
           .data(links, function(d) { return d.id; });
 
       // Enter any new links at the parent's previous position.
