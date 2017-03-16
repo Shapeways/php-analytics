@@ -264,6 +264,8 @@
       // Assigns the x and y position for the nodes
       var treeData = tree(root);
 
+      console.log(treeData);
+
       // Compute the new tree layout.
       var nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
@@ -348,7 +350,7 @@
       var nodeExit = node.exit().transition()
           .duration(duration)
           .attr("transform", function(d) {
-            return "translate(" + source.y0 + "," + source.x0 + ")";
+            return "translate(" + source.y + "," + source.x + ")";
           })
           .remove();
 
@@ -386,7 +388,7 @@
       var linkExit = link.exit().transition()
           .duration(duration)
           .attr('d', function(d) {
-            var o = {x: source.x0, y: source.y0};
+            var o = {x: source.x, y: source.y};
             return diagonal(o, o)
           })
           .remove();
