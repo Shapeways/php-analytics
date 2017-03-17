@@ -185,10 +185,10 @@
 
     var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
     root.sort(function(a, b) {
-      var nodeA = roadRunnerDeps.nodes[a.id];
-      var nodeB = roadRunnerDeps.nodes[b.id];
+      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase().replace('_', '');
+      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase().replace('_', '');
 
-      return nodeA.name.localeCompare(nodeB.name);
+      return nodeA.localeCompare(nodeB);
     });
 
     function collapse(tData) {

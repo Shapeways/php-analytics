@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeVisitorAbstract;
 
@@ -56,11 +57,11 @@ class NodeBuilder extends NodeVisitorAbstract
       new Name('')
     );
 
-    $this->addNode('external:Exception', 'external:Exception', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:ConsumerStrategies_SocketConsumer', 'external:ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:PDO', 'external:PDO', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:PDOStatement', 'external:PDOStatement', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:Apache_Solr_Service', 'external:Apache_Solr_Service', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:Exception', 'Exception', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:ConsumerStrategies_SocketConsumer', 'ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:PDO', 'PDO', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:PDOStatement', 'PDOStatement', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:Apache_Solr_Service', 'Apache_Solr_Service', NodeBuilder::NODE_TYPE_CLASS);
   }
 
   /**
@@ -129,7 +130,7 @@ class NodeBuilder extends NodeVisitorAbstract
    * @param ClassLike $node
    * @return string
    */
-  private function getQualifiedNameForClass(Class_ $node) {
+  private function getQualifiedNameForClass(ClassLike $node) {
     $nameStr = $node->name;
 
     $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
@@ -141,7 +142,7 @@ class NodeBuilder extends NodeVisitorAbstract
    * @param Class_ $class_
    * @return string
    */
-  private function getClassId(Class_ $class_) {
+  private function getClassId(ClassLike $class_) {
     $nameStr = $this->getQualifiedNameForClass($class_);
 
     return $this->filename . ':' . $nameStr;
@@ -166,6 +167,12 @@ class NodeBuilder extends NodeVisitorAbstract
     $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_CLASS);
   }
 
+  private function enterInterface(Interface_ $node) {
+    $classId = $this->getClassId($node);
+    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
+    $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_INTERFACE);
+  }
+
   /**
    * @param Node $node
    */
@@ -175,6 +182,9 @@ class NodeBuilder extends NodeVisitorAbstract
 
     if ($node instanceof Class_) {
       $this->enterClass($node);
+    }
+    else if ($node instanceof Interface_) {
+      $this->enterInterface($node);
     }
     else if ($node instanceof Namespace_) {
       $this->enterNamespace_($node);
