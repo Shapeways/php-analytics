@@ -185,8 +185,10 @@
 
     var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
     root.sort(function(a, b) {
-      console.log(a);
-      return (a.height - b.height) || a.id.localeCompare(b.id);
+      var nodeA = roadRunnerDeps.nodes[a.id];
+      var nodeB = roadRunnerDeps.nodes[b.id];
+
+      return nodeA.name.localeCompare(nodeB.name);
     });
 
     function collapse(tData) {
@@ -229,8 +231,8 @@
     var g = svg.append('g');//.attr('transform', 'translate(20, 20)');
 
     //      var cluster = d3.cluster().size([height, width]);
-    var tree = d3.tree();
-//    var tree = d3.cluster();
+//    var tree = d3.tree();
+    var tree = d3.cluster();
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 0.25 : 0.5;
     });
