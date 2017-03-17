@@ -99,7 +99,7 @@
       return memo;
     }, []));
 
-    var leftovers = _.difference(targets, sources);
+    var leftovers = _.difference(_.extend(targets, _.keys(roadRunnerDeps.nodes)), sources);
 
     var tmpRoot = '';
     if (leftovers.length > 1) {
