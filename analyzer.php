@@ -427,15 +427,7 @@ class MapBuilder extends NodeVisitorAbstract {
 
   public function __destruct()
   {
-//    echo "Nodes:\n======\n";
-//    foreach ($this->nodes as $node) {
-//      echo str_pad($node[self::NODE_TYPE], 16, '.') . $node[self::NODE_ID] . ',' . $node[self::NODE_NAME] . "\n";
-//    }
-//
-//    echo "\n\n\nEdges:\n======\n";
-//    foreach ($this->edges as $edge) {
-//      echo str_pad($edge[self::EDGE_TYPE], 16, '.') . $edge[self::EDGE_SOURCE] . ',' . $edge[self::EDGE_TARGET] . "\n";
-//    }
+
   }
 
 }
@@ -498,32 +490,6 @@ foreach ($filesToAnalyze as $absolutePath) {
     echo "\tParse Error: ", $e->getMessage(), "\n";
   }
 }
-
-$edges = $edgeBuilder->getEdges();
-
-//foreach ($edges as $edge) {
-//  var_dump($edge);
-//  echo "\n";
-//}
-
-
-//foreach ($codeEdges as $edge) {
-//  $source = $edge['source'];
-//  if (empty($codeNodes[strtolower($source)])) {
-//    $codeNodes[strtolower($source)] = array(
-//      'id' => $source,
-//      'name' => $source
-//    );
-//  }
-//
-//  $target = $edge['target'];
-//  if (empty($codeNodes[strtolower($target)])) {
-//    $codeNodes[strtolower($target)] = array(
-//      'id' => $target,
-//      'name' => $target
-//    );
-//  }
-//}
 
 
 $js = 'var roadRunnerDeps = ';

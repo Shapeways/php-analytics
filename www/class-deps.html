@@ -79,8 +79,8 @@
 
       if (
           (edge.type === 'extends')
-          && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface'))
-          && ((roadRunnerDeps.nodes[edge.source].type === 'class') || (roadRunnerDeps.nodes[edge.source].type === 'interface'))
+          && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface') || (roadRunnerDeps.nodes[edge.target].type === 'trait'))
+          && ((roadRunnerDeps.nodes[edge.source].type === 'class') || (roadRunnerDeps.nodes[edge.source].type === 'interface') || (roadRunnerDeps.nodes[edge.source].type === 'trait'))
       ) {
         memo.push(edge);
       }
@@ -335,16 +335,28 @@
             if (nodeData.type === 'interface') {
               return "#a4d765";
             }
+
+            if (nodeData.type === 'trait') {
+              return "#ffc545";
+            }
           })
           .style("fill", function(d) {
             var nodeData = roadRunnerDeps.nodes[d.id];
 
+            if (!d._children) {
+              return "#fff";
+            }
+
             if (!nodeData || nodeData.type === 'class') {
-              return d._children ? "#9be0ff" : "#fff";
+              return "#9be0ff";
             }
 
             if (nodeData.type === 'interface') {
-              return d._children ? "#E4F7CB" : "#fff";
+              return "#E4F7CB";
+            }
+
+            if (nodeData.type === 'trait') {
+              return "#ffde96";
             }
 
           })

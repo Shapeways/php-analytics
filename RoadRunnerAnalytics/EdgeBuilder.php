@@ -25,6 +25,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
 
@@ -412,48 +413,54 @@ class EdgeBuilder extends NodeVisitorAbstract
    */
   private function enterClassLike(ClassLike $node) {
     $this->pushCurrentClass($node);
-    $classId = $this->getClassId($node);
 
-    if (
-      ($node instanceof Interface_)
-      || ($node instanceof Class_)
-    ) {
-      foreach ($node->extends as $name) {
-        $parentClassId = $this->findClassId($name);
-        $this->addEdge($classId, $parentClassId, self::EDGE_TYPE_EXTENDS);
-      }
+    if ($node instanceof Interface_) {
+      $this->enterInterface($node);
+    }
+    else if ($node instanceof Class_) {
+      $this->enterClass_($node);
+    }
+    else if ($node instanceof Trait_) {
+      $this->enterTrait($node);
     }
   }
-//
-//  private function enterInterface(Interface_ $node) {
-//    $interfaceId = $this->getClassId($node);
-////    $interfaceName = $this->getQualifiedNameForClassLike($node);
-//
-//    foreach ($node->extends as $name) {
-//      $parentClassId = $this->findClassId($name);
-//
-//      $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
+
+  /**
+   * @param Trait_ $node
+   */
+  private function enterTrait(Trait_ $node) {
+    var_dump($node->name);
+  }
+
+  /**
+   * @param Interface_ $node
+   */
+  private function enterInterface(Interface_ $node) {
+    $interfaceId = $this->getClassId($node);
+
+    foreach ($node->extends as $name) {
+      $parentClassId = $this->findClassId($name);
+      $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
+    }
+  }
+
+  /**
+   * @param Class_ $node
+   */
+  private function enterClass_(Class_ $node) {
+    $classId = $this->getClassId($node);
+
+    if ($node->extends) {
+
+      $parentClassId = $this->findClassId($node->extends);
+
+      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
+    }
+
+//    foreach ($node->implements as $name) {
+////      $this->addEdge($classId, $this->getQualifiedName($name), self::EDGE_TYPE_IMPLEMENTS);
 //    }
-//  }
-//
-//  /**
-//   * @param Class_ $node
-//   */
-//  private function enterClass_(Class_ $node) {
-//    $classId = $this->getClassId($node);
-////    $className = $this->getQualifiedNameForClassLike($node);
-//
-//    if ($node->extends) {
-//
-//      $parentClassId = $this->findClassId($node->extends);
-//
-//      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
-//    }
-//
-////    foreach ($node->implements as $name) {
-//////      $this->addEdge($classId, $this->getQualifiedName($name), self::EDGE_TYPE_IMPLEMENTS);
-////    }
-//  }
+  }
 
   /**
    * @param ClassLike $node
