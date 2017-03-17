@@ -47,7 +47,7 @@
 
     .node circle {
       fill: #fff;
-      stroke: #4FC9FF;
+      stroke: black;
       stroke-width: 3px;
     }
 
@@ -76,7 +76,7 @@
   <script>
 
     var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
-      
+
       if (
           (edge.type === 'extends')
           && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface'))
@@ -295,12 +295,11 @@
           .on('click', click);
 
       // Add Circle for the nodes
-      nodeEnter.append('circle')
-          .attr('class', 'node')
-          .attr('r', 1e-6)
-          .style("fill", function(d) {
-            return d._children ? "lightsteelblue" : "#fff";
-          });
+      nodeEnter.append('circle').attr('class', 'node');
+//          .attr('r', 1e-6)
+//          .style("fill", function(d) {
+//            return d._children ? "lightsteelblue" : "#fff";
+//          });
 
       // Add labels for the nodes
       nodeEnter.append('text')
@@ -326,8 +325,28 @@
       // Update the node attributes and style
       nodeUpdate.select('circle.node')
           .attr('r', 10)
+          .style('stroke', function(d) {
+            var nodeData = roadRunnerDeps.nodes[d.id];
+
+            if (!nodeData || nodeData.type === 'class') {
+              return "#4FC9FF";
+            }
+
+            if (nodeData.type === 'interface') {
+              return "#a4d765";
+            }
+          })
           .style("fill", function(d) {
-            return d._children ? "#9be0ff" : "#fff";
+            var nodeData = roadRunnerDeps.nodes[d.id];
+
+            if (!nodeData || nodeData.type === 'class') {
+              return d._children ? "#9be0ff" : "#fff";
+            }
+
+            if (nodeData.type === 'interface') {
+              return d._children ? "#E4F7CB" : "#fff";
+            }
+
           })
           .attr('cursor', 'pointer');
 
