@@ -15,6 +15,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 
 class NodeBuilder extends NodeVisitorAbstract
@@ -26,6 +27,7 @@ class NodeBuilder extends NodeVisitorAbstract
   const NODE_TYPE_NAMESPACE = 'namespace';
   const NODE_EXTRA_DATA     = 'extraData';
   const NODE_TYPE_INTERFACE = 'interface';
+  const NODE_TYPE_TRAIT     = 'trait';
   const NODE_TYPE_CLASS     = 'class';
   const NODE_ID             = 'id';
   const NODE_NAME           = 'name';
@@ -173,6 +175,24 @@ class NodeBuilder extends NodeVisitorAbstract
     $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_INTERFACE);
   }
 
+  private function enterClassLike(ClassLike $node) {
+    $classId = $this->getClassId($node);
+    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
+
+    $nodeType = '';
+    if ($node instanceof Class_) {
+      $nodeType = NodeBuilder::NODE_TYPE_CLASS;
+    }
+    else if ($node instanceof Interface_) {
+      $nodeType = NodeBuilder::NODE_TYPE_INTERFACE;
+    }
+    else if ($node instanceof Trait_) {
+      $nodeType = NodeBuilder::NODE_TYPE_TRAIT;
+    }
+
+    $this->addNode($classId, $className, $nodeType);
+  }
+
   /**
    * @param Node $node
    */
@@ -180,11 +200,8 @@ class NodeBuilder extends NodeVisitorAbstract
   {
     parent::enterNode($node);
 
-    if ($node instanceof Class_) {
-      $this->enterClass($node);
-    }
-    else if ($node instanceof Interface_) {
-      $this->enterInterface($node);
+    if ($node instanceof ClassLike) {
+      $this->enterClassLike($node);
     }
     else if ($node instanceof Namespace_) {
       $this->enterNamespace_($node);

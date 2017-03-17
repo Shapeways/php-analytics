@@ -412,44 +412,48 @@ class EdgeBuilder extends NodeVisitorAbstract
    */
   private function enterClassLike(ClassLike $node) {
     $this->pushCurrentClass($node);
-
-    if ($node instanceof Interface_) {
-      $this->enterInterface($node);
-    }
-    else if ($node instanceof Class_) {
-      $this->enterClass_($node);
-    }
-  }
-
-  private function enterInterface(Interface_ $node) {
-    $interfaceId = $this->getClassId($node);
-    $interfaceName = $this->getQualifiedNameForClassLike($node);
-
-    foreach ($node->extends as $name) {
-      $parentClassId = $this->findClassId($name);
-
-      $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
-    }
-  }
-
-  /**
-   * @param Class_ $node
-   */
-  private function enterClass_(Class_ $node) {
     $classId = $this->getClassId($node);
-    $className = $this->getQualifiedNameForClassLike($node);
 
-    if ($node->extends) {
-
-      $parentClassId = $this->findClassId($node->extends);
-
-      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
-    }
-
-    foreach ($node->implements as $name) {
-//      $this->addEdge($classId, $this->getQualifiedName($name), self::EDGE_TYPE_IMPLEMENTS);
+    if (
+      ($node instanceof Interface_)
+      || ($node instanceof Class_)
+    ) {
+      foreach ($node->extends as $name) {
+        $parentClassId = $this->findClassId($name);
+        $this->addEdge($classId, $parentClassId, self::EDGE_TYPE_EXTENDS);
+      }
     }
   }
+//
+//  private function enterInterface(Interface_ $node) {
+//    $interfaceId = $this->getClassId($node);
+////    $interfaceName = $this->getQualifiedNameForClassLike($node);
+//
+//    foreach ($node->extends as $name) {
+//      $parentClassId = $this->findClassId($name);
+//
+//      $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
+//    }
+//  }
+//
+//  /**
+//   * @param Class_ $node
+//   */
+//  private function enterClass_(Class_ $node) {
+//    $classId = $this->getClassId($node);
+////    $className = $this->getQualifiedNameForClassLike($node);
+//
+//    if ($node->extends) {
+//
+//      $parentClassId = $this->findClassId($node->extends);
+//
+//      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
+//    }
+//
+////    foreach ($node->implements as $name) {
+//////      $this->addEdge($classId, $this->getQualifiedName($name), self::EDGE_TYPE_IMPLEMENTS);
+////    }
+//  }
 
   /**
    * @param ClassLike $node
