@@ -22,6 +22,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
@@ -307,7 +308,7 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Class_ $class_
    * @return string
    */
-  private function getClassId(Class_ $class_) {
+  private function getClassId(ClassLike $class_) {
     $nameStr = $this->getQualifiedNameForClassLike($class_);
 
     return $this->filename . ':' . $nameStr;
@@ -344,10 +345,6 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     $filteredNodes = array_filter($this->nodes, function($node) use($qualifiedName) {
       return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
-    });
-
-    $alternateFilteredNodes = array_filter($this->nodes, function($node) use($name) {
-      return stristr($node[NodeBuilder::NODE_ID], $name);
     });
 
     if (empty($filteredNodes)) {
@@ -406,13 +403,20 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     $finalMatchSingle = current($finalMatch);
 
-
-    if ($className->toString() === 'CheckingToolController') {
-      var_dump($finalMatchSingle[NodeBuilder::NODE_ID]);
-      echo "\n\n";
-    }
-
     return $finalMatchSingle[NodeBuilder::NODE_ID];
+  }
+
+  private function enterInterface(Interface_ $node) {
+    $this->pushCurrentClass($node);
+
+    $interfaceId = $this->getClassId($node);
+    $interfaceName = $this->getQualifiedNameForClassLike($node);
+
+    foreach ($node->extends as $name) {
+      $parentClassId = $this->findClassId($name);
+
+      $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
+    }
   }
 
   /**
@@ -428,16 +432,6 @@ class EdgeBuilder extends NodeVisitorAbstract
     if ($node->extends) {
 
       $parentClassId = $this->findClassId($node->extends);
-
-      if (stristr($classId, 'CheckingContentReviewController') || stristr($parentClassId, 'CheckingContentReviewController')) {
-        var_dump($classId);
-        var_dump($className);
-
-        var_dump($parentClassId);
-        var_dump($node->extends->toString());
-
-        echo "\n\n";
-      }
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
