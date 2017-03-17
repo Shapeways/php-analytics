@@ -68,52 +68,6 @@
 
   <script>
 
-//    var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
-//
-//      if (
-//          (edge.type === 'extends')
-//          && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface') || (roadRunnerDeps.nodes[edge.target].type === 'trait'))
-//          && ((roadRunnerDeps.nodes[edge.source].type === 'class') || (roadRunnerDeps.nodes[edge.source].type === 'interface') || (roadRunnerDeps.nodes[edge.source].type === 'trait'))
-//      ) {
-//        memo.push(edge);
-//      }
-//
-//      return memo;
-//
-//    }, []);
-//
-//    var targets = _.uniq(_.reduce(classInheritanceEdges, function(memo, edge) {
-//      memo.push(edge.target);
-//      return memo;
-//    }, []));
-//
-//    var sources = _.uniq(_.reduce(classInheritanceEdges, function(memo, edge) {
-//      memo.push(edge.source);
-//      return memo;
-//    }, []));
-//
-//    var leftovers = _.difference(_.extend(targets, _.keys(roadRunnerDeps.nodes)), sources);
-//
-//    var tmpRoot = '';
-//    if (leftovers.length > 1) {
-//      tmpRoot = '__root';
-//    }
-//    _.each(leftovers, function(leftover) {
-//      classInheritanceEdges.push({
-//        source: leftover,
-//        target: tmpRoot,
-//        type: 'extends'
-//      });
-//    });
-//
-//    if (tmpRoot !== '') {
-//      classInheritanceEdges.push({
-//        source: tmpRoot,
-//        target: '',
-//        type: 'extends'
-//      });
-//    }
-
     var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
 
     var root = d3.stratify()
