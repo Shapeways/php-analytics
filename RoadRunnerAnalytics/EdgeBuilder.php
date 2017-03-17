@@ -9,6 +9,7 @@
 namespace RoadRunnerAnalytics;
 
 
+use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp;
@@ -105,15 +106,15 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @return Namespace_
+   * @return mixed|Namespace_
+   * @throws Exception
    */
   private function popCurrentNamespace_() {
 
     $poppedCurrentNamespace = array_pop($this->currentNamespace);
 
     if ($poppedCurrentNamespace === null) {
-      echo "Unmatched class depth";
-      exit(-1);
+      throw new Exception("Unmatched namespace depth");
     }
 
     return $poppedCurrentNamespace;
@@ -135,15 +136,15 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @return ClassLike
+   * @return mixed|ClassLike
+   * @throws Exception
    */
   private function popCurrentClass() {
 
     $poppedCurrentClass = array_pop($this->currentClass);
 
     if ($poppedCurrentClass === null) {
-      echo "Unmatched class depth";
-      exit(-1);
+      throw new Exception("Unmatched class depth");
     }
 
     return $poppedCurrentClass;
@@ -406,9 +407,21 @@ class EdgeBuilder extends NodeVisitorAbstract
     return $finalMatchSingle[NodeBuilder::NODE_ID];
   }
 
-  private function enterInterface(Interface_ $node) {
+  /**
+   * @param ClassLike $node
+   */
+  private function enterClassLike(ClassLike $node) {
     $this->pushCurrentClass($node);
 
+    if ($node instanceof Interface_) {
+      $this->enterInterface($node);
+    }
+    else if ($node instanceof Class_) {
+      $this->enterClass_($node);
+    }
+  }
+
+  private function enterInterface(Interface_ $node) {
     $interfaceId = $this->getClassId($node);
     $interfaceName = $this->getQualifiedNameForClassLike($node);
 
@@ -423,9 +436,6 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Class_ $node
    */
   private function enterClass_(Class_ $node) {
-
-    $this->pushCurrentClass($node);
-
     $classId = $this->getClassId($node);
     $className = $this->getQualifiedNameForClassLike($node);
 
@@ -441,9 +451,21 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
   }
 
-  private function leaveClass(Class_ $node) {
+  /**
+   * @param ClassLike $node
+   * @throws Exception
+   */
+  private function leaveClassLike(ClassLike $node) {
 
-    $this->popCurrentClass();
+    try {
+      $this->popCurrentClass();
+    }
+    catch (Exception $e) {
+      var_dump($e->getMessage());
+      var_dump($node);
+
+      throw $e;
+    }
 
   }
 
@@ -454,8 +476,8 @@ class EdgeBuilder extends NodeVisitorAbstract
     if ($node instanceof Include_) {
       $this->enterInclude_($node);
     }
-    else if ($node instanceof Class_) {
-      $this->enterClass_($node);
+    else if ($node instanceof ClassLike) {
+      $this->enterClassLike($node);
     }
     else if ($node instanceof Namespace_) {
       $this->enterNamespace_($node);
@@ -470,8 +492,8 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Node $node
    */
   public function leaveNode(Node $node) {
-    if ($node instanceof Class_) {
-      $this->leaveClass($node);
+    if ($node instanceof ClassLike) {
+      $this->leaveClassLike($node);
     }
     else if ($node instanceof Namespace_) {
       $this->leaveNamespace_($node);
