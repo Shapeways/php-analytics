@@ -22,13 +22,6 @@
       top: 0;
     }
 
-    .branch {
-      stroke: #555;
-      stroke-width: 1px;
-      stroke-opacity: 0.4;
-      fill: none;
-    }
-
     text {
       font-family: 'Helvetica Neue', 'Helvetica', sans-serif;
       font-size: 8pt;
@@ -225,7 +218,7 @@
 
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
-        d.y = (d.depth) * nodeWidth;
+        d.y = (d.depth - 1) * nodeWidth;
 
         if (d.x > maxX) {
           maxX = d.x;
@@ -244,7 +237,7 @@
         }
       });
 
-      root.x = minX;
+//      root.x = minX;
 
       var svgHeight = maxY - minY;
       var svgWidth = maxX - minX;
