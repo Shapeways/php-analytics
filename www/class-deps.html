@@ -74,74 +74,14 @@
   <script src="js/class-graph.js"></script>
 
   <script>
-
-    var countClasses = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
-      if (node.type == 'class') {
-        return memo + 1;
-      }
-      return memo;
-    }, 0);
-
-    var sourceFilesWithClasses = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
-
-      if (edge.type == 'sourcefile') {
-        if ((roadRunnerDeps.nodes[edge.source].type == 'class')
-            || (roadRunnerDeps.nodes[edge.source].type == 'interface')) {
-          memo[edge.target] = 1;
-        }
-      }
-
-      return memo;
-    }, {});
-
-    var classesImplementingInterfaces = _.reduce(roadRunnerDeps.edges, function(memo, edge) {
-      if (edge.type == 'implements') {
-        if ((roadRunnerDeps.nodes[edge.source].type == 'class')) {
-          memo[edge.source] = 1;
-        }
-      }
-
-      return memo;
-    }, {});
-
-    var namespaces = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
-      if (node.type == 'namespace') {
-        memo[node.id] = 1;
-      }
-
-      return memo;
-    }, {});
-
-
-    var namespaceMembers = _.reduce(roadRunnerDeps.edges, function(memo, edge) {
-      if (edge.type == 'namespace') {
-        if (((roadRunnerDeps.nodes[edge.source].type == 'class')
-            || (roadRunnerDeps.nodes[edge.source].type == 'interface'))
-        && (roadRunnerDeps.nodes[edge.target].name != '\\')
-        ){
-          memo[edge.source] = 1;
-        }
-      }
-
-      return memo;
-    }, {});
-
-    var countManagers = _.reduce(roadRunnerDeps.nodes, function(memo, node) {
-      if (node.id.indexOf('Manager') >= 0) {
-        return memo + 1;
-      }
-
-      return memo;
-    }, 0);
-
-
+    
     var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
 
-      if (!roadRunnerDeps.nodes[edge.target]) {
-//        console.log(edge);
-      }
-
-      if ((edge.type === 'extends') && (roadRunnerDeps.nodes[edge.target].type === 'class') && (roadRunnerDeps.nodes[edge.source].type === 'class')) {
+      if (
+          (edge.type === 'extends')
+          && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface'))
+          && ((roadRunnerDeps.nodes[edge.source].type === 'class') || (roadRunnerDeps.nodes[edge.source].type === 'interface'))
+      ) {
         memo.push(edge);
       }
 
@@ -150,8 +90,6 @@
     }, []);
 
     var targets = _.uniq(_.reduce(classInheritanceEdges, function(memo, edge) {
-//      console.log(edge);
-
       memo.push(edge.target);
       return memo;
     }, []));
@@ -183,7 +121,14 @@
       });
     }
 
-    var root = d3.stratify().id(function(d) { return d.source; }).parentId(function(d) { return d.target; })(classInheritanceEdges);
+    var root = d3.stratify()
+        .id(function(d) {
+          return d.source;
+        }).parentId(function(d) {
+          return d.target;
+        })
+        (classInheritanceEdges);
+
     root.sort(function(a, b) {
       var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase().replace('_', '');
       var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase().replace('_', '');
