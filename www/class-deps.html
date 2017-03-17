@@ -74,9 +74,9 @@
   <script src="js/class-graph.js"></script>
 
   <script>
-    
-    var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
 
+    var classInheritanceEdges = _.reduce(roadRunnerDeps.edges, function (memo, edge) {
+      
       if (
           (edge.type === 'extends')
           && ((roadRunnerDeps.nodes[edge.target].type === 'class') || (roadRunnerDeps.nodes[edge.target].type === 'interface'))
