@@ -79,8 +79,8 @@
         (classInheritanceEdges);
 
     root.sort(function(a, b) {
-      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase().replace('_', '');
-      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase().replace('_', '');
+      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
+      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
 
       return nodeA.localeCompare(nodeB);
     });
