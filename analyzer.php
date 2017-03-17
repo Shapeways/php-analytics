@@ -29,6 +29,7 @@ use PhpParser\NodeVisitorAbstract;
 
 
 use RoadRunnerAnalytics\EdgeBuilder;
+use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\NodeBuilder;
 
 class MapBuilder extends NodeVisitorAbstract {
@@ -495,7 +496,8 @@ foreach ($filesToAnalyze as $absolutePath) {
 $js = 'var roadRunnerDeps = ';
 $js .= json_encode(array(
                      'edges' => $edgeBuilder->getEdges(),
-                     'nodes' => $nodeBuilder->getNodes()
+                     'nodes' => $nodeBuilder->getNodes(),
+                     'classInheritanceEdges' => (new InheritanceHierarchyFormatter())->format($nodeBuilder, $edgeBuilder)
                    ));
 
 $jsFilename = dirname(__FILE__) . '/www/js/class-graph.js';

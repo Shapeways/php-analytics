@@ -23,7 +23,13 @@ class InheritanceHierarchyFormatter
    * @return array
    */
   public function format(NodeBuilder $nodeBuilder, EdgeBuilder $edgeBuilder) {
-    $graph = array();
+    $graph = array(
+      array(
+        EdgeBuilder::EDGE_SOURCE => self::ROOT,
+        EdgeBuilder::EDGE_TARGET => '',
+        EdgeBuilder::EDGE_TYPE => EdgeBuilder::EDGE_TYPE_EXTENDS
+      )
+    );
 
     $nodes = $nodeBuilder->getNodes();
     $edges = $edgeBuilder->getEdges();
@@ -61,7 +67,7 @@ class InheritanceHierarchyFormatter
     }
 
     // Find nodes that hav no parent
-    $leftovers = array_diff(array_merge($targets, array_keys($nodes)), $sources);
+    $leftovers = array_diff(array_unique(array_merge($targets, array_keys($nodes))), $sources);
 
     foreach ($leftovers as $leftover) {
       $graph[] = array(
