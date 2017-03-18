@@ -170,8 +170,6 @@
 
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
-        d.y = (d.depth - 1) * nodeWidth;
-
         if (d.x > maxX) {
           maxX = d.x;
         }
@@ -221,11 +219,12 @@
     }
 
     function drawNodes(treeData, source) {
-      var nodes = treeData.descendants();
+      var nodes = treeData.descendants().slice(1);
 
       // Update the nodes...
       var node = g.selectAll('g.node')
           .data(nodes, function(d) {
+
             return d.id;
           });
 
@@ -294,10 +293,6 @@
               return "#fff";
             }
 
-            if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
-              return "#b4bbbd";
-            }
-
             if (!nodeData || nodeData.type === 'class') {
               return "#9be0ff";
             }
@@ -354,15 +349,25 @@
       var linkUpdate = linkEnter.merge(link);
 
       // Transition back to the parent element position
-      linkUpdate.transition()
+      linkUpdate
+          .filter(function (d) {
+            // don't draw edges to the namespace root
+            return d.depth > 1;
+          })
+          .transition()
           .duration(duration)
-          .attr('d', function(d){ return diagonal(d, d.parent) });
+          .attr('d', function(d) {
+            return diagonal(d, d.parent)
+          });
 
       // Remove any exiting links
       var linkExit = link.exit().transition()
           .duration(duration)
           .attr('d', function(d) {
-            var o = {x: source.x, y: source.y};
+            var o = {
+              x: source.x,
+              y: source.y
+            };
             return diagonal(o, o)
           })
           .remove();
@@ -372,6 +377,11 @@
       
       // Assigns the x and y position for the nodes
       var treeData = tree(root);
+
+      // Update y-position for nicely normalized depth
+      treeData.descendants().forEach(function(d) {
+        d.y = (d.depth - 1) * nodeWidth;
+      });
 
       updateSvgDimensions(treeData);
       drawNodes(treeData, source);
