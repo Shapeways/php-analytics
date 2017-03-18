@@ -64,7 +64,7 @@ class InheritanceHierarchyFormatter
         }
       }
     }
-    
+
 
     // catalog all source nodes
     foreach ($inheritanceEdges as $edge) {

@@ -33,6 +33,9 @@ class NodeBuilder extends NodeVisitorAbstract
   const NODE_NAME           = 'name';
   const NODE_TYPE_UNDEFINED = 'unspecified';
 
+  const NODE_EXTRA_EXTERNAl_ORIGIN = 'externalOrigin';
+
+
   /**
    * @var array
    */
@@ -59,11 +62,11 @@ class NodeBuilder extends NodeVisitorAbstract
       new Name('')
     );
 
-    $this->addNode('external:Exception', 'Exception', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:ConsumerStrategies_SocketConsumer', 'ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:PDO', 'PDO', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:PDOStatement', 'PDOStatement', NodeBuilder::NODE_TYPE_CLASS);
-    $this->addNode('external:Apache_Solr_Service', 'Apache_Solr_Service', NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode('external:Exception', 'Exception', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
+    $this->addNode('external:ConsumerStrategies_SocketConsumer', 'ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
+    $this->addNode('external:PDO', 'PDO', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
+    $this->addNode('external:PDOStatement', 'PDOStatement', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
+    $this->addNode('external:Apache_Solr_Service', 'Apache_Solr_Service', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
   }
 
   /**
