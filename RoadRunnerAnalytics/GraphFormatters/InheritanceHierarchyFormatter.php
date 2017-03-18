@@ -16,9 +16,6 @@ class InheritanceHierarchyFormatter
 {
 
   const ROOT = '\\';
-  const SOURCE_DATA = 'sourceData';
-  const TARGET_DATA = 'targetData';
-
 
   /**
    * @param NodeBuilder $nodeBuilder
@@ -57,10 +54,7 @@ class InheritanceHierarchyFormatter
           in_array($sourceNode[NodeBuilder::NODE_TYPE], $allowedNodeTypes)
           && in_array($targetNode[NodeBuilder::NODE_TYPE], $allowedNodeTypes)
         ) {
-          $inheritanceEdges[] = array_merge($edge, array(
-            self::SOURCE_DATA => $sourceNode,
-            self::TARGET_DATA => $targetNode
-          ));
+          $inheritanceEdges[] = $edge;
         }
       }
     }
@@ -76,14 +70,10 @@ class InheritanceHierarchyFormatter
     $leftovers = array_diff(array_unique(array_merge($targets, array_keys($nodes))), $sources);
 
     foreach ($leftovers as $leftover) {
-
-      $sourceNode = $nodes[$leftover];
-
       $graph[] = array(
         EdgeBuilder::EDGE_SOURCE  => $leftover,
         EdgeBuilder::EDGE_TARGET  => self::ROOT,
-        EdgeBuilder::EDGE_TYPE    => EdgeBuilder::EDGE_TYPE_EXTENDS,
-        self::SOURCE_DATA         => $sourceNode
+        EdgeBuilder::EDGE_TYPE    => EdgeBuilder::EDGE_TYPE_EXTENDS
       );
     }
 
