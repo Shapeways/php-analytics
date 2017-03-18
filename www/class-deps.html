@@ -85,8 +85,6 @@
       return nodeA.localeCompare(nodeB);
     });
 
-    console.log(root);
-
     function collapse(tData) {
 
       if (tData.children) {
@@ -142,8 +140,8 @@
     var nodeHeight = 30;
     var nodeWidth = 380;
 
-    root.x0 = 90;
-    root.y0 = height / 2;
+    root.x0 = 0;
+    root.y0 = 0;
 
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
@@ -279,6 +277,10 @@
           .style('stroke', function(d) {
             var nodeData = roadRunnerDeps.nodes[d.id];
 
+            if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
+              return "#67757B";
+            }
+
             if (!nodeData || nodeData.type === 'class') {
               return "#4FC9FF";
             }
@@ -296,6 +298,10 @@
 
             if (!d._children) {
               return "#fff";
+            }
+
+            if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
+              return "#b4bbbd";
             }
 
             if (!nodeData || nodeData.type === 'class') {

@@ -126,7 +126,8 @@ class NodeBuilder extends NodeVisitorAbstract
     $this->nodes[$nodeId] = array(
       NodeBuilder::NODE_ID => $nodeId,
       NodeBuilder::NODE_NAME => $nodeName,
-      NodeBuilder::NODE_TYPE => $nodeType
+      NodeBuilder::NODE_TYPE => $nodeType,
+      NodeBuilder::NODE_EXTRA_DATA => $extraData
     );
 
   }
