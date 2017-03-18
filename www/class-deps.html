@@ -154,23 +154,13 @@
       return path;
     }
 
-    function update(source) {
-      
-      // Assigns the x and y position for the nodes
-      var treeData = tree(root);
+    function updateSvgDimensions(treeData) {
+      var maxX = treeData.x;
+      var minX = treeData.x;
+      var maxY = treeData.y;
+      var minY = treeData.y;
 
-      // Compute the new tree layout.
-      var nodes = treeData.descendants(),
-          links = treeData.descendants().slice(1);
-
-
-      var totalHeight = nodes.length * nodeHeight;
-
-      var maxX = root.x;
-      var minX = root.x;
-      var maxY = root.y;
-      var minY = root.y;
-
+      var nodes = treeData.descendants();
 
       // Normalize for fixed-depth.
       nodes.forEach(function(d){
@@ -192,8 +182,6 @@
           minY = d.y;
         }
       });
-
-//      root.x = minX;
 
       var svgHeight = maxY - minY;
       var svgWidth = maxX - minX;
@@ -224,6 +212,17 @@
       } else {
         svg.attr('width', svgHeight);
       }
+    }
+
+    function update(source) {
+      
+      // Assigns the x and y position for the nodes
+      var treeData = tree(root);
+
+      updateSvgDimensions(treeData);
+
+      var nodes = treeData.descendants(),
+          links = treeData.descendants().slice(1);
 
 
       // ****************** Nodes section ***************************
@@ -245,10 +244,6 @@
 
       // Add Circle for the nodes
       nodeEnter.append('circle').attr('class', 'node');
-//          .attr('r', 1e-6)
-//          .style("fill", function(d) {
-//            return d._children ? "lightsteelblue" : "#fff";
-//          });
 
       // Add labels for the nodes
       nodeEnter.append('text')
