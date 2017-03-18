@@ -219,6 +219,8 @@
     }
 
     function drawNodes(treeData, source) {
+
+      // ignore the root node
       var nodes = treeData.descendants().slice(1);
 
       // Update the nodes...
