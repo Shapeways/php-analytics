@@ -154,6 +154,12 @@
       return path;
     }
 
+    /**
+     *
+     * Resize the svg container according to the new layout
+     *
+     * @param treeData
+     */
     function updateSvgDimensions(treeData) {
       var maxX = treeData.x;
       var minX = treeData.x;
@@ -214,18 +220,8 @@
       }
     }
 
-    function update(source) {
-      
-      // Assigns the x and y position for the nodes
-      var treeData = tree(root);
-
-      updateSvgDimensions(treeData);
-
-      var nodes = treeData.descendants(),
-          links = treeData.descendants().slice(1);
-
-
-      // ****************** Nodes section ***************************
+    function drawNodes(treeData, source) {
+      var nodes = treeData.descendants();
 
       // Update the nodes...
       var node = g.selectAll('g.node')
@@ -243,7 +239,10 @@
           .on('click', click);
 
       // Add Circle for the nodes
-      nodeEnter.append('circle').attr('class', 'node');
+      nodeEnter.append('circle')
+          .attr('class', 'node')
+          .attr('r', 0)
+      ;
 
       // Add labels for the nodes
       nodeEnter.append('text')
@@ -330,8 +329,10 @@
       // On exit reduce the opacity of text labels
       nodeExit.select('text')
           .style('fill-opacity', 1e-6);
+    }
 
-      // ****************** links section ***************************
+    function drawLinks(treeData, source) {
+      var links = treeData.descendants().slice(1);
 
       // Update the links...
       var link = g.selectAll('path.link')
@@ -365,9 +366,19 @@
             return diagonal(o, o)
           })
           .remove();
+    }
+
+    function update(source) {
+      
+      // Assigns the x and y position for the nodes
+      var treeData = tree(root);
+
+      updateSvgDimensions(treeData);
+      drawNodes(treeData, source);
+      drawLinks(treeData, source);
 
       // Store the old positions for transition.
-      nodes.forEach(function(d){
+      treeData.descendants().forEach(function(d){
         d.x0 = d.x;
         d.y0 = d.y;
       });
