@@ -85,6 +85,11 @@
       return nodeA.localeCompare(nodeB);
     });
 
+    var nodeIndex = {};
+    root.each(function(d) {
+      nodeIndex[d.id] = d;
+    });
+
     function collapse(tData) {
 
       if (tData.children) {
@@ -99,6 +104,15 @@
         tData.children = tData._children;
         tData._children = null;
       }
+    }
+
+    function showTree(node) {
+
+      node.ancestors().forEach(function(d) {
+        expand(d);
+      });
+
+      update(root);
     }
 
     function click(tData) {
@@ -135,7 +149,7 @@
 
 
     var i = 0,
-        duration = 750;
+        duration = 1750;
 
     var nodeHeight = 30;
     var nodeWidth = 380;
