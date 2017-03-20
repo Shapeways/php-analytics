@@ -85,16 +85,24 @@
       return nodeA.localeCompare(nodeB);
     });
 
+    // Build node index, init start positions and visibility
     var nodeIndex = {};
     root.each(function(d) {
       nodeIndex[d.id] = d;
+      d.visible = true;
+      d.visible0 = true;
+      d.x0 = 0;
+      d.y0 = 0;
     });
 
     function collapse(tData) {
 
       if (tData.children) {
         tData._children = tData.children;
-        tData._children.forEach(collapse);
+        tData._children.forEach(function(c) {
+          collapse(c);
+          c.visible = false;
+        });
         tData.children = null;
       }
     }
@@ -103,6 +111,9 @@
       if (tData._children) {
         tData.children = tData._children;
         tData._children = null;
+        tData.children.forEach(function(c) {
+          c.visible = true;
+        });
       }
     }
 
@@ -125,7 +136,9 @@
       update(tData);
     }
 
-    root.children.forEach(collapse);
+    root.children.forEach(function(d) {
+      collapse(d);
+    });
 
 
     var svg = d3.select('svg');
@@ -153,9 +166,6 @@
 
     var nodeHeight = 30;
     var nodeWidth = 380;
-
-    root.x0 = 0;
-    root.y0 = 0;
 
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
@@ -240,7 +250,6 @@
       // Update the nodes...
       var node = g.selectAll('g.node')
           .data(nodes, function(d) {
-
             return d.id;
           });
 
@@ -249,7 +258,19 @@
           .append('g')
           .attr('class', 'node')
           .attr("transform", function(d) {
-            return "translate(" + source.y0 + "," + source.x0 + ")";
+
+            var lastVisibleParent = null;
+            d.ancestors().forEach(function(a) {
+              if (a.visible0 && !lastVisibleParent) {
+                lastVisibleParent = a;
+              }
+            });
+
+            if (!lastVisibleParent) {
+              lastVisibleParent = root;
+            }
+
+            return "translate(" + lastVisibleParent.y0 + "," + lastVisibleParent.x0 + ")";
           })
           .on('click', click);
 
@@ -355,9 +376,22 @@
       var linkEnter = link.enter().insert('path', "g")
           .attr("class", "link")
           .attr('d', function(d){
+
+            var lastVisibleParent = null;
+            d.ancestors().forEach(function(a) {
+              if (a.visible0 && !lastVisibleParent) {
+                lastVisibleParent = a;
+              }
+            });
+
+            if (!lastVisibleParent) {
+              lastVisibleParent = root;
+            }
+
             var o = {
-              x: source.x0,
-              y: source.y0}
+              x: lastVisibleParent.x0,
+              y: lastVisibleParent.y0
+            };
             return diagonal(o, o)
           });
 
@@ -404,9 +438,13 @@
       drawLinks(treeData, source);
 
       // Store the old positions for transition.
-      treeData.descendants().forEach(function(d){
+      root.each(function(d){
         d.x0 = d.x;
         d.y0 = d.y;
+      });
+
+      _.each(nodeIndex, function(d) {
+        d.visible0 = d.visible;
       });
 
     }
