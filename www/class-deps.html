@@ -70,6 +70,13 @@
 
     var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
 
+    var implementsIndex = {};
+    _.each(roadRunnerDeps.edges, function(edge, edgeKey) {
+      if (edge.type === 'implements') {
+        implementsIndex[edgeKey] = edge;
+      }
+    });
+
     var root = d3.stratify()
         .id(function(d) {
           return d.source;
@@ -120,18 +127,28 @@
     function showTree(node) {
 
       node.ancestors().forEach(function(d) {
+        if (d.id === node.id) {
+          return;
+        }
         expand(d);
       });
 
-      update(root);
     }
 
     function click(tData) {
+
       if (tData._children) {
         expand(tData);
       } else if (tData.children) {
         collapse(tData);
       }
+
+      _.each(implementsIndex, function(edge) {
+        if (edge.source === tData.id) {
+          showTree(nodeIndex[edge.target]);
+        }
+      });
+
 
       update(tData);
     }

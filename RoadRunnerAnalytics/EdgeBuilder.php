@@ -457,9 +457,11 @@ class EdgeBuilder extends NodeVisitorAbstract
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
 
-//    foreach ($node->implements as $name) {
-////      $this->addEdge($classId, $this->getQualifiedName($name), self::EDGE_TYPE_IMPLEMENTS);
-//    }
+    foreach ($node->implements as $name) {
+      $interfaceId = $this->findClassId($name);
+
+      $this->addEdge($classId, $interfaceId, self::EDGE_TYPE_IMPLEMENTS);
+    }
   }
 
   /**
