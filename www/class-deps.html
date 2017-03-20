@@ -441,6 +441,8 @@
     }
 
     function update(source) {
+
+      g.selectAll('path.coupling').remove();
       
       // Assigns the x and y position for the nodes
       var treeData = tree(root);
@@ -453,6 +455,37 @@
       updateSvgDimensions(treeData);
       drawNodes(treeData, source);
       drawLinks(treeData, source);
+
+
+      _.each(implementsIndex, function(edge) {
+
+        var targets = [];
+        if (edge.source === source.id) {
+          targets.push(nodeIndex[edge.target]);
+        }
+
+        g.selectAll('path.coupling')
+          .data(targets, function(d) {
+            return d.id;
+          })
+          .enter()
+            .insert('path', 'g')
+            .attr('class', 'coupling')
+            .attr('d', function(d) {
+              return diagonal(source, source);
+            })
+            .attr('stroke', 'black')
+            .attr('fill', 'none')
+            .transition()
+            .duration(duration)
+            .attr('d', function(d) {
+              return diagonal(source, d);
+            })
+        ;
+
+
+      });
+
 
       // Store the old positions for transition.
       root.each(function(d){
