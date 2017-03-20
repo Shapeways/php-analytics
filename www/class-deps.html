@@ -188,6 +188,17 @@
     var nodeHeight = 30;
     var nodeWidth = 380;
 
+    function exaggeratedDiagonal(s, d) {
+
+      var path = `M ${s.y} ${s.x}
+            C ${(s.y) + (nodeWidth)} ${s.x},
+              ${(s.y) + (nodeWidth)} ${d.x},
+              ${d.y} ${d.x}`;
+
+      return path;
+
+    }
+
     // Creates a curved (diagonal) path from parent to the child nodes
     function diagonal(s, d) {
 
@@ -491,6 +502,11 @@
           .transition()
           .duration(duration)
           .attr('d', function(d) {
+
+            if (d.depth === source.depth) {
+              return exaggeratedDiagonal(source, d);
+            }
+
             return diagonal(source, d);
           })
       ;
