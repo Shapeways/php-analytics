@@ -474,7 +474,9 @@
             .attr('d', function(d) {
               return diagonal(source, source);
             })
-            .attr('stroke', 'black')
+            .attr('stroke', '#a4d765')
+            .style('stroke-dasharray', '(3, 3)')
+            .style('stroke-width', '2')
             .attr('fill', 'none')
             .transition()
             .duration(duration)
