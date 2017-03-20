@@ -147,6 +147,10 @@
         if (edge.source === tData.id) {
           showTree(nodeIndex[edge.target]);
         }
+
+        if (edge.target === tData.id) {
+          showTree(nodeIndex[edge.source]);
+        }
       });
 
 
@@ -457,36 +461,39 @@
       drawLinks(treeData, source);
 
 
+      var targets = [];
       _.each(implementsIndex, function(edge) {
 
-        var targets = [];
         if (edge.source === source.id) {
           targets.push(nodeIndex[edge.target]);
         }
 
-        g.selectAll('path.coupling')
+        if (edge.target === source.id) {
+          targets.push(nodeIndex[edge.source]);
+        }
+
+      });
+
+      g.selectAll('path.coupling')
           .data(targets, function(d) {
             return d.id;
           })
           .enter()
-            .insert('path', 'g')
-            .attr('class', 'coupling')
-            .attr('d', function(d) {
-              return diagonal(source, source);
-            })
-            .attr('stroke', '#a4d765')
-            .style('stroke-dasharray', ('3, 3'))
-            .style('stroke-width', '2')
-            .attr('fill', 'none')
-            .transition()
-            .duration(duration)
-            .attr('d', function(d) {
-              return diagonal(source, d);
-            })
-        ;
-
-
-      });
+          .insert('path', 'g')
+          .attr('class', 'coupling')
+          .attr('d', function(d) {
+            return diagonal(source, source);
+          })
+          .attr('stroke', '#a4d765')
+          .style('stroke-dasharray', ('3, 3'))
+          .style('stroke-width', '2')
+          .attr('fill', 'none')
+          .transition()
+          .duration(duration)
+          .attr('d', function(d) {
+            return diagonal(source, d);
+          })
+      ;
 
 
       // Store the old positions for transition.
