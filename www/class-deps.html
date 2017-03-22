@@ -480,39 +480,43 @@
         ancestorIds.push(a.id);
       });
 
-      var dependencyEdges = [];
+      var dependencyEdges = {};
       _.each(implementsIndex, function(edge) {
 
+        if (dependencyEdges[edge.id]) {
+          return;
+        }
+
         if (edge.source === source.id) {
-          dependencyEdges.push({
+          dependencyEdges[edge.id] = {
             edge: edge,
             source: true,
             target: false,
             ancestor: false
-          });
+          };
         }
 
         if (edge.target === source.id) {
-          dependencyEdges.push({
+          dependencyEdges[edge.id] = {
             edge: edge,
             source: false,
             target: true,
             ancestor: false
-          });
+          };
         }
 
         if (ancestorIds.indexOf(edge.source) >= 0) {
-          dependencyEdges.push({
+          dependencyEdges[edge.id] = {
             edge: edge,
             source: false,
             target: false,
             ancestor: true
-          });
+          };
         }
       });
 
       g.selectAll('path.coupling')
-          .data(dependencyEdges, function(d) {
+          .data(_.values(dependencyEdges), function(d) {
             return d.id;
           })
           .enter()

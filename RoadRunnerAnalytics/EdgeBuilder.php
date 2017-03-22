@@ -40,6 +40,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   const EDGE_TYPE_EXTENDS       = 'extends';
   const EDGE_TYPE_IMPLEMENTS    = 'implements';
   const EDGE_LABEL              = 'label';
+  const EDGE_ID                 = 'id';
   const EDGE_TYPE_CONSUMER      = 'consumer';
   const EDGE_SOURCE             = 'source';
   const EDGE_TYPE_STATIC_ACCESS = 'staticAccess';
@@ -192,9 +193,10 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
 
 
-    $edgeKey = "$edgeSource.$edgeDestination.$edgeType";
+    $edgeId = "$edgeSource.$edgeDestination.$edgeType";
 
-    $this->edges[$edgeKey] = array(
+    $this->edges[$edgeId] = array(
+      EdgeBuilder::EDGE_ID => $edgeId,
       EdgeBuilder::EDGE_SOURCE => $edgeSource,
       EdgeBuilder::EDGE_TARGET => $edgeDestination,
       EdgeBuilder::EDGE_TYPE => $edgeType,
