@@ -480,62 +480,39 @@
         ancestorIds.push(a.id);
       });
 
-      var targets = [];
+      var dependencyEdges = [];
       _.each(implementsIndex, function(edge) {
 
         if (edge.source === source.id) {
-          targets.push(nodeIndex[edge.target]);
+          dependencyEdges.push({
+            edge: edge,
+            source: true,
+            target: false,
+            ancestor: false
+          });
         }
 
         if (edge.target === source.id) {
-          targets.push(nodeIndex[edge.source]);
+          dependencyEdges.push({
+            edge: edge,
+            source: false,
+            target: true,
+            ancestor: false
+          });
         }
-      });
 
-      g.selectAll('path.coupling')
-          .data(targets, function(d) {
-            return d.id;
-          })
-          .enter()
-          .insert('path', 'g')
-          .attr('class', 'coupling')
-          .attr('d', function(d) {
-            return diagonal(source, source);
-          })
-          .attr('stroke', '#a4d765')
-          .style('stroke-width', '2')
-          .attr('fill', 'none')
-          .transition()
-          .duration(duration)
-          .attr('d', function(d) {
-
-            if (d.depth === source.depth) {
-              return exaggeratedDiagonal(source, d);
-            }
-
-            return diagonal(source, d);
-          })
-      ;
-
-      var ancestorIds = [];
-      source.ancestors().forEach(function(a) {
-        if (a.id === source.id) {
-          return;
-        }
-        ancestorIds.push(a.id);
-      });
-
-      console.log(ancestorIds);
-
-      targets = [];
-      _.each(implementsIndex, function(edge) {
         if (ancestorIds.indexOf(edge.source) >= 0) {
-          targets.push(nodeIndex[edge.target]);
+          dependencyEdges.push({
+            edge: edge,
+            source: false,
+            target: false,
+            ancestor: true
+          });
         }
       });
 
       g.selectAll('path.coupling')
-          .data(targets, function(d) {
+          .data(dependencyEdges, function(d) {
             return d.id;
           })
           .enter()
@@ -544,19 +521,37 @@
           .attr('d', function(d) {
             return diagonal(source, source);
           })
+          .style('stroke-dasharray', function(d) {
+            if (d.ancestor) {
+              return ('3, 3');
+            }
+
+            return ('1');
+          })
           .attr('stroke', '#a4d765')
-          .style('stroke-dasharray', ('3, 3'))
           .style('stroke-width', '2')
           .attr('fill', 'none')
           .transition()
           .duration(duration)
           .attr('d', function(d) {
 
-            if (d.depth === source.depth) {
-              return exaggeratedDiagonal(source, d);
+            var dependencyNode;
+            if (d.source) {
+              dependencyNode = nodeIndex[d.edge.target];
+            }
+            else if (d.target) {
+              dependencyNode = nodeIndex[d.edge.source];
+            }
+            else if (d.ancestor) {
+              dependencyNode = nodeIndex[d.edge.target];
             }
 
-            return diagonal(source, d);
+
+            if (dependencyNode.depth === source.depth) {
+              return exaggeratedDiagonal(source, dependencyNode);
+            }
+
+            return diagonal(source, dependencyNode);
           })
       ;
 
