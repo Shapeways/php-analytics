@@ -16,6 +16,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
@@ -28,6 +29,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   const EDGE_TYPE_CREATES       = 'creates';
   const EDGE_TYPE_SOURCE_FILE   = 'sourcefile';
   const EDGE_TYPE_EXTENDS       = 'extends';
+  const EDGE_TYPE_TRAIT_USE     = 'traitUse';
   const EDGE_TYPE_IMPLEMENTS    = 'implements';
   const EDGE_LABEL              = 'label';
   const EDGE_ID                 = 'id';
@@ -41,12 +43,12 @@ class EdgeBuilder extends NodeVisitorAbstract
   /**
    * @var array
    */
-  private $nodes = array();
+  private $nodes = [];
 
   /**
    * @var array
    */
-  private $edges = array();
+  private $edges = [];
 
   /**
    * @var string
@@ -56,7 +58,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   /**
    * @var ClassLike[]
    */
-  private $currentClass = array();
+  private $currentClass = [];
 
   /**
    * @var ClassNameHelper
@@ -163,7 +165,16 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Trait_ $node
    */
   private function enterTrait(Trait_ $node) {
-    var_dump($node->name);
+
+  }
+
+  private function enterTraitUse(TraitUse $node) {
+    $currentClassId = $this->classNameHelper->getClassId(end($this->currentClass));
+    foreach ($node->traits as $trait) {
+      $traitId = $this->classNameHelper->findClassId($trait, $this->nodes);
+      $this->addEdge($currentClassId, $traitId, EdgeBuilder::EDGE_TYPE_TRAIT_USE);
+    }
+
   }
 
   /**
@@ -225,6 +236,9 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
     else if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
+    }
+    else if ($node instanceof TraitUse) {
+      $this->enterTraitUse($node);
     }
 
   }
