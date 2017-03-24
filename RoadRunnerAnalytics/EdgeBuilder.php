@@ -256,28 +256,15 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Name $className
    * @return mixed|string
    */
-  private function findClassId(Name $className) {
+  private function findClassId(Name $className, array $nodes) {
 
     $qualifiedName = $this->classNameHelper->getQualifiedName($className);
 
-    $filteredNodes = array_filter($this->nodes, function($node) use($qualifiedName) {
+    $filteredNodes = array_filter($nodes, function($node) use($qualifiedName) {
       return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
     });
 
     if (empty($filteredNodes)) {
-
-      //ConsumerStrategies_SocketConsumer
-      //PDOStatement
-      if (
-        ($qualifiedName !== 'Exception') ||
-        ($qualifiedName !== 'ConsumerStrategies_SocketConsumer') ||
-        ($qualifiedName !== 'PDO') ||
-        ($qualifiedName !== 'PDOStatement') ||
-        ($qualifiedName !== 'Apache_Solr_Service')
-      ) {
-//        die;
-      }
-
       return 'external:' . $qualifiedName;
     }
 
@@ -288,7 +275,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
 
     if (empty($this->currentIncludePartialFilename)) {
-//      var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
+      var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
 
       return 'implicit:' . $qualifiedName;
     }
@@ -348,7 +335,7 @@ class EdgeBuilder extends NodeVisitorAbstract
     $interfaceId = $this->getClassId($node);
 
     foreach ($node->extends as $name) {
-      $parentClassId = $this->findClassId($name);
+      $parentClassId = $this->findClassId($name, $this->nodes);
       $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
     }
   }
@@ -361,13 +348,13 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     if ($node->extends) {
 
-      $parentClassId = $this->findClassId($node->extends);
+      $parentClassId = $this->findClassId($node->extends, $this->nodes);
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
 
     foreach ($node->implements as $name) {
-      $interfaceId = $this->findClassId($name);
+      $interfaceId = $this->findClassId($name, $this->nodes);
 
       $this->addEdge($classId, $interfaceId, self::EDGE_TYPE_IMPLEMENTS);
     }
