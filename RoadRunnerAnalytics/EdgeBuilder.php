@@ -354,12 +354,6 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     if (empty($filteredNodes)) {
 
-//      var_dump($this->filename);
-//
-//      var_dump("Undefined class: " . $qualifiedName);
-//      var_dump("Alternates", $filteredNodes);
-//      var_dump("Alternates", $alternateFilteredNodes);
-
       //ConsumerStrategies_SocketConsumer
       //PDOStatement
       if (
