@@ -103,22 +103,16 @@ class NodeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param ClassLike $class_
-   * @return string
-   */
-  private function getClassId(ClassLike $class_) {
-    $nameStr = $this->classNameHelper->getQualifiedNameForClassLike($class_);
-
-    return $this->filename . ':' . $nameStr;
-  }
-
-  /**
    * @param mixed $filename
    */
   public function setFilename($filename)
   {
     $this->filename = $filename;
-    $this->classNameHelper->resetCurrentUse();
+    $this->classNameHelper
+      ->setCurrentFilename($filename)
+      ->resetCurrentNamespace()
+      ->resetCurrentUse()
+      ->resetIncludedFiles();
   }
 
   private function enterClass(Class_ $node) {
@@ -131,7 +125,7 @@ class NodeBuilder extends NodeVisitorAbstract
   }
 
   private function enterClassLike(ClassLike $node) {
-    $classId = $this->getClassId($node);
+    $classId = $this->classNameHelper->getClassId($node);
     $className = $this->classNameHelper->getQualifiedNameForClassLike($node);
 
     $nodeType = '';

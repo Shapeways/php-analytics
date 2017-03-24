@@ -45,7 +45,12 @@ class ClassNameHelper
   /**
    * @var string[]
    */
-  private $currentIncludedFiles = array();
+  private $currentIncludedFiles = [];
+
+  /**
+   * @var string
+   */
+  private $currentFilename;
 
   /**
    * ClassNameHelper constructor.
@@ -196,5 +201,36 @@ class ClassNameHelper
   public function getCurrentIncludedFiles(): array
   {
     return $this->currentIncludedFiles;
+  }
+
+  /**
+   * @return string
+   */
+  public function getCurrentFilename(): string
+  {
+
+    return $this->currentFilename;
+  }
+
+  /**
+   * @param string $currentFilename
+   * @return ClassNameHelper
+   */
+  public function setCurrentFilename(string $currentFilename): ClassNameHelper
+  {
+
+    $this->currentFilename = $currentFilename;
+
+    return $this;
+  }
+
+  /**
+   * @param ClassLike $class_
+   * @return string
+   */
+  public function getClassId(ClassLike $class_): string {
+    $nameStr = $this->getQualifiedNameForClassLike($class_);
+
+    return $this->currentFilename . ':' . $nameStr;
   }
 }

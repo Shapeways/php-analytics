@@ -120,8 +120,10 @@ class EdgeBuilder extends NodeVisitorAbstract
   public function setFilename($filename)
   {
 
-    $this->filename                      = $filename;
+    $this->filename = $filename;
+
     $this->classNameHelper
+      ->setCurrentFilename($filename)
       ->resetCurrentNamespace()
       ->resetCurrentUse()
       ->resetIncludedFiles();
@@ -240,16 +242,6 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param ClassLike $class_
-   * @return string
-   */
-  private function getClassId(ClassLike $class_) {
-    $nameStr = $this->classNameHelper->getQualifiedNameForClassLike($class_);
-
-    return $this->filename . ':' . $nameStr;
-  }
-
-  /**
    * @param Name $className
    * @return mixed|string
    */
@@ -330,7 +322,7 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Interface_ $node
    */
   private function enterInterface(Interface_ $node) {
-    $interfaceId = $this->getClassId($node);
+    $interfaceId = $this->classNameHelper->getClassId($node);
 
     foreach ($node->extends as $name) {
       $parentClassId = $this->findClassId($name, $this->nodes);
@@ -342,7 +334,7 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Class_ $node
    */
   private function enterClass_(Class_ $node) {
-    $classId = $this->getClassId($node);
+    $classId = $this->classNameHelper->getClassId($node);
 
     if ($node->extends) {
 
