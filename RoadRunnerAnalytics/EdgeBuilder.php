@@ -65,11 +65,6 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $filename;
 
   /**
-   * @var string[]
-   */
-  private $currentIncludePartialFilename = array();
-
-  /**
    * @var ClassLike[]
    */
   private $currentClass = array();
@@ -126,8 +121,10 @@ class EdgeBuilder extends NodeVisitorAbstract
   {
 
     $this->filename                      = $filename;
-    $this->classNameHelper->resetCurrentNamespace()->resetCurrentUse();
-    $this->currentIncludePartialFilename = array();
+    $this->classNameHelper
+      ->resetCurrentNamespace()
+      ->resetCurrentUse()
+      ->resetIncludedFiles();
   }
 
   private function addEdge($edgeSource, $edgeDestination, $edgeType, $edgeWeight = 1, $edgeLabel = '')
@@ -183,7 +180,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 //      echo "\tconst " . $expr->name->toString() . "\n";
     } else if ($expr instanceof String_) {
 //      echo "\tstring " . $expr->value . "\n";
-      $this->currentIncludePartialFilename[] = $expr->value;
+      $this->classNameHelper->addIncludedFile($expr->value);
     } else if ($expr instanceof Variable) {
 //      echo "\tvariable " . $expr->name . "\n";
     } else if ($expr instanceof PropertyFetch) {
@@ -218,7 +215,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
           if ($subExpr instanceof String_) {
 //            echo "\tstring " . $subExpr->value . "\n";
-            $this->currentIncludePartialFilename[] = $subExpr->value;
+            $this->classNameHelper->addIncludedFile($subExpr->value);
           }
 
         } else {
@@ -259,6 +256,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   private function findClassId(Name $className, array $nodes) {
 
     $qualifiedName = $this->classNameHelper->getQualifiedName($className);
+    $currentlyIncludedFiles = $this->classNameHelper->getCurrentIncludedFiles();
 
     $filteredNodes = array_filter($nodes, function($node) use($qualifiedName) {
       return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
@@ -274,7 +272,7 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
 
 
-    if (empty($this->currentIncludePartialFilename)) {
+    if (empty($currentlyIncludedFiles)) {
       var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
 
       return 'implicit:' . $qualifiedName;
@@ -282,7 +280,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     $finalMatch = array();
 
-    foreach ($this->currentIncludePartialFilename as $partialFilename) {
+    foreach ($currentlyIncludedFiles as $partialFilename) {
       $finalMatch = array_filter($filteredNodes, function($node) use ($partialFilename) {
 
         return stristr($node[NodeBuilder::NODE_ID], $partialFilename);
@@ -294,7 +292,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
 
       var_dump($filteredNodes);
-      var_dump($this->currentIncludePartialFilename);
+      var_dump($currentlyIncludedFiles);
 
       return 'undefined:' . $qualifiedName;
     }

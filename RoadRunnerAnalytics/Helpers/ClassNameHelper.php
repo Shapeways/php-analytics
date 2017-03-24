@@ -43,6 +43,11 @@ class ClassNameHelper
   private $currentNamespace;
 
   /**
+   * @var string[]
+   */
+  private $currentIncludedFiles = array();
+
+  /**
    * ClassNameHelper constructor.
    */
   public function __construct()
@@ -56,7 +61,7 @@ class ClassNameHelper
   /**
    * @return $this
    */
-  public function resetCurrentUse() {
+  public function resetCurrentUse(): ClassNameHelper {
     $this->currentUse = [];
     return $this;
   }
@@ -65,7 +70,7 @@ class ClassNameHelper
    * @param UseUse $node
    * @return $this
    */
-  public function setCurrentUse(UseUse $node) {
+  public function setCurrentUse(UseUse $node): ClassNameHelper {
     $this->currentUse[$node->alias] = $node->name->toString();
 
     return $this;
@@ -82,7 +87,7 @@ class ClassNameHelper
   /**
    * @return $this
    */
-  public function resetCurrentNamespace() {
+  public function resetCurrentNamespace(): ClassNameHelper {
     $this->currentNamespace = [$this->rootNamespace];
     return $this;
   }
@@ -90,16 +95,18 @@ class ClassNameHelper
   /**
    * @param Namespace_ $node
    */
-  public function pushCurrentNamespace(Namespace_ $node) {
+  public function pushCurrentNamespace(Namespace_ $node): ClassNameHelper {
     array_push($this->currentNamespace, $node);
+
+    return $this;
   }
 
   /**
    * @param Namespace_ $node
-   * @return mixed|Namespace_
+   * @return Namespace_
    * @throws Exception
    */
-  public function popCurrentNamespace(Namespace_ $node) {
+  public function popCurrentNamespace(Namespace_ $node): Namespace_ {
 
     $poppedCurrentNamespace = array_pop($this->currentNamespace);
 
@@ -113,9 +120,9 @@ class ClassNameHelper
   }
 
   /**
-   * @return mixed|Namespace_
+   * @return string
    */
-  public function peekCurrentNamespace() {
+  public function peekCurrentNamespace(): string {
     $peekedNamespace = end($this->currentNamespace);
 
     // Special case for Root Namespace
@@ -130,7 +137,7 @@ class ClassNameHelper
    * @param ClassLike $node
    * @return string
    */
-  public function getQualifiedNameForClassLike(ClassLike $node) {
+  public function getQualifiedNameForClassLike(ClassLike $node): string {
     $nameStr = $node->name;
 
     if ($this->getCurrentUse($nameStr)) {
@@ -146,7 +153,7 @@ class ClassNameHelper
    * @param Name $name
    * @return string
    */
-  public function getQualifiedName(Name $name) {
+  public function getQualifiedName(Name $name): string {
 
     $nameStr = $name->toString();
     if ($name->isUnqualified()) {
@@ -162,5 +169,32 @@ class ClassNameHelper
     }
 
     return $nameStr;
+  }
+
+  /**
+   * @return $this
+   */
+  public function resetIncludedFiles(): ClassNameHelper {
+    $this->currentIncludedFiles = [];
+
+    return $this;
+  }
+
+  /**
+   * @param string $partialFilename
+   * @return $this
+   */
+  public function addIncludedFile(string $partialFilename): ClassNameHelper {
+    $this->currentIncludedFiles[] = $partialFilename;
+
+    return $this;
+  }
+
+  /**
+   * @return string[]
+   */
+  public function getCurrentIncludedFiles(): array
+  {
+    return $this->currentIncludedFiles;
   }
 }
