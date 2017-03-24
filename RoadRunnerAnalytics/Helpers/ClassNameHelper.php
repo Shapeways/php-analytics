@@ -11,7 +11,6 @@
 
 namespace RoadRunnerAnalytics\Helpers;
 
-use Exception;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\ClassConstFetch;
@@ -24,8 +23,6 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\UseUse;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 /**
@@ -37,22 +34,6 @@ use RoadRunnerAnalytics\Visitors\NodeBuilder;
  */
 class ClassNameHelper
 {
-
-  /**
-   * @var UseUse[]
-   */
-  private $currentUse = [];
-
-  /**
-   * @var Namespace_
-   */
-  private $rootNamespace;
-
-  /**
-   * @var Namespace_[]
-   */
-  private $currentNamespace;
-
   /**
    * @var string[]
    */
@@ -68,10 +49,6 @@ class ClassNameHelper
    */
   public function __construct()
   {
-    $this->rootNamespace = new Namespace_(
-      new Name('')
-    );
-    $this->currentNamespace = [$this->rootNamespace];
   }
 
   /**
@@ -79,84 +56,7 @@ class ClassNameHelper
    */
   public function resetAll(): ClassNameHelper {
     return $this
-      ->resetCurrentNamespace()
-      ->resetCurrentUse()
       ->resetIncludedFiles();
-  }
-
-  /**
-   * @return $this
-   */
-  public function resetCurrentUse(): ClassNameHelper {
-    $this->currentUse = [];
-    return $this;
-  }
-
-  /**
-   * @param UseUse $node
-   * @return $this
-   */
-  public function setCurrentUse(UseUse $node): ClassNameHelper {
-    $this->currentUse[$node->alias] = $node->name->toString();
-
-    return $this;
-  }
-
-  /**
-   * @param string $alias
-   * @return null|UseUse
-   */
-  public function getCurrentUse(string $alias) {
-    return $this->currentUse[$alias]?? null;
-  }
-
-  /**
-   * @return $this
-   */
-  public function resetCurrentNamespace(): ClassNameHelper {
-    $this->currentNamespace = [$this->rootNamespace];
-    return $this;
-  }
-
-  /**
-   * @param Namespace_ $node
-   */
-  public function pushCurrentNamespace(Namespace_ $node): ClassNameHelper {
-    array_push($this->currentNamespace, $node);
-
-    return $this;
-  }
-
-  /**
-   * @param Namespace_ $node
-   * @return Namespace_
-   * @throws Exception
-   */
-  public function popCurrentNamespace(Namespace_ $node): Namespace_ {
-
-    $poppedCurrentNamespace = array_pop($this->currentNamespace);
-
-    if (($poppedCurrentNamespace !== $node)
-      || ($poppedCurrentNamespace === null)
-    ) {
-      throw new Exception("Unmatched class depth");
-    }
-
-    return $poppedCurrentNamespace;
-  }
-
-  /**
-   * @return string
-   */
-  public function peekCurrentNamespace(): string {
-    $peekedNamespace = end($this->currentNamespace);
-
-    // Special case for Root Namespace
-    if ($peekedNamespace === $this->rootNamespace) {
-      return '';
-    }
-
-    return $peekedNamespace->name->toString() . '\\';
   }
 
   /**
@@ -168,15 +68,7 @@ class ClassNameHelper
       return $node->namespacedName->toString();
     }
 
-    $nameStr = $node->name;
-
-    if ($this->getCurrentUse($nameStr)) {
-      return $this->getCurrentUse($nameStr);
-    }
-
-    $nameStr = $this->peekCurrentNamespace() . $nameStr;
-
-    return $nameStr;
+    return $node->name;
   }
 
   /**
@@ -185,20 +77,7 @@ class ClassNameHelper
    */
   public function getQualifiedName(Name $name): string {
 
-    $nameStr = $name->toString();
-    if ($name->isUnqualified()) {
-
-      if (!empty($this->getCurrentUse($nameStr))) {
-        return $this->getCurrentUse($nameStr);
-      }
-
-      return $this->peekCurrentNamespace() . $nameStr;
-    }
-    else if ($name->isFullyQualified()) {
-      return $nameStr;
-    }
-
-    return $nameStr;
+    return $name->toString();
   }
 
   /**

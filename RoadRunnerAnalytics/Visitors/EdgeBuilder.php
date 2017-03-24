@@ -15,9 +15,7 @@ use PhpParser\Node\Expr\Include_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
-use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
@@ -145,21 +143,6 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param Namespace_ $node
-   */
-  private function enterNamespace_(Namespace_ $node)
-  {
-    $this->classNameHelper->pushCurrentNamespace($node);
-  }
-
-  /**
-   * @param Namespace_ $node
-   */
-  private function leaveNamespace_(Namespace_ $node) {
-    $this->classNameHelper->popCurrentNamespace($node);
-  }
-
-  /**
    * @param ClassLike $node
    */
   private function enterClassLike(ClassLike $node) {
@@ -243,12 +226,6 @@ class EdgeBuilder extends NodeVisitorAbstract
     else if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
     }
-    else if ($node instanceof Namespace_) {
-      $this->enterNamespace_($node);
-    }
-    else if ($node instanceof UseUse) {
-      $this->classNameHelper->setCurrentUse($node);
-    }
 
   }
 
@@ -259,9 +236,7 @@ class EdgeBuilder extends NodeVisitorAbstract
     if ($node instanceof ClassLike) {
       $this->leaveClassLike($node);
     }
-    else if ($node instanceof Namespace_) {
-      $this->leaveNamespace_($node);
-    }
+
   }
 
   /**

@@ -13,9 +13,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
-use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
@@ -67,20 +65,6 @@ class NodeBuilder extends NodeVisitorAbstract
   public function __construct(ClassNameHelper $classNameHelper)
   {
     $this->classNameHelper = $classNameHelper;
-  }
-
-  /**
-   * @param Namespace_ $node
-   */
-  private function enterNamespace_(Namespace_ $node) {
-    $this->classNameHelper->pushCurrentNamespace($node);
-  }
-
-  /**
-   * @param Namespace_ $node
-   */
-  private function leaveNamespace_(Namespace_ $node) {
-    $this->classNameHelper->popCurrentNamespace($node);
   }
 
   /**
@@ -177,12 +161,6 @@ class NodeBuilder extends NodeVisitorAbstract
     if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
     }
-    else if ($node instanceof Namespace_) {
-      $this->enterNamespace_($node);
-    }
-    else if ($node instanceof UseUse) {
-      $this->classNameHelper->setCurrentUse($node);
-    }
 
   }
 
@@ -192,10 +170,6 @@ class NodeBuilder extends NodeVisitorAbstract
   public function leaveNode(Node $node)
   {
     parent::leaveNode($node);
-
-    if ($node instanceof Namespace_) {
-      $this->leaveNamespace_($node);
-    }
   }
 
   /**
