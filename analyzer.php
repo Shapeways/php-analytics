@@ -32,6 +32,7 @@ use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Visitors\EdgeBuilder;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 class MapBuilder extends NodeVisitorAbstract {
@@ -465,6 +466,7 @@ foreach ($filesToAnalyze as $absolutePath) {
     $traverser = new NodeTraverser();
     $nodeBuilder->setFilename($absolutePath);
     $traverser->addVisitor(new NameResolver());
+    $traverser->addVisitor(new FilenameIdResolver($absolutePath));
     $traverser->addVisitor($nodeBuilder);
     $stmts = $traverser->traverse($stmts);
 
@@ -487,6 +489,7 @@ foreach ($filesToAnalyze as $absolutePath) {
     $traverser = new NodeTraverser();
     $edgeBuilder->setFilename($absolutePath);
     $traverser->addVisitor(new NameResolver());
+    $traverser->addVisitor(new FilenameIdResolver($absolutePath));
     $traverser->addVisitor($edgeBuilder);
     $stmts = $traverser->traverse($stmts);
 

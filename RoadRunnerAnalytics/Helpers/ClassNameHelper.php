@@ -244,6 +244,10 @@ class ClassNameHelper
    * @return string
    */
   public function getClassId(ClassLike $class_): string {
+    if (!empty($class_->filenameId)) {
+      return $class_->filenameId;
+    }
+
     $nameStr = $this->getQualifiedNameForClassLike($class_);
 
     return $this->currentFilename . ':' . $nameStr;
