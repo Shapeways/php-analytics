@@ -9,8 +9,8 @@
 namespace RoadRunnerAnalytics\GraphFormatters;
 
 
-use RoadRunnerAnalytics\EdgeBuilder;
-use RoadRunnerAnalytics\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\EdgeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 class InheritanceHierarchyFormatter
 {
@@ -18,8 +18,8 @@ class InheritanceHierarchyFormatter
   const ROOT = '\\';
 
   /**
-   * @param NodeBuilder $nodeBuilder
-   * @param EdgeBuilder $edgeBuilder
+   * @param \RoadRunnerAnalytics\Visitors\NodeBuilder $nodeBuilder
+   * @param \RoadRunnerAnalytics\Visitors\EdgeBuilder $edgeBuilder
    * @return array
    */
   public function format(NodeBuilder $nodeBuilder, EdgeBuilder $edgeBuilder) {

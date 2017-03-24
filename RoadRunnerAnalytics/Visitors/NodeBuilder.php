@@ -6,7 +6,7 @@
  * Time: 5:55 PM
  */
 
-namespace RoadRunnerAnalytics;
+namespace RoadRunnerAnalytics\Visitors;
 
 
 use PhpParser\Node\Stmt\Class_;

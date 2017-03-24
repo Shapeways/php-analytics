@@ -26,7 +26,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\UseUse;
-use RoadRunnerAnalytics\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 /**
  * Class ClassNameHelper

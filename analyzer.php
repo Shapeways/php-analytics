@@ -29,10 +29,10 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 
-use RoadRunnerAnalytics\EdgeBuilder;
+use RoadRunnerAnalytics\Visitors\EdgeBuilder;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
-use RoadRunnerAnalytics\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 class MapBuilder extends NodeVisitorAbstract {
 

@@ -6,7 +6,7 @@
  * Time: 6:53 PM
  */
 
-namespace RoadRunnerAnalytics;
+namespace RoadRunnerAnalytics\Visitors;
 
 
 use Exception;
