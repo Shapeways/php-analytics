@@ -52,9 +52,13 @@ class NodeBuilder extends NodeVisitorAbstract
   private $classNameHelper;
 
   /**
-   * @var string[]
+   * @var string[][]
    */
-  private $seenClassLikeNames = [];
+  private $seenClassLikeNames = [
+    NodeBuilder::NODE_TYPE_CLASS => [],
+    NodeBuilder::NODE_TYPE_INTERFACE => [],
+    NodeBuilder::NODE_TYPE_TRAIT => []
+  ];
 
   /**
    * NodeBuilder constructor.
@@ -63,12 +67,6 @@ class NodeBuilder extends NodeVisitorAbstract
   public function __construct(ClassNameHelper $classNameHelper)
   {
     $this->classNameHelper = $classNameHelper;
-
-    $this->addNode('external:Exception', 'Exception', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
-    $this->addNode('external:ConsumerStrategies_SocketConsumer', 'ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
-    $this->addNode('external:PDO', 'PDO', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
-    $this->addNode('external:PDOStatement', 'PDOStatement', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
-    $this->addNode('external:Apache_Solr_Service', 'Apache_Solr_Service', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
   }
 
   /**
@@ -90,8 +88,9 @@ class NodeBuilder extends NodeVisitorAbstract
    * @param $nodeName
    * @param $nodeType
    * @param array $extraData
+   * @return mixed
    */
-  private function addNode($nodeId, $nodeName, $nodeType, $extraData = array()) {
+  private function addNode($nodeId, $nodeName, $nodeType, $extraData = array()): array {
 
     $this->nodes[$nodeId] = array(
       NodeBuilder::NODE_ID => $nodeId,
@@ -100,6 +99,7 @@ class NodeBuilder extends NodeVisitorAbstract
       NodeBuilder::NODE_EXTRA_DATA => $extraData
     );
 
+    return $this->nodes[$nodeId];
   }
 
   /**
@@ -114,31 +114,57 @@ class NodeBuilder extends NodeVisitorAbstract
     ;
   }
 
+  /**
+   * @param Class_ $node
+   */
   private function enterClass(Class_ $node) {
+    $classId = $this->classNameHelper->getClassId($node);
+    $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
+    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_CLASS);
 
+    if ($node->extends) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $this->classNameHelper->getQualifiedName($node->extends);
+    }
 
+    foreach ($node->implements as $name) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
+    }
   }
 
+  /**
+   * @param Interface_ $node
+   */
   private function enterInterface(Interface_ $node) {
+    $classId = $this->classNameHelper->getClassId($node);
+    $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
+    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_INTERFACE);
 
+    foreach ($node->extends as $name) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
+    }
+  }
+
+  /**
+   * @param Trait_ $node
+   */
+  private function enterTrait(Trait_ $node) {
+    $classId = $this->classNameHelper->getClassId($node);
+    $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
+    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_TRAIT);
   }
 
   private function enterClassLike(ClassLike $node) {
-    $classId = $this->classNameHelper->getClassId($node);
-    $className = $this->classNameHelper->getQualifiedNameForClassLike($node);
 
-    $nodeType = '';
     if ($node instanceof Class_) {
-      $nodeType = NodeBuilder::NODE_TYPE_CLASS;
+      $this->enterClass($node);
     }
     else if ($node instanceof Interface_) {
-      $nodeType = NodeBuilder::NODE_TYPE_INTERFACE;
+      $this->enterInterface($node);
     }
     else if ($node instanceof Trait_) {
-      $nodeType = NodeBuilder::NODE_TYPE_TRAIT;
+      $this->enterTrait($node);
     }
 
-    $this->addNode($classId, $className, $nodeType);
   }
 
   /**
@@ -177,5 +203,23 @@ class NodeBuilder extends NodeVisitorAbstract
    */
   public function getNodes() {
     return $this->nodes;
+  }
+
+  public function addExternalNodesForUnvisitedReferences() {
+
+    $visitedNodeNames = array_map(function($node) {
+      return $node[NodeBuilder::NODE_NAME];
+    }, $this->nodes);
+
+    foreach ($this->seenClassLikeNames as $typeString => $typeArray) {
+      foreach ($typeArray as $name) {
+        if (!in_array($name, $visitedNodeNames)) {
+          $this->addNode('external:' . $name, $name, $typeString, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
+        }
+      }
+
+    }
+
+
   }
 }
