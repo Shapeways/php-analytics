@@ -28,6 +28,7 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
+use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
 class EdgeBuilder extends NodeVisitorAbstract
 {
@@ -74,61 +75,19 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $currentClass = array();
 
   /**
-   * @var Namespace_[]
+   * @var ClassNameHelper
    */
-  private $currentNamespace = array();
-
-  /**
-   * @var string[]
-   */
-  private $currentUse_ = array();
-
-  /**
-   * @var Namespace_
-   */
-  private $rootNamespace;
+  private $classNameHelper;
 
   /**
    * EdgeBuilder constructor.
    */
-  public function __construct($nodes)
+  public function __construct(array $nodes, ClassNameHelper $classNameHelper)
   {
     $this->nodes = $nodes;
-
-    $this->rootNamespace = new Namespace_(
-      new Name('')
-    );
+    $this->classNameHelper = $classNameHelper;
   }
 
-  /**
-   * @param Namespace_ $node
-   */
-  private function pushCurrentNamespace_(Namespace_ $node) {
-    array_push($this->currentNamespace, $node);
-  }
-
-  /**
-   * @return mixed|Namespace_
-   * @throws Exception
-   */
-  private function popCurrentNamespace_() {
-
-    $poppedCurrentNamespace = array_pop($this->currentNamespace);
-
-    if ($poppedCurrentNamespace === null) {
-      throw new Exception("Unmatched namespace depth");
-    }
-
-    return $poppedCurrentNamespace;
-  }
-
-  /**
-   * @return string
-   */
-  private function peekCurrentNamespace_() {
-    $peekedNamespace = end($this->currentNamespace);
-    return $peekedNamespace? $peekedNamespace->name->toString() : '';
-  }
 
   /**
    * @param ClassLike $node
@@ -166,16 +125,8 @@ class EdgeBuilder extends NodeVisitorAbstract
   public function setFilename($filename)
   {
 
-    if (!empty($this->currentIncludePartialFilename)) {
-//      echo $this->filename . ":\n";
-//      echo "\tIncluded files:\n";
-//      var_dump($this->currentIncludePartialFilename);
-//      echo "\n\n";
-    }
-
     $this->filename                      = $filename;
-    $this->currentNamespace              = array($this->rootNamespace);
-    $this->currentUse_                   = array();
+    $this->classNameHelper->resetCurrentNamespace()->resetCurrentUse();
     $this->currentIncludePartialFilename = array();
   }
 
@@ -210,15 +161,14 @@ class EdgeBuilder extends NodeVisitorAbstract
    */
   private function enterNamespace_(Namespace_ $node)
   {
-
-    $this->pushCurrentNamespace_($node);
+    $this->classNameHelper->pushCurrentNamespace($node);
   }
 
   /**
    * @param Namespace_ $node
    */
   private function leaveNamespace_(Namespace_ $node) {
-    $this->popCurrentNamespace_();
+    $this->classNameHelper->popCurrentNamespace();
   }
 
   private function enterInclude_(Include_ $node) {
@@ -299,11 +249,11 @@ class EdgeBuilder extends NodeVisitorAbstract
   private function getQualifiedNameForClassLike(ClassLike $node) {
     $nameStr = $node->name;
 
-    if ($this->currentUse_[$nameStr]) {
-      return $this->currentUse_[$nameStr];
+    if ($this->classNameHelper->getCurrentUse($nameStr)) {
+      return $this->classNameHelper->getCurrentUse($nameStr);
     }
 
-    $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
+    $nameStr = $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
 
     return ltrim($nameStr, '\\');
   }
@@ -327,11 +277,11 @@ class EdgeBuilder extends NodeVisitorAbstract
     $nameStr = $name->toString();
     if ($name->isUnqualified()) {
 
-      if (!empty($this->currentUse_[$nameStr])) {
-        return $this->currentUse_[$nameStr];
+      if (!empty($this->classNameHelper->getCurrentUse($nameStr))) {
+        return $this->classNameHelper->getCurrentUse($nameStr);
       }
 
-      return $this->peekCurrentNamespace_() . '\\' . $nameStr;
+      return $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
     }
     else if ($name->isFullyQualified()) {
       return ltrim($nameStr, '\\');
@@ -493,7 +443,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       $this->enterNamespace_($node);
     }
     else if ($node instanceof UseUse) {
-      $this->currentUse_[$node->alias] = $node->name->toString();
+      $this->classNameHelper->setCurrentUse($node);
     }
 
   }

@@ -11,13 +11,13 @@ namespace RoadRunnerAnalytics;
 
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node;
-use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
+use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
 class NodeBuilder extends NodeVisitorAbstract
 {
@@ -36,21 +36,10 @@ class NodeBuilder extends NodeVisitorAbstract
 
   const NODE_EXTRA_EXTERNAl_ORIGIN = 'externalOrigin';
 
-
   /**
    * @var array
    */
   private $nodes = array();
-
-  /**
-   * @var Namespace_[]
-   */
-  private $currentNamespace = array();
-
-  /**
-   * @var UseUse[]
-   */
-  private $currentUse = array();
 
   /**
    * @var string
@@ -58,15 +47,22 @@ class NodeBuilder extends NodeVisitorAbstract
   private $filename;
 
   /**
-   * @var Namespace_
+   * @var ClassNameHelper
    */
-  private $rootNamespace;
+  private $classNameHelper;
 
-  public function __construct()
+  /**
+   * @var string[]
+   */
+  private $seenClassLikeNames = [];
+
+  /**
+   * NodeBuilder constructor.
+   * @param ClassNameHelper $classNameHelper
+   */
+  public function __construct(ClassNameHelper $classNameHelper)
   {
-    $this->rootNamespace = new Namespace_(
-      new Name('')
-    );
+    $this->classNameHelper = $classNameHelper;
 
     $this->addNode('external:Exception', 'Exception', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
     $this->addNode('external:ConsumerStrategies_SocketConsumer', 'ConsumerStrategies_SocketConsumer', NodeBuilder::NODE_TYPE_CLASS, array(self::NODE_EXTRA_EXTERNAl_ORIGIN => true));
@@ -78,47 +74,15 @@ class NodeBuilder extends NodeVisitorAbstract
   /**
    * @param Namespace_ $node
    */
-  private function pushCurrentNamespace_(Namespace_ $node) {
-    array_push($this->currentNamespace, $node);
-  }
-
-  /**
-   * @return Namespace_
-   */
-  private function popCurrentNamespace_() {
-
-    $poppedCurrentNamespace = array_pop($this->currentNamespace);
-
-    if ($poppedCurrentNamespace === null) {
-      echo "Unmatched class depth";
-      exit(-1);
-    }
-
-    return $poppedCurrentNamespace;
-  }
-
-  /**
-   * @return string
-   */
-  private function peekCurrentNamespace_() {
-    $peekedNamespace = end($this->currentNamespace);
-    return $peekedNamespace? $peekedNamespace->name->toString() : '';
-  }
-
-  /**
-   * @param Namespace_ $node
-   */
   private function enterNamespace_(Namespace_ $node) {
-    $this->pushCurrentNamespace_($node);
-
-//    $this->addNode($node->name->toString(), $node->name->toString(), self::NODE_TYPE_NAMESPACE);
+    $this->classNameHelper->pushCurrentNamespace($node);
   }
 
   /**
    * @param Namespace_ $node
    */
   private function leaveNamespace_(Namespace_ $node) {
-    $this->popCurrentNamespace_();
+    $this->classNameHelper->popCurrentNamespace();
   }
 
   /**
@@ -145,11 +109,11 @@ class NodeBuilder extends NodeVisitorAbstract
   private function getQualifiedNameForClass(ClassLike $node) {
     $nameStr = $node->name;
 
-    if ($this->currentUse[$nameStr]) {
-      return $this->currentUse[$nameStr];
+    if ($this->classNameHelper->getCurrentUse($nameStr)) {
+      return $this->classNameHelper->getCurrentUse($nameStr);
     }
 
-    $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
+    $nameStr = $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
 
     return ltrim($nameStr, '\\');
   }
@@ -170,24 +134,16 @@ class NodeBuilder extends NodeVisitorAbstract
   public function setFilename($filename)
   {
     $this->filename = $filename;
-    $this->currentNamespace = array($this->rootNamespace);
-    $this->currentUse = [];
-
-//    $this->addNode($filename, basename($filename), NodeBuilder::NODE_TYPE_FILE);
+    $this->classNameHelper->resetCurrentUse();
   }
 
   private function enterClass(Class_ $node) {
 
-    $classId = $this->getClassId($node);
-    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
 
-    $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_CLASS);
   }
 
   private function enterInterface(Interface_ $node) {
-    $classId = $this->getClassId($node);
-    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
-    $this->addNode($classId, $className, NodeBuilder::NODE_TYPE_INTERFACE);
+
   }
 
   private function enterClassLike(ClassLike $node) {
@@ -203,9 +159,6 @@ class NodeBuilder extends NodeVisitorAbstract
     }
     else if ($node instanceof Trait_) {
       $nodeType = NodeBuilder::NODE_TYPE_TRAIT;
-    }
-    else if ($node instanceof UseUse) {
-      $this->currentUse[$node->alias] = $node->name->toString();
     }
 
     $this->addNode($classId, $className, $nodeType);
@@ -223,6 +176,9 @@ class NodeBuilder extends NodeVisitorAbstract
     }
     else if ($node instanceof Namespace_) {
       $this->enterNamespace_($node);
+    }
+    else if ($node instanceof UseUse) {
+      $this->classNameHelper->setCurrentUse($node);
     }
 
   }

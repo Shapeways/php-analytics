@@ -30,6 +30,7 @@ use PhpParser\NodeVisitorAbstract;
 
 use RoadRunnerAnalytics\EdgeBuilder;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
+use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\NodeBuilder;
 
 class MapBuilder extends NodeVisitorAbstract {
@@ -436,7 +437,7 @@ class MapBuilder extends NodeVisitorAbstract {
 $codeEdges = array();
 $codeNodes = array();
 
-$nodeBuilder = new NodeBuilder();
+$nodeBuilder = new NodeBuilder(new ClassNameHelper());
 
 $filesToAnalyze = array();
 
@@ -472,7 +473,7 @@ foreach ($filesToAnalyze as $absolutePath) {
 }
 
 echo "Analyzing edges...\n";
-$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes());
+$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes(), new ClassNameHelper());
 foreach ($filesToAnalyze as $absolutePath) {
   $code = file_get_contents($absolutePath);
 
