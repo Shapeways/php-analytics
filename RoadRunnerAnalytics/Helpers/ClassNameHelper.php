@@ -93,13 +93,17 @@ class ClassNameHelper
   }
 
   /**
-   * @return Namespace_
+   * @param Namespace_ $node
+   * @return mixed|Namespace_
+   * @throws Exception
    */
-  public function popCurrentNamespace() {
+  public function popCurrentNamespace(Namespace_ $node) {
 
     $poppedCurrentNamespace = array_pop($this->currentNamespace);
 
-    if ($poppedCurrentNamespace === null) {
+    if (($poppedCurrentNamespace !== $node)
+      || ($poppedCurrentNamespace === null)
+    ) {
       throw new Exception("Unmatched class depth");
     }
 

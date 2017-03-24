@@ -82,7 +82,7 @@ class NodeBuilder extends NodeVisitorAbstract
    * @param Namespace_ $node
    */
   private function leaveNamespace_(Namespace_ $node) {
-    $this->classNameHelper->popCurrentNamespace();
+    $this->classNameHelper->popCurrentNamespace($node);
   }
 
   /**
