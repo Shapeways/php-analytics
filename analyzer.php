@@ -13,7 +13,12 @@ use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
+
+ini_set('memory_limit','2G');
+
 $starttime = microtime(true);
+
+$parsedFiles = [];
 
 $codeEdges = array();
 $codeNodes = array();
@@ -21,6 +26,13 @@ $codeNodes = array();
 $nodeBuilder = new NodeBuilder(new ClassNameHelper());
 
 $filesToAnalyze = array();
+
+
+function humanReadable($size)
+{
+  $unit=array('b','kb','mb','gb','tb','pb');
+  return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
+}
 
 echo "Building file list...\n";
 while ($f = fgets(STDIN)) {
@@ -32,22 +44,14 @@ while ($f = fgets(STDIN)) {
   $filesToAnalyze[] = $absolutePath;
 }
 
-
-echo "Analyzing nodes...\n";
+echo "Parsing files...\n";
 foreach ($filesToAnalyze as $absolutePath) {
   $code = file_get_contents($absolutePath);
 
   $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
   try {
-    $stmts = $parser->parse($code);
-
-    $traverser = new NodeTraverser();
-    $nodeBuilder->setFilename($absolutePath);
-    $traverser->addVisitor(new NameResolver());
-    $traverser->addVisitor(new FilenameIdResolver($absolutePath));
-    $traverser->addVisitor($nodeBuilder);
-    $stmts = $traverser->traverse($stmts);
+    $parsedFiles[$absolutePath] = $parser->parse($code);
 
   } catch (Exception $e) {
     echo basename($absolutePath) . ":\n";
@@ -55,27 +59,34 @@ foreach ($filesToAnalyze as $absolutePath) {
   }
 }
 
-echo "Analyzing edges...\n";
+echo "Pass one:\n";
+echo "\tResolving names...\n";
+echo "\tIdentifying classes...\n";
+echo "\tAnalyzing nodes...\n";
+foreach ($filesToAnalyze as $absolutePath) {
+
+  $stmts = $parsedFiles[$absolutePath];
+
+  $traverser = new NodeTraverser();
+  $nodeBuilder->setFilename($absolutePath);
+  $traverser->addVisitor(new NameResolver());
+  $traverser->addVisitor(new FilenameIdResolver($absolutePath));
+  $traverser->addVisitor($nodeBuilder);
+  $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
+
+}
+
+echo "Pass two:\n";
+echo "\tAnalyzing edges...\n";
 $edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes(), new ClassNameHelper());
 foreach ($filesToAnalyze as $absolutePath) {
-  $code = file_get_contents($absolutePath);
+  $stmts = $parsedFiles[$absolutePath];
 
-  $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+  $traverser = new NodeTraverser();
+  $edgeBuilder->setFilename($absolutePath);
+  $traverser->addVisitor($edgeBuilder);
 
-  try {
-    $stmts = $parser->parse($code);
-
-    $traverser = new NodeTraverser();
-    $edgeBuilder->setFilename($absolutePath);
-    $traverser->addVisitor(new NameResolver());
-    $traverser->addVisitor(new FilenameIdResolver($absolutePath));
-    $traverser->addVisitor($edgeBuilder);
-    $stmts = $traverser->traverse($stmts);
-
-  } catch (Exception $e) {
-    echo basename($absolutePath) . ":\n";
-    echo "\tParse Error: ", $e->getMessage(), "\n";
-  }
+  $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
 }
 
 
@@ -92,4 +103,5 @@ file_put_contents($jsFilename, $js);
 $endTime = microtime(true);
 $elapsedTime = $endTime - $starttime;
 
-echo "Analysis complete in " . $elapsedTime . " seconds";
+echo "Analysis complete in " . $elapsedTime . " seconds\n";
+echo "Analysis required " . humanReadable(memory_get_peak_usage()) . "\n";
