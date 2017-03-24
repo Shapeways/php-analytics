@@ -7,7 +7,6 @@
  */
 
 
-
 namespace Wes;
 
 use PhpParser\Node\Scalar\MagicConst\Class_;

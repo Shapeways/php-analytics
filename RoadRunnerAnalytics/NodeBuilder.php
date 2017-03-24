@@ -103,27 +103,11 @@ class NodeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param ClassLike $node
-   * @return string
-   */
-  private function getQualifiedNameForClass(ClassLike $node) {
-    $nameStr = $node->name;
-
-    if ($this->classNameHelper->getCurrentUse($nameStr)) {
-      return $this->classNameHelper->getCurrentUse($nameStr);
-    }
-
-    $nameStr = $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
-
-    return ltrim($nameStr, '\\');
-  }
-
-  /**
-   * @param Class_ $class_
+   * @param ClassLike $class_
    * @return string
    */
   private function getClassId(ClassLike $class_) {
-    $nameStr = $this->getQualifiedNameForClass($class_);
+    $nameStr = $this->classNameHelper->getQualifiedNameForClassLike($class_);
 
     return $this->filename . ':' . $nameStr;
   }
@@ -148,7 +132,7 @@ class NodeBuilder extends NodeVisitorAbstract
 
   private function enterClassLike(ClassLike $node) {
     $classId = $this->getClassId($node);
-    $className = ltrim($this->getQualifiedNameForClass($node), '\\');
+    $className = $this->classNameHelper->getQualifiedNameForClassLike($node);
 
     $nodeType = '';
     if ($node instanceof Class_) {

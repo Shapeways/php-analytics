@@ -13,6 +13,7 @@ namespace RoadRunnerAnalytics\Helpers;
 
 use Exception;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\UseUse;
 
@@ -39,7 +40,7 @@ class ClassNameHelper
   /**
    * @var Namespace_[]
    */
-  private $currentNamespace = [];
+  private $currentNamespace;
 
   /**
    * ClassNameHelper constructor.
@@ -49,6 +50,7 @@ class ClassNameHelper
     $this->rootNamespace = new Namespace_(
       new Name('')
     );
+    $this->currentNamespace = [$this->rootNamespace];
   }
 
   /**
@@ -115,7 +117,28 @@ class ClassNameHelper
    */
   public function peekCurrentNamespace() {
     $peekedNamespace = end($this->currentNamespace);
-    return $peekedNamespace? $peekedNamespace->name->toString() : '';
+
+    // Special case for Root Namespace
+    if ($peekedNamespace === $this->rootNamespace) {
+      return '';
+    }
+
+    return $peekedNamespace->name->toString() . '\\';
   }
 
+  /**
+   * @param ClassLike $node
+   * @return string
+   */
+  public function getQualifiedNameForClassLike(ClassLike $node) {
+    $nameStr = $node->name;
+
+    if ($this->getCurrentUse($nameStr)) {
+      return $this->getCurrentUse($nameStr);
+    }
+
+    $nameStr = $this->peekCurrentNamespace() . $nameStr;
+
+    return $nameStr;
+  }
 }

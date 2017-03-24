@@ -243,27 +243,11 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param ClassLike $node
-   * @return string
-   */
-  private function getQualifiedNameForClassLike(ClassLike $node) {
-    $nameStr = $node->name;
-
-    if ($this->classNameHelper->getCurrentUse($nameStr)) {
-      return $this->classNameHelper->getCurrentUse($nameStr);
-    }
-
-    $nameStr = $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
-
-    return ltrim($nameStr, '\\');
-  }
-
-  /**
-   * @param Class_ $class_
+   * @param ClassLike $class_
    * @return string
    */
   private function getClassId(ClassLike $class_) {
-    $nameStr = $this->getQualifiedNameForClassLike($class_);
+    $nameStr = $this->classNameHelper->getQualifiedNameForClassLike($class_);
 
     return $this->filename . ':' . $nameStr;
   }
@@ -281,10 +265,10 @@ class EdgeBuilder extends NodeVisitorAbstract
         return $this->classNameHelper->getCurrentUse($nameStr);
       }
 
-      return $this->classNameHelper->peekCurrentNamespace() . '\\' . $nameStr;
+      return $this->classNameHelper->peekCurrentNamespace() . $nameStr;
     }
     else if ($name->isFullyQualified()) {
-      return ltrim($nameStr, '\\');
+      return $nameStr;
     }
 
     return $nameStr;
@@ -296,7 +280,7 @@ class EdgeBuilder extends NodeVisitorAbstract
    */
   private function findClassId(Name $className) {
 
-    $qualifiedName = ltrim($this->getQualifiedName($className), '\\');
+    $qualifiedName = $this->getQualifiedName($className);
 
     $filteredNodes = array_filter($this->nodes, function($node) use($qualifiedName) {
       return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
