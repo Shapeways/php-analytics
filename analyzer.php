@@ -13,6 +13,7 @@ use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
+$starttime = microtime(true);
 
 $codeEdges = array();
 $codeNodes = array();
@@ -88,3 +89,7 @@ $js .= json_encode(array(
 $jsFilename = dirname(__FILE__) . '/www/js/class-graph.js';
 file_put_contents($jsFilename, $js);
 
+$endTime = microtime(true);
+$elapsedTime = $endTime - $starttime;
+
+echo "Analysis complete in " . $elapsedTime . " seconds";
