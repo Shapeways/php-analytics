@@ -141,4 +141,26 @@ class ClassNameHelper
 
     return $nameStr;
   }
+
+  /**
+   * @param Name $name
+   * @return string
+   */
+  public function getQualifiedName(Name $name) {
+
+    $nameStr = $name->toString();
+    if ($name->isUnqualified()) {
+
+      if (!empty($this->getCurrentUse($nameStr))) {
+        return $this->getCurrentUse($nameStr);
+      }
+
+      return $this->peekCurrentNamespace() . $nameStr;
+    }
+    else if ($name->isFullyQualified()) {
+      return $nameStr;
+    }
+
+    return $nameStr;
+  }
 }

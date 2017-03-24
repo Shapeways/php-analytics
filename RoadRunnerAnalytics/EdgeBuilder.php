@@ -253,34 +253,12 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param Name $name
-   * @return string
-   */
-  private function getQualifiedName(Name $name) {
-
-    $nameStr = $name->toString();
-    if ($name->isUnqualified()) {
-
-      if (!empty($this->classNameHelper->getCurrentUse($nameStr))) {
-        return $this->classNameHelper->getCurrentUse($nameStr);
-      }
-
-      return $this->classNameHelper->peekCurrentNamespace() . $nameStr;
-    }
-    else if ($name->isFullyQualified()) {
-      return $nameStr;
-    }
-
-    return $nameStr;
-  }
-
-  /**
    * @param Name $className
    * @return mixed|string
    */
   private function findClassId(Name $className) {
 
-    $qualifiedName = $this->getQualifiedName($className);
+    $qualifiedName = $this->classNameHelper->getQualifiedName($className);
 
     $filteredNodes = array_filter($this->nodes, function($node) use($qualifiedName) {
       return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
