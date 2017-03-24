@@ -12,7 +12,17 @@
 namespace RoadRunnerAnalytics\Helpers;
 
 use Exception;
+use PhpParser\Node\Expr\ArrayDimFetch;
+use PhpParser\Node\Expr\BinaryOp;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\Include_;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\PropertyFetch;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\UseUse;
@@ -288,4 +298,86 @@ class ClassNameHelper
 
     return $finalMatchSingle[NodeBuilder::NODE_ID];
   }
+
+  /**
+   *
+   * Helper method for adding included files when entering an
+   * Include_ stmt;
+   *
+   * This will add any resolveable partial file names to the list
+   * of currently included files.
+   *
+   * @param Include_ $node
+   */
+  public function enterInclude(Include_ $node) {
+    $expr = $node->expr;
+
+    while ($expr instanceof BinaryOp) {
+      $expr = $expr->right;
+    }
+
+//    echo $this->filename . ":\n";
+    if ($expr instanceof ConstFetch) {
+//      echo "\tconst " . $expr->name->toString() . "\n";
+    } else if ($expr instanceof String_) {
+//      echo "\tstring " . $expr->value . "\n";
+      $this->addIncludedFile($expr->value);
+    } else if ($expr instanceof Variable) {
+//      echo "\tvariable " . $expr->name . "\n";
+    } else if ($expr instanceof PropertyFetch) {
+      if ($expr->var instanceof Variable) {
+//        echo "\tproperty fetch " . $expr->var->name . "::" . $expr->name . "\n";
+      } else {
+        var_dump($expr);
+        echo "arrrrggg...."; die;
+      }
+    } else if ($expr instanceof ArrayDimFetch) {
+
+//      echo "Array dimension fetch: ";
+//      var_dump($expr->dim);
+//      echo "\n";
+
+    } else if ($expr instanceof ClassConstFetch) {
+
+//      echo "Class constant fetch: ";
+//      var_dump($expr);
+//      echo "\n";
+
+    } else if ($expr instanceof FuncCall) {
+
+      if ($expr->name instanceof Name) {
+        if ($expr->name->toString() === 'realpath') {
+
+          $subExpr = $expr->args[0];
+
+          while ($subExpr instanceof BinaryOp) {
+            $subExpr = $subExpr->right;
+          }
+
+          if ($subExpr instanceof String_) {
+//            echo "\tstring " . $subExpr->value . "\n";
+            $this->addIncludedFile($subExpr->value);
+          }
+
+        } else {
+//          echo "Func call: ";
+//          var_dump($expr);
+        }
+      } else {
+//        echo "Func call: ";
+//        var_dump($expr);
+      }
+
+    } else if ($expr instanceof MethodCall) {
+//      echo "Method call: ";
+//      var_dump($expr);
+      echo "\n";
+    } else {
+      var_dump($expr);
+
+      echo "arrrgggg...."; die;
+    }
+
+  }
+
 }
