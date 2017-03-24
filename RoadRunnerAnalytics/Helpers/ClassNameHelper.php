@@ -75,6 +75,16 @@ class ClassNameHelper
   }
 
   /**
+   * @return ClassNameHelper
+   */
+  public function resetAll(): ClassNameHelper {
+    return $this
+      ->resetCurrentNamespace()
+      ->resetCurrentUse()
+      ->resetIncludedFiles();
+  }
+
+  /**
    * @return $this
    */
   public function resetCurrentUse(): ClassNameHelper {

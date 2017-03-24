@@ -109,10 +109,9 @@ class NodeBuilder extends NodeVisitorAbstract
   {
     $this->filename = $filename;
     $this->classNameHelper
+      ->resetAll()
       ->setCurrentFilename($filename)
-      ->resetCurrentNamespace()
-      ->resetCurrentUse()
-      ->resetIncludedFiles();
+    ;
   }
 
   private function enterClass(Class_ $node) {

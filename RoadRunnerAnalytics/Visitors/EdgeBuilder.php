@@ -110,14 +110,12 @@ class EdgeBuilder extends NodeVisitorAbstract
    */
   public function setFilename($filename)
   {
-
     $this->filename = $filename;
 
     $this->classNameHelper
+      ->resetAll()
       ->setCurrentFilename($filename)
-      ->resetCurrentNamespace()
-      ->resetCurrentUse()
-      ->resetIncludedFiles();
+    ;
   }
 
   private function addEdge($edgeSource, $edgeDestination, $edgeType, $edgeWeight = 1, $edgeLabel = '')
