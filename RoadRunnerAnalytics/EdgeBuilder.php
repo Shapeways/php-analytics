@@ -242,59 +242,6 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
-   * @param Name $className
-   * @return mixed|string
-   */
-  private function findClassId(Name $className, array $nodes) {
-
-    $qualifiedName = $this->classNameHelper->getQualifiedName($className);
-    $currentlyIncludedFiles = $this->classNameHelper->getCurrentIncludedFiles();
-
-    $filteredNodes = array_filter($nodes, function($node) use($qualifiedName) {
-      return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
-    });
-
-    if (empty($filteredNodes)) {
-      return 'external:' . $qualifiedName;
-    }
-
-    if (count($filteredNodes) === 1) {
-      $firstNode = current($filteredNodes);
-      return $firstNode[NodeBuilder::NODE_ID];
-    }
-
-
-    if (empty($currentlyIncludedFiles)) {
-      var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
-
-      return 'implicit:' . $qualifiedName;
-    }
-
-    $finalMatch = array();
-
-    foreach ($currentlyIncludedFiles as $partialFilename) {
-      $finalMatch = array_filter($filteredNodes, function($node) use ($partialFilename) {
-
-        return stristr($node[NodeBuilder::NODE_ID], $partialFilename);
-      });
-    }
-
-    if (empty($finalMatch)) {
-      var_dump("Unfound class", $qualifiedName);
-
-
-      var_dump($filteredNodes);
-      var_dump($currentlyIncludedFiles);
-
-      return 'undefined:' . $qualifiedName;
-    }
-
-    $finalMatchSingle = current($finalMatch);
-
-    return $finalMatchSingle[NodeBuilder::NODE_ID];
-  }
-
-  /**
    * @param ClassLike $node
    */
   private function enterClassLike(ClassLike $node) {
@@ -325,7 +272,7 @@ class EdgeBuilder extends NodeVisitorAbstract
     $interfaceId = $this->classNameHelper->getClassId($node);
 
     foreach ($node->extends as $name) {
-      $parentClassId = $this->findClassId($name, $this->nodes);
+      $parentClassId = $this->classNameHelper->findClassId($name, $this->nodes);
       $this->addEdge($interfaceId, $parentClassId, self::EDGE_TYPE_EXTENDS);
     }
   }
@@ -338,13 +285,13 @@ class EdgeBuilder extends NodeVisitorAbstract
 
     if ($node->extends) {
 
-      $parentClassId = $this->findClassId($node->extends, $this->nodes);
+      $parentClassId = $this->classNameHelper->findClassId($node->extends, $this->nodes);
 
       $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
     }
 
     foreach ($node->implements as $name) {
-      $interfaceId = $this->findClassId($name, $this->nodes);
+      $interfaceId = $this->classNameHelper->findClassId($name, $this->nodes);
 
       $this->addEdge($classId, $interfaceId, self::EDGE_TYPE_IMPLEMENTS);
     }

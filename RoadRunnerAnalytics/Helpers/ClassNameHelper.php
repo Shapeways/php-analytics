@@ -16,6 +16,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\UseUse;
+use RoadRunnerAnalytics\NodeBuilder;
 
 /**
  * Class ClassNameHelper
@@ -232,5 +233,59 @@ class ClassNameHelper
     $nameStr = $this->getQualifiedNameForClassLike($class_);
 
     return $this->currentFilename . ':' . $nameStr;
+  }
+
+  /**
+   * @param Name $className
+   * @param array $nodes
+   * @return string
+   */
+  public function findClassId(Name $className, array $nodes):string {
+
+    $qualifiedName = $this->getQualifiedName($className);
+    $currentlyIncludedFiles = $this->getCurrentIncludedFiles();
+
+    $filteredNodes = array_filter($nodes, function($node) use($qualifiedName) {
+      return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
+    });
+
+    if (empty($filteredNodes)) {
+      return 'external:' . $qualifiedName;
+    }
+
+    if (count($filteredNodes) === 1) {
+      $firstNode = current($filteredNodes);
+      return $firstNode[NodeBuilder::NODE_ID];
+    }
+
+
+    if (empty($currentlyIncludedFiles)) {
+      var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
+
+      return 'implicit:' . $qualifiedName;
+    }
+
+    $finalMatch = array();
+
+    foreach ($currentlyIncludedFiles as $partialFilename) {
+      $finalMatch = array_filter($filteredNodes, function($node) use ($partialFilename) {
+
+        return stristr($node[NodeBuilder::NODE_ID], $partialFilename);
+      });
+    }
+
+    if (empty($finalMatch)) {
+      var_dump("Unfound class", $qualifiedName);
+
+
+      var_dump($filteredNodes);
+      var_dump($currentlyIncludedFiles);
+
+      return 'undefined:' . $qualifiedName;
+    }
+
+    $finalMatchSingle = current($finalMatch);
+
+    return $finalMatchSingle[NodeBuilder::NODE_ID];
   }
 }
