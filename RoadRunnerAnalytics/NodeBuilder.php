@@ -16,6 +16,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\UseUse;
 use PhpParser\NodeVisitorAbstract;
 
 class NodeBuilder extends NodeVisitorAbstract
@@ -45,6 +46,11 @@ class NodeBuilder extends NodeVisitorAbstract
    * @var Namespace_[]
    */
   private $currentNamespace = array();
+
+  /**
+   * @var UseUse[]
+   */
+  private $currentUse = array();
 
   /**
    * @var string
@@ -139,6 +145,10 @@ class NodeBuilder extends NodeVisitorAbstract
   private function getQualifiedNameForClass(ClassLike $node) {
     $nameStr = $node->name;
 
+    if ($this->currentUse[$nameStr]) {
+      return $this->currentUse[$nameStr];
+    }
+
     $nameStr = $this->peekCurrentNamespace_() . '\\' . $nameStr;
 
     return ltrim($nameStr, '\\');
@@ -161,6 +171,7 @@ class NodeBuilder extends NodeVisitorAbstract
   {
     $this->filename = $filename;
     $this->currentNamespace = array($this->rootNamespace);
+    $this->currentUse = [];
 
 //    $this->addNode($filename, basename($filename), NodeBuilder::NODE_TYPE_FILE);
   }
@@ -192,6 +203,9 @@ class NodeBuilder extends NodeVisitorAbstract
     }
     else if ($node instanceof Trait_) {
       $nodeType = NodeBuilder::NODE_TYPE_TRAIT;
+    }
+    else if ($node instanceof UseUse) {
+      $this->currentUse[$node->alias] = $node->name->toString();
     }
 
     $this->addNode($classId, $className, $nodeType);

@@ -323,6 +323,7 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @return string
    */
   private function getQualifiedName(Name $name) {
+
     $nameStr = $name->toString();
     if ($name->isUnqualified()) {
 
