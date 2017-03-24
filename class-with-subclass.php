@@ -10,8 +10,6 @@
 
 namespace Wes;
 
-use PhpParser\Node\Scalar\MagicConst\Class_;
-
 interface Y {
 
 }
@@ -57,6 +55,10 @@ class OtherClass extends ChildClass implements X {
 
 }
 
-class NamespaceExtension extends Class_ {
+class Class_ {
+
+}
+
+class NamespaceExtension extends \PhpParser\Node\Scalar\MagicConst\Class_ {
 
 }
