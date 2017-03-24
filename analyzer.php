@@ -23,6 +23,7 @@ use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
@@ -463,6 +464,7 @@ foreach ($filesToAnalyze as $absolutePath) {
 
     $traverser = new NodeTraverser();
     $nodeBuilder->setFilename($absolutePath);
+    $traverser->addVisitor(new NameResolver());
     $traverser->addVisitor($nodeBuilder);
     $stmts = $traverser->traverse($stmts);
 
@@ -484,6 +486,7 @@ foreach ($filesToAnalyze as $absolutePath) {
 
     $traverser = new NodeTraverser();
     $edgeBuilder->setFilename($absolutePath);
+    $traverser->addVisitor(new NameResolver());
     $traverser->addVisitor($edgeBuilder);
     $stmts = $traverser->traverse($stmts);
 

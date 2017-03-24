@@ -154,6 +154,10 @@ class ClassNameHelper
    * @return string
    */
   public function getQualifiedNameForClassLike(ClassLike $node): string {
+    if (!empty($node->namespacedName)) {
+      return $node->namespacedName->toString();
+    }
+
     $nameStr = $node->name;
 
     if ($this->getCurrentUse($nameStr)) {
