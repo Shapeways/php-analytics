@@ -43,6 +43,8 @@ while ($f = fgets(STDIN)) {
 
   $filesToAnalyze[] = $absolutePath;
 }
+$fileListTime = microtime(true);
+echo "File list complete in " . ($fileListTime - $starttime) . " seconds.\n\n";
 
 echo "Parsing files...\n";
 foreach ($filesToAnalyze as $absolutePath) {
@@ -58,6 +60,8 @@ foreach ($filesToAnalyze as $absolutePath) {
     echo "\tParse Error: ", $e->getMessage(), "\n";
   }
 }
+$parseTime = microtime(true);
+echo "Parsing files complete in " . ($parseTime - $fileListTime) . " seconds.\n\n";
 
 echo "Pass one:\n";
 echo "\tResolving names...\n";
@@ -75,6 +79,13 @@ foreach ($filesToAnalyze as $absolutePath) {
   $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
 
 }
+$passOneTime = microtime(true);
+echo "Pass one complete in " . ($passOneTime - $parseTime) . " seconds.\n\n";
+
+echo "Creating external nodes...\n";
+$nodeBuilder->addExternalNodesForUnvisitedReferences();
+$nodeTime = microtime(true);
+echo "Creating external nodes complete in " . ($nodeTime - $passOneTime) . " seconds.\n\n";
 
 echo "Pass two:\n";
 echo "\tAnalyzing edges...\n";
@@ -88,6 +99,8 @@ foreach ($filesToAnalyze as $absolutePath) {
 
   $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
 }
+$passTwoTime = microtime(true);
+echo "Pass two complete in " . ($passTwoTime - $nodeTime) . " seconds.\n\n";
 
 
 $js = 'var roadRunnerDeps = ';
