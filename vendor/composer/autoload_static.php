@@ -13,7 +13,12 @@ class ComposerStaticInita23cc8d3742f1e4ed955f0402b97b9c0
         ),
         'P' => 
         array (
+            'Psr\\Log\\' => 8,
             'PhpParser\\' => 10,
+        ),
+        'M' => 
+        array (
+            'Monolog\\' => 8,
         ),
     );
 
@@ -22,9 +27,17 @@ class ComposerStaticInita23cc8d3742f1e4ed955f0402b97b9c0
         array (
             0 => __DIR__ . '/../..' . '/RoadRunnerAnalytics',
         ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
         'PhpParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
+        ),
+        'Monolog\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
     );
 
