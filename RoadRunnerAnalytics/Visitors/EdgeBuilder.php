@@ -12,6 +12,8 @@ namespace RoadRunnerAnalytics\Visitors;
 use Exception;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Include_;
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
@@ -26,7 +28,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   const EDGE_TYPE_NAMESPACE     = 'namespace';
   const EDGE_TYPE_SUBNAMESPACE  = 'subnamespace';
   const EDGE_TYPE_DEPENDENCY    = 'dependency';
-  const EDGE_TYPE_CREATES       = 'creates';
+  const EDGE_TYPE_INSTANTIATES  = 'instantiates';
   const EDGE_TYPE_SOURCE_FILE   = 'sourcefile';
   const EDGE_TYPE_EXTENDS       = 'extends';
   const EDGE_TYPE_TRAIT_USE     = 'traitUse';
@@ -228,6 +230,31 @@ class EdgeBuilder extends NodeVisitorAbstract
   }
 
   /**
+   * @param New_ $node
+   */
+  private function enterNew(New_ $node) {
+    $class = $node->class;
+
+    if ($class instanceof Name) {
+      $currentClass = end($this->currentClass);
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANTIATES);
+      }
+      else {
+        echo $this->filename . ': Instantiation of class ' . $class->toString() . "\n";
+      }
+    }
+    else if ($class instanceof Node\Expr\Variable) {
+      echo $this->filename . ': New instance instantiation from variable: ' . $class->name;
+    }
+    else {
+      echo $this->filename . ': New instance instantiation from unknown type ' . var_export($class, true);
+    }
+  }
+
+  /**
    * @param Node $node
    */
   public function enterNode(Node $node) {
@@ -239,6 +266,9 @@ class EdgeBuilder extends NodeVisitorAbstract
     }
     else if ($node instanceof TraitUse) {
       $this->enterTraitUse($node);
+    }
+    else if ($node instanceof New_) {
+      $this->enterNew($node);
     }
 
   }

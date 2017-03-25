@@ -76,7 +76,14 @@ foreach ($filesToAnalyze as $absolutePath) {
   $traverser->addVisitor(new NameResolver());
   $traverser->addVisitor(new FilenameIdResolver($absolutePath));
   $traverser->addVisitor($nodeBuilder);
-  $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
+
+  try {
+    $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
+  } catch (Exception $e) {
+    echo basename($absolutePath) . ":\n";
+    echo "\tParse Error: ", $e->getMessage(), "\n";
+  }
+
 
 }
 $passOneTime = microtime(true);

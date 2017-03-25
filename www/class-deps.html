@@ -75,6 +75,7 @@
 
       if ((edge.type === 'traitUse')
           || (edge.type === 'implements')
+          || (edge.type === 'instantiates')
       ) {
         implementsIndex[edgeKey] = edge;
       }
@@ -544,6 +545,8 @@
             if (d.edge.type === 'traitUse') {
               return '#ffc545';
             }
+
+            return '#000';
           })
           .style('stroke-width', '2')
           .attr('fill', 'none')

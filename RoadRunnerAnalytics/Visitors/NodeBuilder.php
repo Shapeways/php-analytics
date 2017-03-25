@@ -9,6 +9,8 @@
 namespace RoadRunnerAnalytics\Visitors;
 
 
+use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
@@ -152,6 +154,23 @@ class NodeBuilder extends NodeVisitorAbstract
   }
 
   /**
+   * @param New_ $node
+   */
+  private function enterNew(New_ $node) {
+    $class = $node->class;
+
+    if ($class instanceof Name) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
+    }
+    else if ($class instanceof Node\Expr\Variable) {
+      echo $this->filename . ': New instance instantiation from variable: ' . $class->name;
+    }
+    else {
+      echo $this->filename . ': New instance instantiation from unknown type: ' . var_export($class, true);
+    }
+  }
+
+  /**
    * @param Node $node
    */
   public function enterNode(Node $node)
@@ -160,6 +179,9 @@ class NodeBuilder extends NodeVisitorAbstract
 
     if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
+    }
+    else if ($node instanceof New_) {
+      $this->enterNew($node);
     }
 
   }
