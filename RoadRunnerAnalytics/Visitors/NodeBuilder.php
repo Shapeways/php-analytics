@@ -17,6 +17,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
+use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 
 class NodeBuilder extends NodeVisitorAbstract
@@ -52,6 +53,11 @@ class NodeBuilder extends NodeVisitorAbstract
   private $classNameHelper;
 
   /**
+   * @var LoggerInterface
+   */
+  private $logger;
+
+  /**
    * @var string[][]
    */
   private $seenClassLikeNames = [
@@ -64,9 +70,10 @@ class NodeBuilder extends NodeVisitorAbstract
    * NodeBuilder constructor.
    * @param ClassNameHelper $classNameHelper
    */
-  public function __construct(ClassNameHelper $classNameHelper)
+  public function __construct(ClassNameHelper $classNameHelper, LoggerInterface $logger)
   {
     $this->classNameHelper = $classNameHelper;
+    $this->logger = $logger;
   }
 
   /**
@@ -163,7 +170,7 @@ class NodeBuilder extends NodeVisitorAbstract
       $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
     }
     else if ($class instanceof Node\Expr\Variable) {
-      echo $this->filename . ': New instance instantiation from variable: ' . $class->name;
+      $this->logger->warning($this->filename . ': New instance instantiation from variable: ' . $class->name);
     }
     else {
       echo $this->filename . ': New instance instantiation from unknown type: ' . var_export($class, true);

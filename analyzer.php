@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Monolog\Handler\StreamHandler;
+use Bramus\Monolog\Formatter\ColoredLineFormatter;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
@@ -14,6 +16,8 @@ use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 
+$logger = new Monolog\Logger('php analyzer', [(new StreamHandler('php://stdout'))->setFormatter(new ColoredLineFormatter())]);
+
 ini_set('memory_limit','2G');
 
 $starttime = microtime(true);
@@ -23,7 +27,7 @@ $parsedFiles = [];
 $codeEdges = array();
 $codeNodes = array();
 
-$nodeBuilder = new NodeBuilder(new ClassNameHelper());
+$nodeBuilder = new NodeBuilder(new ClassNameHelper(), $logger);
 
 $filesToAnalyze = array();
 

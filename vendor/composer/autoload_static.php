@@ -20,6 +20,11 @@ class ComposerStaticInita23cc8d3742f1e4ed955f0402b97b9c0
         array (
             'Monolog\\' => 8,
         ),
+        'B' => 
+        array (
+            'Bramus\\Monolog\\' => 15,
+            'Bramus\\Ansi\\' => 12,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -38,6 +43,14 @@ class ComposerStaticInita23cc8d3742f1e4ed955f0402b97b9c0
         'Monolog\\' => 
         array (
             0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
+        ),
+        'Bramus\\Monolog\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bramus/monolog-colored-line-formatter/src',
+        ),
+        'Bramus\\Ansi\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bramus/ansi-php/src',
         ),
     );
 
