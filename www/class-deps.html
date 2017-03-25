@@ -532,7 +532,11 @@
           })
           .style('stroke-dasharray', function(d) {
             if (d.ancestor) {
-              return ('3, 3');
+              return ('3, 3, 5, 3');
+            }
+
+            if (d.target) {
+              return ('3, 9');
             }
 
             return ('1, 0');
@@ -544,6 +548,10 @@
 
             if (d.edge.type === 'traitUse') {
               return '#ffc545';
+            }
+
+            if (d.edge.type === 'instantiates') {
+              return '#005A81';
             }
 
             return '#000';
