@@ -17,7 +17,7 @@ use RoadRunnerAnalytics\Visitors\NodeBuilder;
 use RoadRunnerAnalytics\Visitors\SelfResolver;
 
 
-$logger = new Monolog\Logger('php analyzer', [(new StreamHandler('php://stdout'))->setFormatter(new ColoredLineFormatter())]);
+$logger = new Monolog\Logger('', [(new StreamHandler('php://stdout'))->setFormatter(new ColoredLineFormatter())]);
 
 ini_set('memory_limit','2G');
 
@@ -39,7 +39,7 @@ function humanReadable($size)
   return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
 }
 
-echo "Building file list...\n";
+$logger->info("Building file list...");
 while ($f = fgets(STDIN)) {
 
   $filename     = str_replace(PHP_EOL, '', $f);
@@ -49,9 +49,9 @@ while ($f = fgets(STDIN)) {
   $filesToAnalyze[] = $absolutePath;
 }
 $fileListTime = microtime(true);
-echo "File list complete in " . ($fileListTime - $starttime) . " seconds.\n\n";
+$logger->info("File list complete in " . ($fileListTime - $starttime) . " seconds.");
 
-echo "Parsing files...\n";
+$logger->info("Parsing files...");
 foreach ($filesToAnalyze as $absolutePath) {
   $code = file_get_contents($absolutePath);
 
@@ -61,17 +61,17 @@ foreach ($filesToAnalyze as $absolutePath) {
     $parsedFiles[$absolutePath] = $parser->parse($code);
 
   } catch (Exception $e) {
-    echo basename($absolutePath) . ":\n";
-    echo "\tParse Error: ", $e->getMessage(), "\n";
+    $logger->error(basename($absolutePath) . ":");
+    $logger->error("\tParse Error: ", $e->getMessage());
   }
 }
 $parseTime = microtime(true);
-echo "Parsing files complete in " . ($parseTime - $fileListTime) . " seconds.\n\n";
+$logger->info("Parsing files complete in " . ($parseTime - $fileListTime) . " seconds.");
 
-echo "Pass one:\n";
-echo "\tResolving names...\n";
-echo "\tIdentifying classes...\n";
-echo "\tAnalyzing nodes...\n";
+$logger->info("Pass one:");
+$logger->info("\tResolving names...");
+$logger->info("\tIdentifying classes...");
+$logger->info("\tAnalyzing nodes...");
 foreach ($filesToAnalyze as $absolutePath) {
 
   $stmts = $parsedFiles[$absolutePath];
@@ -86,23 +86,23 @@ foreach ($filesToAnalyze as $absolutePath) {
   try {
     $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
   } catch (Exception $e) {
-    echo basename($absolutePath) . ":\n";
-    echo "\tParse Error: ", $e->getMessage(), "\n";
+    $logger->error(basename($absolutePath) . ":");
+    $logger->error("\tParse Error: ", $e->getMessage());
   }
 
 
 }
 $passOneTime = microtime(true);
-echo "Pass one complete in " . ($passOneTime - $parseTime) . " seconds.\n\n";
+$logger->info("Pass one complete in " . ($passOneTime - $parseTime) . " seconds.");
 
-echo "Creating external nodes...\n";
+$logger->info("Creating external nodes...");
 $nodeBuilder->addExternalNodesForUnvisitedReferences();
 $nodeTime = microtime(true);
-echo "Creating external nodes complete in " . ($nodeTime - $passOneTime) . " seconds.\n\n";
+$logger->info("Creating external nodes complete in " . ($nodeTime - $passOneTime) . " seconds.");
 
-echo "Pass two:\n";
-echo "\tAnalyzing edges...\n";
-$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes(), new ClassNameHelper());
+$logger->info("Pass two:");
+$logger->info("\tAnalyzing edges...");
+$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes(), new ClassNameHelper(), $logger);
 foreach ($filesToAnalyze as $absolutePath) {
   $stmts = $parsedFiles[$absolutePath];
 
@@ -113,7 +113,7 @@ foreach ($filesToAnalyze as $absolutePath) {
   $parsedFiles[$absolutePath] = $traverser->traverse($stmts);
 }
 $passTwoTime = microtime(true);
-echo "Pass two complete in " . ($passTwoTime - $nodeTime) . " seconds.\n\n";
+$logger->info("Pass two complete in " . ($passTwoTime - $nodeTime) . " seconds.");
 
 
 $js = 'var roadRunnerDeps = ';
@@ -129,5 +129,5 @@ file_put_contents($jsFilename, $js);
 $endTime = microtime(true);
 $elapsedTime = $endTime - $starttime;
 
-echo "Analysis complete in " . $elapsedTime . " seconds\n";
-echo "Analysis required " . humanReadable(memory_get_peak_usage()) . "\n";
+$logger->info("Analysis complete in " . $elapsedTime . " seconds");
+$logger->info("Analysis required " . humanReadable(memory_get_peak_usage()));

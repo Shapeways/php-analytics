@@ -20,6 +20,7 @@ use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
+use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
@@ -69,12 +70,18 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $classNameHelper;
 
   /**
+   * @var LoggerInterface
+   */
+  private $logger;
+
+  /**
    * EdgeBuilder constructor.
    */
-  public function __construct(array $nodes, ClassNameHelper $classNameHelper)
+  public function __construct(array $nodes, ClassNameHelper $classNameHelper, LoggerInterface $logger)
   {
     $this->nodes = $nodes;
     $this->classNameHelper = $classNameHelper;
+    $this->logger = $logger;
   }
 
 
@@ -258,10 +265,10 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
     }
     else if ($class instanceof Node\Expr\Variable) {
-      echo $this->filename . ': New instance instantiation from variable: ' . $class->name;
+      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
     }
     else {
-      echo $this->filename . ': New instance instantiation from unknown type ' . var_export($class, true);
+      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
     }
   }
 

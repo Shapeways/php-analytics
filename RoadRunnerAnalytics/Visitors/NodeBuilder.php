@@ -174,10 +174,10 @@ class NodeBuilder extends NodeVisitorAbstract
       $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
     }
     else if ($class instanceof Node\Expr\Variable) {
-      $this->logger->warning($this->filename . ': New instance instantiation from variable: ' . $class->name);
+      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
     }
     else {
-      echo $this->filename . ': New instance instantiation from unknown type: ' . var_export($class, true);
+      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
     }
   }
 
