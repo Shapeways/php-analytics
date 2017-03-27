@@ -19,6 +19,7 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
 class NodeBuilder extends NodeVisitorAbstract
 {
@@ -166,7 +167,10 @@ class NodeBuilder extends NodeVisitorAbstract
   private function enterNew(New_ $node) {
     $class = $node->class;
 
-    if ($class instanceof Name) {
+    if ($node instanceof ResolvedKeywordsNew) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->getResolvedClass()->toString();
+    }
+    else if (($class instanceof Name)) {
       $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
     }
     else if ($class instanceof Node\Expr\Variable) {

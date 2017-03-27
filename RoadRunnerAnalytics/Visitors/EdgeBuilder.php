@@ -21,6 +21,7 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
 class EdgeBuilder extends NodeVisitorAbstract
 {
@@ -235,7 +236,17 @@ class EdgeBuilder extends NodeVisitorAbstract
   private function enterNew(New_ $node) {
     $class = $node->class;
 
-    if ($class instanceof Name) {
+    if ($node instanceof ResolvedKeywordsNew) {
+      $currentClass = end($this->currentClass);
+      if ($currentClass) {
+        $resolvedName   = $node->getResolvedClass();
+
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANTIATES);
+      }
+    }
+    else if ($class instanceof Name) {
       $currentClass = end($this->currentClass);
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
@@ -243,7 +254,7 @@ class EdgeBuilder extends NodeVisitorAbstract
         $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANTIATES);
       }
       else {
-        echo $this->filename . ': Instantiation of class ' . $class->toString() . "\n";
+        //echo $this->filename . ': Instantiation of class ' . $class->toString() . "\n";
       }
     }
     else if ($class instanceof Node\Expr\Variable) {

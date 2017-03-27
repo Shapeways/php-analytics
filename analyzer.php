@@ -14,6 +14,7 @@ use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\SelfResolver;
 
 
 $logger = new Monolog\Logger('php analyzer', [(new StreamHandler('php://stdout'))->setFormatter(new ColoredLineFormatter())]);
@@ -79,6 +80,7 @@ foreach ($filesToAnalyze as $absolutePath) {
   $nodeBuilder->setFilename($absolutePath);
   $traverser->addVisitor(new NameResolver());
   $traverser->addVisitor(new FilenameIdResolver($absolutePath));
+  $traverser->addVisitor(new SelfResolver());
   $traverser->addVisitor($nodeBuilder);
 
   try {

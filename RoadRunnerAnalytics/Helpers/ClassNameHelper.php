@@ -165,6 +165,16 @@ class ClassNameHelper
       return $firstNode[NodeBuilder::NODE_ID];
     }
 
+    $currentFilename = $this->currentFilename;
+    $ownFileMatch = array_filter($filteredNodes, function($node) use ($currentFilename) {
+      return stristr($node[NodeBuilder::NODE_ID], $currentFilename);
+    });
+
+    if (count($ownFileMatch) === 1) {
+      $firstNode = current($ownFileMatch);
+      return $firstNode[NodeBuilder::NODE_ID];
+    }
+
 
     if (empty($currentlyIncludedFiles)) {
       var_dump("No possible disambiguation. Implicit dependency?", $qualifiedName);
