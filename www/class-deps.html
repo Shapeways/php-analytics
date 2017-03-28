@@ -205,10 +205,56 @@
 
     function exaggeratedDiagonal(s, d) {
 
-      var path = `M ${s.y} ${s.x}
-            C ${(s.y) + (nodeWidth / 2)} ${s.x},
-              ${(s.y) + (nodeWidth / 2)} ${d.x},
-              ${d.y} ${d.x}`;
+      var x1 = s.x;
+      var y1 = s.y;
+      var x2 = d.x;
+      var y2 = d.y;
+
+      if (x1 === x2) {
+
+        if (y1 === 0) {
+          y1 += nodeRadius;
+          y2 += nodeRadius;
+
+          return `M ${y1} ${x1}
+              C ${(y1) + (4 * nodeRadius)} ${x1 + (4 * nodeRadius)},
+                ${(y1) + (4 * nodeRadius)} ${x2 - (4 * nodeRadius)},
+                ${y2} ${x2}`;
+        }
+        else {
+          y1 -= nodeRadius;
+          y2 -= nodeRadius;
+
+          return `M ${y1} ${x1}
+              C ${(y1) + (4 * -nodeRadius)} ${x1 + (4 * nodeRadius)},
+                ${(y1) + (4 * -nodeRadius)} ${x2 - (4 * nodeRadius)},
+                ${y2} ${x2}`;
+        }
+      }
+      else if ((y1 === 0) && (y2 === 0)) {
+        y1 += nodeRadius;
+        y2 += nodeRadius;
+
+        return `M ${y1} ${x1}
+            C ${(y1) + (nodeWidth / 2)} ${x1},
+              ${(y1) + (nodeWidth / 2)} ${x2},
+              ${y2} ${x2}`;
+
+      }
+      else if (y1 === y2) {
+        y1 -= nodeRadius;
+        y2 -= nodeRadius;
+
+        return `M ${y1} ${x1}
+            C ${(y1) - (nodeWidth / 2)} ${x1},
+              ${(y1) - (nodeWidth / 2)} ${x2},
+              ${y2} ${x2}`;
+      }
+
+      var path = `M ${y1} ${x1}
+            C ${(y1) + (nodeWidth / 2)} ${x1},
+              ${(y1) + (nodeWidth / 2)} ${x2},
+              ${y2} ${x2}`;
 
       return path;
 
