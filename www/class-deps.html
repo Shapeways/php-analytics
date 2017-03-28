@@ -634,23 +634,20 @@
           .duration(duration)
           .attr('d', function(d) {
 
-            var dependencyNode;
-            if (d.source) {
-              dependencyNode = nodeIndex[d.edge.target];
-            }
-            else if (d.target) {
-              dependencyNode = nodeIndex[d.edge.source];
-            }
-            else if (d.ancestor) {
-              dependencyNode = nodeIndex[d.edge.target];
+            var dependencyNode = nodeIndex[d.edge.target];
+            var localSource = source;
+
+            if (d.target) {
+              dependencyNode = localSource;
+              localSource = nodeIndex[d.edge.source];
             }
 
 
-            if (dependencyNode.depth === source.depth) {
-              return exaggeratedDiagonal(source, dependencyNode);
+            if (dependencyNode.depth === localSource.depth) {
+              return exaggeratedDiagonal(localSource, dependencyNode);
             }
 
-            return diagonal(source, dependencyNode);
+            return diagonal(localSource, dependencyNode);
           })
       ;
 
