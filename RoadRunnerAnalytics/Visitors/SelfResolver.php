@@ -14,6 +14,7 @@ use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
+use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
 class SelfResolver extends NodeVisitorAbstract
@@ -23,6 +24,16 @@ class SelfResolver extends NodeVisitorAbstract
    * @var ClassLike
    */
   private $currentClass;
+
+  /**
+   * @var ClassNameHelper
+   */
+  private $classNameHelper;
+
+  public function __construct(ClassNameHelper $classNameHelper)
+  {
+    $this->classNameHelper = $classNameHelper;
+  }
 
   /**
    * @param Node $node
@@ -38,10 +49,10 @@ class SelfResolver extends NodeVisitorAbstract
       $class = $node->class;
 
       if ($class instanceof Name) {
-        if ($class->toString() === ResolvedKeywordsNew::KEYWORD_SELF) {
+        if (in_array($class->toString(), [ResolvedKeywordsNew::KEYWORD_SELF, ResolvedKeywordsNew::KEYWORD_STATIC])) {
           if ($this->currentClass) {
             return ResolvedKeywordsNew::fromNew_($node)
-              ->setResolvedKeyword(ResolvedKeywordsNew::KEYWORD_SELF)
+              ->setResolvedKeyword($class->toString())
               ->setResolvedClass($this->currentClass->namespacedName);
           }
         }

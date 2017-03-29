@@ -80,7 +80,7 @@ foreach ($filesToAnalyze as $absolutePath) {
   $nodeBuilder->setFilename($absolutePath);
   $traverser->addVisitor(new NameResolver());
   $traverser->addVisitor(new FilenameIdResolver($absolutePath));
-  $traverser->addVisitor(new SelfResolver());
+  $traverser->addVisitor(new SelfResolver(new ClassNameHelper()));
   $traverser->addVisitor($nodeBuilder);
 
   try {
