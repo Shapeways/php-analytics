@@ -179,10 +179,10 @@ class NodeBuilder extends NodeVisitorAbstract
       $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
     }
     else if ($class instanceof Variable) {
-      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
+//      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
     }
     else {
-      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
+//      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
     }
   }
 
@@ -214,7 +214,7 @@ class NodeBuilder extends NodeVisitorAbstract
       }
       else if ($node->class instanceof Variable) {
         $currentFilename = basename($this->filename);
-        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch from variable: \${$node->class->name}");
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch from variable: \${$node->class->name}");
       }
       else {
         $node->class->toString();

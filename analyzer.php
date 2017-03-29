@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Bramus\Monolog\Formatter\ColoredLineFormatter;
 use PhpParser\NodeVisitor\NameResolver;
@@ -17,7 +18,9 @@ use RoadRunnerAnalytics\Visitors\NodeBuilder;
 use RoadRunnerAnalytics\Visitors\SelfResolver;
 
 
-$logger = new Monolog\Logger('', [(new StreamHandler('php://stdout'))->setFormatter(new ColoredLineFormatter())]);
+$logger = new Logger('', [
+  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter())
+]);
 
 ini_set('memory_limit','2G');
 

@@ -272,10 +272,10 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
     }
     else if ($class instanceof Node\Expr\Variable) {
-      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
+//      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
     }
     else {
-      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
+//      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from unknown type: ' . var_export($class, true));
     }
   }
 
@@ -310,7 +310,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
       else {
         $currentFilename = basename($this->filename);
-        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static call to class: {$node->class}");
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static call to class: {$node->class}");
       }
     }
     else if ($node instanceof Instanceof_) {
@@ -322,7 +322,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
       else {
         $currentFilename = basename($this->filename);
-        $this->logger->warning("{$currentFilename}:{$node->getLine()} instanceof comparison to class: {$node->class}");
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} instanceof comparison to class: {$node->class}");
       }
     }
     else if ($node instanceof ClassConstFetch) {
@@ -336,7 +336,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
       else if ($node->class instanceof Variable) {
         $currentFilename = basename($this->filename);
-        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch to variable: \${$node->class->name}");
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch to variable: \${$node->class->name}");
       }
       else {
         $node->class->toString();
@@ -351,7 +351,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       }
       else {
         $currentFilename = basename($this->filename);
-        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static property access to class: {$node->class}");
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static property access to class: {$node->class}");
       }
     }
 
