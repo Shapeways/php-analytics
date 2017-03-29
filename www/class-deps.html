@@ -86,6 +86,9 @@
       if ((edge.type === 'traitUse')
           || (edge.type === 'implements')
           || (edge.type === 'instantiates')
+          || (edge.type === 'instanceOf')
+          || (edge.type === 'staticAccess')
+          || (edge.type === 'constantFetch')
       ) {
         implementsIndex[edgeKey] = edge;
       }
@@ -623,6 +626,18 @@
             }
 
             if (d.edge.type === 'instantiates') {
+              return '#CC3F30';
+            }
+
+            if (d.edge.type === 'instanceOf') {
+              return '#fc857a';
+            }
+
+            if (d.edge.type === 'staticAccess') {
+              return '#e05760';
+            }
+
+            if (d.edge.type === 'constantFetch') {
               return '#e05760';
             }
 

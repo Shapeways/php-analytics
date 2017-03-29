@@ -11,8 +11,13 @@ namespace RoadRunnerAnalytics\Visitors;
 
 use Exception;
 use PhpParser\Node;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\Include_;
+use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\StaticPropertyFetch;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
@@ -40,6 +45,8 @@ class EdgeBuilder extends NodeVisitorAbstract
   const EDGE_TYPE_CONSUMER      = 'consumer';
   const EDGE_SOURCE             = 'source';
   const EDGE_TYPE_STATIC_ACCESS = 'staticAccess';
+  const EDGE_TYPE_CONST_FETCH   = 'constantFetch';
+  const EDGE_TYPE_INSTANCEOF    = 'instanceOf';
   const EDGE_WEIGHT             = 'weight';
   const EDGE_TARGET             = 'target';
   const EDGE_TYPE               = 'type';
@@ -276,17 +283,76 @@ class EdgeBuilder extends NodeVisitorAbstract
    * @param Node $node
    */
   public function enterNode(Node $node) {
+    // Helper visitors
     if ($node instanceof Include_) {
       $this->classNameHelper->enterInclude($node);
     }
+
+    // Inheritance edges
     else if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
     }
     else if ($node instanceof TraitUse) {
       $this->enterTraitUse($node);
     }
+
+    // TIght couplings
     else if ($node instanceof New_) {
       $this->enterNew($node);
+    }
+    else if ($node instanceof StaticCall) {
+
+      $currentClass = end($this->currentClass);
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_STATIC_ACCESS);
+      }
+      else {
+        $currentFilename = basename($this->filename);
+        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static call to class: {$node->class}");
+      }
+    }
+    else if ($node instanceof Instanceof_) {
+      $currentClass = end($this->currentClass);
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANCEOF);
+      }
+      else {
+        $currentFilename = basename($this->filename);
+        $this->logger->warning("{$currentFilename}:{$node->getLine()} instanceof comparison to class: {$node->class}");
+      }
+    }
+    else if ($node instanceof ClassConstFetch) {
+      if ($node->class instanceof Name) {
+        $currentClass = end($this->currentClass);
+        if ($currentClass) {
+          $currentClassId = $this->classNameHelper->getClassId($currentClass);
+          $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
+          $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_CONST_FETCH);
+        }
+      }
+      else if ($node->class instanceof Variable) {
+        $currentFilename = basename($this->filename);
+        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch to variable: \${$node->class->name}");
+      }
+      else {
+        $node->class->toString();
+      }
+    }
+    else if ($node instanceof StaticPropertyFetch) {
+      $currentClass = end($this->currentClass);
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_STATIC_ACCESS);
+      }
+      else {
+        $currentFilename = basename($this->filename);
+        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static property access to class: {$node->class}");
+      }
     }
 
   }

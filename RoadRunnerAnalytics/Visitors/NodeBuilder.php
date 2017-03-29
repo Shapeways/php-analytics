@@ -9,7 +9,12 @@
 namespace RoadRunnerAnalytics\Visitors;
 
 
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\Instanceof_;
 use PhpParser\Node\Expr\New_;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\StaticPropertyFetch;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node;
@@ -173,7 +178,7 @@ class NodeBuilder extends NodeVisitorAbstract
     else if (($class instanceof Name)) {
       $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
     }
-    else if ($class instanceof Node\Expr\Variable) {
+    else if ($class instanceof Variable) {
       $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
     }
     else {
@@ -188,11 +193,35 @@ class NodeBuilder extends NodeVisitorAbstract
   {
     parent::enterNode($node);
 
+    // Build nodes for Classes, Interfaces, and Traits
     if ($node instanceof ClassLike) {
       $this->enterClassLike($node);
     }
+
+    // Tight couplings
     else if ($node instanceof New_) {
       $this->enterNew($node);
+    }
+    else if ($node instanceof StaticCall) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+    }
+    else if ($node instanceof Instanceof_) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+    }
+    else if ($node instanceof ClassConstFetch) {
+      if ($node->class instanceof Name) {
+        $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+      }
+      else if ($node->class instanceof Variable) {
+        $currentFilename = basename($this->filename);
+        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch from variable: \${$node->class->name}");
+      }
+      else {
+        $node->class->toString();
+      }
+    }
+    else if ($node instanceof StaticPropertyFetch) {
+      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
     }
 
   }
