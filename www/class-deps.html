@@ -77,6 +77,24 @@
 
   <script>
 
+    // Bootstrap
+    var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
+    var root = d3.stratify()
+        .id(function(d) {
+          return d.source;
+        }).parentId(function(d) {
+          return d.target;
+        })
+        (classInheritanceEdges);
+
+    root.sort(function(a, b) {
+      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
+      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
+
+      return nodeA.localeCompare(nodeB);
+    });
+
+
     // Actions
     function toggleImplements() {
       return {
@@ -128,23 +146,50 @@
       return state;
     }
 
+    function nodePositions(state, action) {
+      var nodePositions = {};
+      root.each(function(d) {
+        nodePositions[d.id] = {
+          visible: true,
+          x: 0,
+          y: 0
+        };
+      });
+
+      return nodePositions;
+    }
+
     var reducer = Redux.combineReducers({
       showImplements,
-      selectedNode
+      selectedNode,
+      nodePositions
     });
 
     // Store
     var previousState = {};
     var store = Redux.createStore(
         reducer,
-        Redux.applyMiddleware(function(store) {
-          return function(next) {
-            return function(action) {
-              previousState = store.getState();
-              next(action);
+        Redux.applyMiddleware(
+            // Previous state middleware
+            function (store) {
+              return function (next) {
+                return function (action) {
+                  previousState = store.getState();
+                  next(action);
+                }
+              }
+            },
+
+            // Logging Middleware
+            function (store) {
+              return function (next) {
+                return function (action) {
+                  console.log(action);
+                  next(action);
+                }
+              }
             }
-          }
-        })
+        )
     );
     var previousState = store.getState();
 
@@ -164,10 +209,7 @@
     }
 
     // Begin App
-
     var nodeRadius = 10;
-
-    var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
 
     var implementsIndex = {};
     _.each(roadRunnerDeps.edges, function(edge, edgeKey) {
@@ -183,30 +225,10 @@
       }
     });
 
-
-    var root = d3.stratify()
-        .id(function(d) {
-          return d.source;
-        }).parentId(function(d) {
-          return d.target;
-        })
-        (classInheritanceEdges);
-
-    root.sort(function(a, b) {
-      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
-      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
-
-      return nodeA.localeCompare(nodeB);
-    });
-
     // Build node index, init start positions and visibility
     var nodeIndex = {};
     root.each(function(d) {
       nodeIndex[d.id] = d;
-      d.visible = true;
-      d.visible0 = true;
-      d.x0 = 0;
-      d.y0 = 0;
     });
 
     function collapse(tData) {
