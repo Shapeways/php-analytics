@@ -97,6 +97,7 @@
     // Build node index, init start positions and visibility
     var nodeIndex = {};
     root.each(function(d) {
+      d.visible = true;
       nodeIndex[d.id] = d;
     });
     var treeData;
@@ -121,10 +122,28 @@
       return {
         type: 'RECOMPUTE_TREE',
         treeData: treeData.descendants().map(function(node) {
+          if (node.visible) {
+            return {
+              id: node.id,
+              x: node.x,
+              y: node.y,
+              visible: node.visible
+            };
+          }
+
+          if (node.parent) {
+            return {
+              id: node.id,
+              x: node.parent.x,
+              y: node.parent.y,
+              visible: node.visible
+            };
+          }
+
           return {
             id: node.id,
-            x: node.x,
-            y: node.y,
+            x: 0,
+            y: 0,
             visible: node.visible
           };
         })
@@ -813,20 +832,16 @@
 
 
       // Store the old positions for transition.
-      root.each(function(d){
-        d.x0 = d.x;
-        d.y0 = d.y;
-      });
-
-      _.each(nodeIndex, function(d) {
-        d.visible0 = d.visible;
-      });
+//      root.each(function(d){
+//        d.x0 = d.x;
+//        d.y0 = d.y;
+//      });
+//
+//      _.each(nodeIndex, function(d) {
+//        d.visible0 = d.visible;
+//      });
 
     }
-
-    root.children.forEach(function(d) {
-      collapse(d);
-    });
 
     /**
      * Expand inheritance hierarchy for selected node
@@ -840,10 +855,8 @@
 
       if (nextState.selectedNode.expanded) {
         expand(sourceNode);
-        console.log('expanded');
       } else {
         collapse(sourceNode);
-        console.log('collapsed');
       }
     };
     observeStoreChanges(expandInheritance);
@@ -862,6 +875,10 @@
 
 
     // Init view
+    root.children.forEach(function(d) {
+      store.dispatch(selectNode(d.id, false));
+    });
+    store.dispatch(selectNode(null));
     store.dispatch(recomputeTreeAction());
 //    recomputeTree();
 //    drawNodes(treeData, root);
