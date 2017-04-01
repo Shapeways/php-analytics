@@ -69,12 +69,93 @@
     </defs>
   </svg>
 
+  <script src="js/redux/redux.min.js"></script>
   <script src="js/underscore.js"></script>
   <script src="js/d3/d3.js"></script>
   <script src="js/d3-force/d3-force.js"></script>
   <script src="js/class-graph.js"></script>
 
   <script>
+
+    // Actions
+    function toggleImplements() {
+      return {
+        type: 'TOGGLE_IMPLEMENTS'
+      };
+    }
+
+    function selectNode(nodeId) {
+      return {
+        type: 'SELECT_NODE',
+        nodeId: nodeId
+      }
+    }
+
+    // Reducers
+    function showImplements(state, action) {
+
+      if (action.type === 'SELECT_NODE') {
+        return false;
+      }
+
+      if (action.type === 'TOGGLE_IMPLEMENTS') {
+        var showImplements = true;
+
+        if (state) {
+          showImplements = false;
+        }
+
+        return showImplements;
+      }
+
+      if (state === undefined) {
+        return false;
+      }
+
+      return state;
+    }
+
+    function selectedNode(state, action) {
+
+      if (action.type === 'SELECT_NODE') {
+        return action.nodeId;
+      }
+
+      if (state === undefined) {
+        return null;
+      }
+
+      return state;
+    }
+
+    var reducer = Redux.combineReducers({
+      showImplements,
+      selectedNode
+    });
+
+    // Store
+    var previousState = {};
+    var store = Redux.createStore(
+        reducer,
+        Redux.applyMiddleware(function(store) {
+          return function(next) {
+            return function(action) {
+              previousState = store.getState();
+              next(action);
+            }
+          }
+        })
+    );
+    var previousState = store.getState();
+
+    // Utils
+    function observeStore(fn) {
+      store.subscribe(function() {
+        fn(previousState, store.getState());
+      });
+    }
+
+    // Begin App
 
     var nodeRadius = 10;
 
@@ -153,52 +234,20 @@
 
     }
 
-    function click(tData) {
-
-      if (tData._children) {
-        expand(tData);
-      } else if (tData.children) {
-        collapse(tData);
-      }
-
-      _.each(implementsIndex, function(edge) {
-        if (edge.source === tData.id) {
-          showTree(nodeIndex[edge.target]);
-        }
-
-        if (edge.target === tData.id) {
-          showTree(nodeIndex[edge.source]);
-        }
-      });
-
-
-      update(tData);
-    }
-
-    root.children.forEach(function(d) {
-      collapse(d);
-    });
-
-
     var svg = d3.select('svg');
-//    var width = window.innerWidth;
-    var height = window.innerHeight;
 
     var width = 20000;
     var height = 40000;
     svg.attr('width', width);
     svg.attr('height', height);
-    var g = svg.append('g');//.attr('transform', 'translate(20, 20)');
+    var g = svg.append('g');
 
-    //      var cluster = d3.cluster().size([height, width]);
 //    var tree = d3.tree();
     var tree = d3.cluster();
     tree.separation(function(a, b) {
       return a.parent == b.parent ? 0.25 : 0.5;
     });
-//    tree.size([height, width]);
     tree.nodeSize([100, 100]);
-
 
     var i = 0,
         duration = 750;
@@ -382,7 +431,7 @@
 
             return "translate(" + lastVisibleParent.y0 + "," + lastVisibleParent.x0 + ")";
           })
-          .on('click', click);
+          .on('click', function(d) { store.dispatch(selectNode(d.id)); });
 
       // Add Circle for the nodes
       nodeEnter.append('circle')
@@ -533,138 +582,144 @@
           .remove();
     }
 
-    function update(source) {
-
-      g.selectAll('path.coupling').remove();
-      
-      // Assigns the x and y position for the nodes
+    function recomputeTree() {
       var treeData = tree(root);
-
       // Update y-position for nicely normalized depth
       treeData.descendants().forEach(function(d) {
         d.y = (d.depth - 1) * nodeWidth;
       });
 
       updateSvgDimensions(treeData);
+
+      return treeData;
+    }
+
+    function update(source) {
+
+//      g.selectAll('path.coupling').remove();
+      
+      // Assigns the x and y position for the nodes
+      var treeData = recomputeTree();
+
       drawNodes(treeData, source);
       drawLinks(treeData, source);
 
+//
+//      var ancestorIds = [];
+//      source.ancestors().forEach(function(a) {
+//        if (a.id === source.id) {
+//          return;
+//        }
+//        ancestorIds.push(a.id);
+//      });
+//
+//      var dependencyEdges = {};
+//      _.each(implementsIndex, function(edge) {
+//
+//        if (dependencyEdges[edge.id]) {
+//          return;
+//        }
+//
+//        if (edge.source === source.id) {
+//          dependencyEdges[edge.id] = {
+//            edge: edge,
+//            source: true,
+//            target: false,
+//            ancestor: false
+//          };
+//        }
+//
+//        if (edge.target === source.id) {
+//          dependencyEdges[edge.id] = {
+//            edge: edge,
+//            source: false,
+//            target: true,
+//            ancestor: false
+//          };
+//        }
+//
+//        if (ancestorIds.indexOf(edge.source) >= 0) {
+//          dependencyEdges[edge.id] = {
+//            edge: edge,
+//            source: false,
+//            target: false,
+//            ancestor: true
+//          };
+//        }
+//      });
 
-      var ancestorIds = [];
-      source.ancestors().forEach(function(a) {
-        if (a.id === source.id) {
-          return;
-        }
-        ancestorIds.push(a.id);
-      });
-
-      var dependencyEdges = {};
-      _.each(implementsIndex, function(edge) {
-
-        if (dependencyEdges[edge.id]) {
-          return;
-        }
-
-        if (edge.source === source.id) {
-          dependencyEdges[edge.id] = {
-            edge: edge,
-            source: true,
-            target: false,
-            ancestor: false
-          };
-        }
-
-        if (edge.target === source.id) {
-          dependencyEdges[edge.id] = {
-            edge: edge,
-            source: false,
-            target: true,
-            ancestor: false
-          };
-        }
-
-        if (ancestorIds.indexOf(edge.source) >= 0) {
-          dependencyEdges[edge.id] = {
-            edge: edge,
-            source: false,
-            target: false,
-            ancestor: true
-          };
-        }
-      });
-
-      g.selectAll('path.coupling')
-          .data(_.values(dependencyEdges), function(d) {
-            return d.id;
-          })
-          .enter()
-          .insert('path', 'g')
-//          .append('path')
-          .attr('class', 'coupling')
-          .attr('d', function(d) {
-            return diagonal(source, source);
-          })
-          .attr('marker-end', 'url(#markerArrow)')
-          .style('stroke-dasharray', function(d) {
-            if (d.ancestor) {
-              return ('3, 3, 5, 3');
-            }
-
-            if (d.target) {
-              return ('3, 2');
-            }
-
-            return ('1, 0');
-          })
-          .attr('stroke', function(d) {
-            if (d.edge.type === 'implements') {
-              return '#a4d765';
-            }
-
-            if (d.edge.type === 'traitUse') {
-              return '#ffc545';
-            }
-
-            if (d.edge.type === 'instantiates') {
-              return '#CC3F30';
-            }
-
-            if (d.edge.type === 'instanceOf') {
-              return '#fc857a';
-            }
-
-            if (d.edge.type === 'staticAccess') {
-              return '#e05760';
-            }
-
-            if (d.edge.type === 'constantFetch') {
-              return '#e05760';
-            }
-
-            return '#000';
-          })
-          .style('stroke-width', '2')
-          .attr('fill', 'none')
-          .transition()
-          .duration(duration)
-          .attr('d', function(d) {
-
-            var dependencyNode = nodeIndex[d.edge.target];
-            var localSource = source;
-
-            if (d.target) {
-              dependencyNode = localSource;
-              localSource = nodeIndex[d.edge.source];
-            }
-
-
-            if (dependencyNode.depth === localSource.depth) {
-              return exaggeratedDiagonal(localSource, dependencyNode);
-            }
-
-            return diagonal(localSource, dependencyNode);
-          })
-      ;
+//      g.selectAll('path.coupling')
+//          .data(_.values(dependencyEdges), function(d) {
+//            return d.id;
+//          })
+//          .enter()
+//          .insert('path', 'g')
+////          .append('path')
+//          .attr('class', 'coupling')
+//          .attr('d', function(d) {
+//            return diagonal(source, source);
+//          })
+//          .attr('marker-end', 'url(#markerArrow)')
+//          .style('stroke-dasharray', function(d) {
+//            if (d.ancestor) {
+//              return ('3, 3, 5, 3');
+//            }
+//
+//            if (d.target) {
+//              return ('3, 2');
+//            }
+//
+//            return ('1, 0');
+//          })
+//          .attr('stroke', function(d) {
+//            if (d.edge.type === 'implements') {
+//              return '#a4d765';
+//            }
+//
+//            if (d.edge.type === 'traitUse') {
+//              return '#ffc545';
+//            }
+//
+//            if (d.edge.type === 'instantiates') {
+//              return '#CC3F30';
+//            }
+//
+//            if (d.edge.type === 'instanceOf') {
+//              return '#fc857a';
+//            }
+//
+//            if (d.edge.type === 'staticAccess') {
+//              return '#e05760';
+//            }
+//
+//            if (d.edge.type === 'constantFetch') {
+//              return '#e05760';
+//            }
+//
+//            return '#000';
+//          })
+//          .style('stroke-width', '2')
+//          .attr('fill', 'none')
+//          .transition()
+//          .duration(duration)
+//          .attr('d', function(d) {
+//
+//            var dependencyNode = nodeIndex[d.edge.target];
+//            var localSource = source;
+//
+//            if (d.target) {
+//              dependencyNode = localSource;
+//              localSource = nodeIndex[d.edge.source];
+//            }
+//
+//
+//            if (dependencyNode.depth === localSource.depth) {
+//              return exaggeratedDiagonal(localSource, dependencyNode);
+//            }
+//
+//            return diagonal(localSource, dependencyNode);
+//          })
+//      ;
 
 
       // Store the old positions for transition.
@@ -679,9 +734,34 @@
 
     }
 
+    root.children.forEach(function(d) {
+      collapse(d);
+    });
+
+    /**
+     * Expand/collapse inheritance hierarchy for selected node
+     */
+    function expandInheritance(previousState, nextState) {
+
+      var sourceNode = nodeIndex[nextState.selectedNode];
+
+      if (sourceNode._children) {
+        expand(sourceNode);
+      } else if (sourceNode.children) {
+        collapse(sourceNode);
+      }
+
+      var treeData = recomputeTree();
+      drawNodes(treeData, sourceNode);
+      drawLinks(treeData, sourceNode);
+    };
+    observeStore(expandInheritance);
 
 
-    update(root);
+    // Init view
+    var treeData = recomputeTree();
+    drawNodes(treeData, root);
+    drawLinks(treeData, root);
   </script>
 
 </body>
