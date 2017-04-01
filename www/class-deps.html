@@ -155,6 +155,14 @@
       });
     }
 
+    function observeStoreChanges(fn) {
+      observeStore(function(previousState, nextState) {
+        if (previousState !== nextState) {
+          fn(previousState, nextState);
+        }
+      });
+    }
+
     // Begin App
 
     var nodeRadius = 10;
@@ -598,11 +606,11 @@
 
 //      g.selectAll('path.coupling').remove();
       
-      // Assigns the x and y position for the nodes
-      var treeData = recomputeTree();
-
-      drawNodes(treeData, source);
-      drawLinks(treeData, source);
+//      // Assigns the x and y position for the nodes
+//      var treeData = recomputeTree();
+//
+//      drawNodes(treeData, source);
+//      drawLinks(treeData, source);
 
 //
 //      var ancestorIds = [];
@@ -755,7 +763,7 @@
       drawNodes(treeData, sourceNode);
       drawLinks(treeData, sourceNode);
     };
-    observeStore(expandInheritance);
+    observeStoreChanges(expandInheritance);
 
 
     // Init view
