@@ -94,6 +94,11 @@
       return nodeA.localeCompare(nodeB);
     });
 
+    // Build node index, init start positions and visibility
+    var nodeIndex = {};
+    root.each(function(d) {
+      nodeIndex[d.id] = d;
+    });
 
     // Actions
     function toggleImplements() {
@@ -148,11 +153,11 @@
 
     function nodePositions(state, action) {
       var nodePositions = {};
-      root.each(function(d) {
-        nodePositions[d.id] = {
-          visible: true,
-          x: 0,
-          y: 0
+      _.each(nodeIndex, function(node) {
+        nodePositions[node.id] = {
+          visible: (node.visible === undefined) ? 0 : node.visible,
+          x: (node.x === undefined) ? 0 : node.x,
+          y: (node.y === undefined) ? 0 : node.y
         };
       });
 
@@ -223,12 +228,6 @@
       ) {
         implementsIndex[edgeKey] = edge;
       }
-    });
-
-    // Build node index, init start positions and visibility
-    var nodeIndex = {};
-    root.each(function(d) {
-      nodeIndex[d.id] = d;
     });
 
     function collapse(tData) {
@@ -433,6 +432,8 @@
 
     function drawNodes(treeData, source) {
 
+      var previousNodePositions = previousState.nodePositions;
+
       // ignore the root node
       var nodes = treeData.descendants().slice(1);
 
@@ -450,7 +451,7 @@
 
             var lastVisibleParent = null;
             d.ancestors().forEach(function(a) {
-              if (a.visible0 && !lastVisibleParent) {
+              if (previousNodePositions[a.id].visible && !lastVisibleParent) {
                 lastVisibleParent = a;
               }
             });
@@ -459,7 +460,9 @@
               lastVisibleParent = root;
             }
 
-            return "translate(" + lastVisibleParent.y0 + "," + lastVisibleParent.x0 + ")";
+            var previousPositions = previousNodePositions[lastVisibleParent.id];
+
+            return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
           })
           .on('click', function(d) { store.dispatch(selectNode(d.id)); });
 
@@ -548,11 +551,12 @@
           .attr('r', 1e-6);
 
       // On exit reduce the opacity of text labels
-      nodeExit.select('text')
-          .style('fill-opacity', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
     }
 
     function drawLinks(treeData, source) {
+      var previousNodePositions = previousState.nodePositions;
+
       var links = treeData.descendants().slice(1);
 
       // Update the links...
@@ -568,7 +572,7 @@
 
             var lastVisibleParent = null;
             d.ancestors().forEach(function(a) {
-              if (a.visible0 && !lastVisibleParent) {
+              if (previousNodePositions[a.id].visible && !lastVisibleParent) {
                 lastVisibleParent = a;
               }
             });
@@ -577,9 +581,11 @@
               lastVisibleParent = root;
             }
 
+            var lastVisibleParentPreviousPositions = previousNodePositions[lastVisibleParent.id];
+
             var o = {
-              x: lastVisibleParent.x0,
-              y: lastVisibleParent.y0
+              x: lastVisibleParentPreviousPositions.x,
+              y: lastVisibleParentPreviousPositions.y
             };
             return diagonal(o, o)
           });
