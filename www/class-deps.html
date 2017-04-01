@@ -121,7 +121,8 @@
       recomputeTree();
       return {
         type: 'RECOMPUTE_TREE',
-        treeData: treeData.descendants().map(function(node) {
+        treeData: _.map(nodeIndex, function(node) {
+
           if (node.visible) {
             return {
               id: node.id,
@@ -518,20 +519,7 @@
           .append('g')
           .attr('class', 'node')
           .attr("transform", function(d) {
-
-            var lastVisibleParent = null;
-            d.ancestors().forEach(function(a) {
-              if (previousNodePositions[a.id].visible && !lastVisibleParent) {
-                lastVisibleParent = a;
-              }
-            });
-
-            if (!lastVisibleParent) {
-              lastVisibleParent = root;
-            }
-
-            var previousPositions = previousNodePositions[lastVisibleParent.id];
-
+            var previousPositions = previousNodePositions[d.id];
             return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
           })
           .on('click', function(d) {
@@ -876,9 +864,8 @@
 
     // Init view
     root.children.forEach(function(d) {
-      store.dispatch(selectNode(d.id, false));
+      collapse(d);
     });
-    store.dispatch(selectNode(null));
     store.dispatch(recomputeTreeAction());
 //    recomputeTree();
 //    drawNodes(treeData, root);
