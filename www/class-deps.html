@@ -99,6 +99,7 @@
     root.each(function(d) {
       nodeIndex[d.id] = d;
     });
+    var treeData;
 
     // Actions
     function toggleImplements() {
@@ -107,11 +108,27 @@
       };
     }
 
-    function selectNode(nodeId) {
+    function selectNode(nodeId, expanded) {
       return {
         type: 'SELECT_NODE',
-        nodeId: nodeId
+        nodeId: nodeId,
+        expanded: expanded
       }
+    }
+
+    function recomputeTreeAction() {
+      recomputeTree();
+      return {
+        type: 'RECOMPUTE_TREE',
+        treeData: treeData.descendants().map(function(node) {
+          return {
+            id: node.id,
+            x: node.x,
+            y: node.y,
+            visible: node.visible
+          };
+        })
+      };
     }
 
     // Reducers
@@ -141,27 +158,52 @@
     function selectedNode(state, action) {
 
       if (action.type === 'SELECT_NODE') {
-        return action.nodeId;
+        return {
+          nodeId: action.nodeId,
+          expanded: action.expanded
+        };
       }
 
       if (state === undefined) {
-        return null;
+        return {
+          nodeId: null,
+          expanded: false
+        };
       }
 
       return state;
     }
 
     function nodePositions(state, action) {
-      var nodePositions = {};
-      _.each(nodeIndex, function(node) {
-        nodePositions[node.id] = {
-          visible: (node.visible === undefined) ? 0 : node.visible,
-          x: (node.x === undefined) ? 0 : node.x,
-          y: (node.y === undefined) ? 0 : node.y
-        };
-      });
 
-      return nodePositions;
+      if (action.type === 'RECOMPUTE_TREE') {
+        var nodePositions = {};
+        action.treeData.forEach(function(d) {
+          nodePositions[d.id] = {
+            visible: d.visible,
+            x: d.x,
+            y: d.y
+          };
+        });
+
+        return Object.assign(JSON.parse(JSON.stringify(state)), nodePositions);
+      }
+
+      // Default state
+      if (state === undefined) {
+        var nodePositions = {};
+        _.each(nodeIndex, function (node) {
+          nodePositions[node.id] = {
+            visible: true,
+            x: 0,
+            y: 0
+          };
+        });
+
+        return nodePositions;
+      }
+
+      return state;
     }
 
     var reducer = Redux.combineReducers({
@@ -205,12 +247,21 @@
       });
     }
 
-    function observeStoreChanges(fn) {
-      observeStore(function(previousState, nextState) {
-        if (previousState !== nextState) {
-          fn(previousState, nextState);
-        }
-      });
+    function observeStoreChanges(fn, key) {
+
+      if (key) {
+        observeStore(function (previousState, nextState) {
+          if (previousState[key] !== nextState[key]) {
+            fn(previousState, nextState);
+          }
+        });
+      } else {
+        observeStore(function (previousState, nextState) {
+          if (previousState !== nextState) {
+            fn(previousState, nextState);
+          }
+        });
+      }
     }
 
     // Begin App
@@ -464,7 +515,10 @@
 
             return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
           })
-          .on('click', function(d) { store.dispatch(selectNode(d.id)); });
+          .on('click', function(d) {
+            store.dispatch(selectNode(d.id, d._children? true : false));
+            store.dispatch(recomputeTreeAction());
+          });
 
       // Add Circle for the nodes
       nodeEnter.append('circle')
@@ -619,7 +673,7 @@
     }
 
     function recomputeTree() {
-      var treeData = tree(root);
+      treeData = tree(root);
       // Update y-position for nicely normalized depth
       treeData.descendants().forEach(function(d) {
         d.y = (d.depth - 1) * nodeWidth;
@@ -775,29 +829,43 @@
     });
 
     /**
-     * Expand/collapse inheritance hierarchy for selected node
+     * Expand inheritance hierarchy for selected node
      */
     function expandInheritance(previousState, nextState) {
+      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
 
-      var sourceNode = nodeIndex[nextState.selectedNode];
-
-      if (sourceNode._children) {
-        expand(sourceNode);
-      } else if (sourceNode.children) {
-        collapse(sourceNode);
+      if (!sourceNode) {
+        return;
       }
 
-      var treeData = recomputeTree();
-      drawNodes(treeData, sourceNode);
-      drawLinks(treeData, sourceNode);
+      if (nextState.selectedNode.expanded) {
+        expand(sourceNode);
+        console.log('expanded');
+      } else {
+        collapse(sourceNode);
+        console.log('collapsed');
+      }
     };
     observeStoreChanges(expandInheritance);
 
+    function updateGraph(previousState, nextState) {
+      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+
+      if (!sourceNode) {
+        sourceNode = root;
+      }
+
+      drawNodes(treeData, sourceNode);
+      drawLinks(treeData, sourceNode);
+    }
+    observeStoreChanges(updateGraph, 'nodePositions');
+
 
     // Init view
-    var treeData = recomputeTree();
-    drawNodes(treeData, root);
-    drawLinks(treeData, root);
+    store.dispatch(recomputeTreeAction());
+//    recomputeTree();
+//    drawNodes(treeData, root);
+//    drawLinks(treeData, root);
   </script>
 
 </body>
