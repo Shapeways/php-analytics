@@ -61,6 +61,8 @@
       right: 20px;
       width: 420px;
       height: 160px;
+
+      padding: 10px;
     }
 
   </style>
@@ -112,9 +114,10 @@
     var treeData;
 
     // Actions
-    function toggleImplements() {
+    function toggleImplements(value) {
       return {
-        type: 'TOGGLE_IMPLEMENTS'
+        type: 'TOGGLE_IMPLEMENTS',
+        value: value
       };
     }
 
@@ -168,13 +171,7 @@
       }
 
       if (action.type === 'TOGGLE_IMPLEMENTS') {
-        var showImplements = true;
-
-        if (state) {
-          showImplements = false;
-        }
-
-        return showImplements;
+        return action.value;
       }
 
       if (state === undefined) {
@@ -532,7 +529,7 @@
             return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
           })
           .on('click', function(d) {
-            store.dispatch(selectNode(d.id, d._children? true : false));
+            store.dispatch(selectNode(d.id, d._children? true : true));
             store.dispatch(recomputeTreeAction());
           });
 
@@ -895,7 +892,17 @@
 
   <div class="info-box">
     Selected node:<span class="legend--selected-node"></span>
+    <form id="graph-controls" action="#" method="GET">
+      <label><input type="checkbox" name="toggleImplements" value="true" /> Show implementation edges</label>
+    </form>
   </div>
 
+  <script>
+    var form = document.getElementById('graph-controls');
+    form.addEventListener('change', function() {
+      var formData = new FormData(form);
+      store.dispatch(toggleImplements(formData.get('toggleImplements') === 'true'? true : false));
+    });
+  </script>
 </body>
 </html>
