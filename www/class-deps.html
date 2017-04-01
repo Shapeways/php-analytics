@@ -54,6 +54,15 @@
       stroke-width: 2px;
     }
 
+    .info-box {
+      border: 2px solid #edeff0;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 420px;
+      height: 160px;
+    }
+
   </style>
 
 </head>
@@ -861,16 +870,32 @@
     }
     observeStoreChanges(updateGraph, 'nodePositions');
 
+    function updateLegend(previousState, nextState) {
+      var sourceNode = roadRunnerDeps.nodes[nextState.selectedNode.nodeId];
+
+      document.querySelectorAll('.legend--selected-node').forEach(function(domNode) {
+        domNode.innerHTML = '';
+      });
+
+      if (sourceNode) {
+        document.querySelectorAll('.legend--selected-node').forEach(function(domNode) {
+          domNode.appendChild(document.createTextNode(' ' + sourceNode.name));
+        });
+      }
+    }
+    observeStoreChanges(updateLegend);
+
 
     // Init view
     root.children.forEach(function(d) {
       collapse(d);
     });
     store.dispatch(recomputeTreeAction());
-//    recomputeTree();
-//    drawNodes(treeData, root);
-//    drawLinks(treeData, root);
   </script>
+
+  <div class="info-box">
+    Selected node:<span class="legend--selected-node"></span>
+  </div>
 
 </body>
 </html>
