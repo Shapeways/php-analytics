@@ -296,13 +296,7 @@
     var implementsIndex = {};
     _.each(roadRunnerDeps.edges, function(edge, edgeKey) {
 
-      if ((edge.type === 'traitUse')
-          || (edge.type === 'implements')
-          || (edge.type === 'instantiates')
-          || (edge.type === 'instanceOf')
-          || (edge.type === 'staticAccess')
-          || (edge.type === 'constantFetch')
-      ) {
+      if (edge.type === 'implements') {
         implementsIndex[edgeKey] = edge;
       }
     });
@@ -881,18 +875,129 @@
       }
 
       if (nextState.showImplements) {
-        document.querySelector('input[name="toggleImplements"]').checked = 'checked';
+        var checkbox = document.querySelector('input[name="toggleImplements"]');
+        if (checkbox) {
+          checkbox.checked = 'checked';
+        }
       } else {
-        document.querySelector('input[name="toggleImplements"]').checked = false;
+        var checkbox = document.querySelector('input[name="toggleImplements"]');
+        if (checkbox) {
+          checkbox.checked = false;
+        }
       }
     }
     observeStoreChanges(updateLegend);
 
     function drawImplementsEdges(previousState, nextState) {
+      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+
+      if (!sourceNode) {
+        return;
+      }
+
       if (nextState.showImplements) {
         console.log('Drawing implements edges');
+
+        var ancestorIds = [];
+        sourceNode.ancestors().forEach(function (a) {
+          if (a.id === sourceNode.id) {
+            return;
+          }
+          ancestorIds.push(a.id);
+        });
+
+        var dependencyEdges = {};
+        _.each(implementsIndex, function (edge) {
+
+          if (dependencyEdges[edge.id]) {
+            return;
+          }
+
+          if (edge.source === sourceNode.id) {
+            dependencyEdges[edge.id] = {
+              edge: edge,
+              source: true,
+              target: false,
+              ancestor: false
+            };
+          }
+
+//          if (edge.target === source.id) {
+//            dependencyEdges[edge.id] = {
+//              edge: edge,
+//              source: false,
+//              target: true,
+//              ancestor: false
+//            };
+//          }
+
+          if (ancestorIds.indexOf(edge.source) >= 0) {
+            dependencyEdges[edge.id] = {
+              edge: edge,
+              source: false,
+              target: false,
+              ancestor: true
+            };
+          }
+        });
+
+
+      g.selectAll('path.coupling')
+          .data(_.values(dependencyEdges), function(d) {
+            return d.id;
+          })
+          .enter()
+          .insert('path', 'g')
+          .attr('class', 'coupling')
+          .attr('d', function(d) {
+            return diagonal(sourceNode, sourceNode);
+          })
+          .attr('marker-end', 'url(#markerArrow)')
+          .style('stroke-dasharray', function(d) {
+            if (d.ancestor) {
+              return ('3, 3, 5, 3');
+            }
+
+            if (d.target) {
+              return ('3, 2');
+            }
+
+            return ('1, 0');
+          })
+          .attr('stroke', function(d) {
+            if (d.edge.type === 'implements') {
+              return '#a4d765';
+            }
+
+            return '#000';
+          })
+          .style('stroke-width', '2')
+          .attr('fill', 'none')
+          .transition()
+          .duration(duration)
+          .attr('d', function(d) {
+
+            var dependencyNode = nodeIndex[d.edge.target];
+            var localSource = sourceNode;
+
+            if (d.target) {
+              dependencyNode = localSource;
+              localSource = nodeIndex[d.edge.source];
+            }
+
+
+            if (dependencyNode.depth === localSource.depth) {
+              return exaggeratedDiagonal(localSource, dependencyNode);
+            }
+
+            return diagonal(localSource, dependencyNode);
+          })
+      ;
+
+
       } else {
         console.log('Hiding implements edges');
+        g.selectAll('path.coupling').remove();
       }
     }
     observeStoreChanges(drawImplementsEdges, 'showImplements');
