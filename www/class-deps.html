@@ -879,6 +879,12 @@
           domNode.appendChild(document.createTextNode(' ' + sourceNode.name));
         });
       }
+
+      if (nextState.showImplements) {
+        document.querySelector('input[name="toggleImplements"]').checked = 'checked';
+      } else {
+        document.querySelector('input[name="toggleImplements"]').checked = false;
+      }
     }
     observeStoreChanges(updateLegend);
 
@@ -901,7 +907,7 @@
 
   <div class="info-box">
     Selected node:<span class="legend--selected-node"></span>
-    <form id="graph-controls" action="#" method="GET">
+    <form id="graph-controls" name="legend" action="#" method="GET">
       <label><input type="checkbox" name="toggleImplements" value="true" /> Show implementation edges</label>
     </form>
   </div>
