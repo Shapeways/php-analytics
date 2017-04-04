@@ -166,9 +166,9 @@
     // Reducers
     function showImplements(state, action) {
 
-//      if (action.type === 'SELECT_NODE') {
-//        return false;
-//      }
+      if (action.type === 'SELECT_NODE') {
+        return false;
+      }
 
       if (action.type === 'TOGGLE_IMPLEMENTS') {
         return action.value;
@@ -825,31 +825,11 @@
 
         paths = _.values(dependencyEdges);
 
-
-
-
-      } else {
-//        console.log('Hiding implements edges');
-//        g.selectAll('path.coupling')
-//          .data([])
-//            .exit()
-//            .transition()
-//            .duration(duration)
-//            .attr('d', function(d) {
-//              var localSource = nodeIndex[d.edge.source];
-//              return diagonal(localSource, localSource)
-//            })
-//            .remove()
-//        ;
-      }
-
-
-      var select = g.selectAll('path.coupling')
-          .data(paths, function(d) {
+      g.selectAll('path.coupling')
+          .data(_.values(dependencyEdges), function(d) {
             return d.id;
-          });
-
-      select.enter()
+          })
+          .enter()
           .insert('path', 'g')
           .attr('class', 'coupling')
           .attr('d', function(d) {
@@ -894,17 +874,24 @@
             }
 
             return diagonal(localSource, dependencyNode);
-          });
-
-      select.exit()
-          .transition()
-          .duration(duration)
-          .attr('d', function(d) {
-            var localSource = nodeIndex[d.edge.source];
-            return diagonal(localSource, localSource)
           })
-          .remove()
       ;
+
+
+      } else {
+        console.log('Hiding implements edges');
+        g.selectAll('path.coupling')
+          .data([])
+            .exit()
+            .transition()
+            .duration(duration)
+            .attr('d', function(d) {
+              var localSource = nodeIndex[d.edge.source];
+              return diagonal(localSource, localSource)
+            })
+            .remove()
+        ;
+      }
     }
     observeStoreChanges(drawImplementsEdges);
 
