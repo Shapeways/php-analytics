@@ -166,9 +166,9 @@
     // Reducers
     function showImplements(state, action) {
 
-      if (action.type === 'SELECT_NODE') {
-        return false;
-      }
+//      if (action.type === 'SELECT_NODE') {
+//        return false;
+//      }
 
       if (action.type === 'TOGGLE_IMPLEMENTS') {
         return action.value;
@@ -542,7 +542,8 @@
           .text(function(d) {
             var parts = d.id.split(':');
             return (parts.length === 1)? parts[0] : parts[1];
-          });
+          })
+      ;
 
       // UPDATE
       var nodeUpdate = nodeEnter.merge(node);
@@ -596,7 +597,24 @@
             }
 
           })
-          .attr('cursor', 'pointer');
+          .attr('cursor', 'pointer')
+          .style('stroke-width', function(d) {
+            if (d.id === source.id) {
+              return '5px';
+            }
+
+            return '3px';
+          });
+      ;
+
+      nodeUpdate.select('text')
+          .style('font-weight', function(d) {
+            if (d.id === source.id) {
+              return 'bold';
+            }
+
+            return 'normal';
+          });
 
 
       // Remove any exiting nodes
@@ -690,7 +708,7 @@
 
       return treeData;
     }
-    
+
 
     /**
      * Expand inheritance hierarchy for selected node
@@ -756,6 +774,8 @@
         return;
       }
 
+      var paths = [];
+
       if (nextState.showImplements) {
         console.log('Drawing implements edges');
 
@@ -803,11 +823,33 @@
         });
 
 
-      g.selectAll('path.coupling')
-          .data(_.values(dependencyEdges), function(d) {
+        paths = _.values(dependencyEdges);
+
+
+
+
+      } else {
+//        console.log('Hiding implements edges');
+//        g.selectAll('path.coupling')
+//          .data([])
+//            .exit()
+//            .transition()
+//            .duration(duration)
+//            .attr('d', function(d) {
+//              var localSource = nodeIndex[d.edge.source];
+//              return diagonal(localSource, localSource)
+//            })
+//            .remove()
+//        ;
+      }
+
+
+      var select = g.selectAll('path.coupling')
+          .data(paths, function(d) {
             return d.id;
-          })
-          .enter()
+          });
+
+      select.enter()
           .insert('path', 'g')
           .attr('class', 'coupling')
           .attr('d', function(d) {
@@ -852,26 +894,19 @@
             }
 
             return diagonal(localSource, dependencyNode);
+          });
+
+      select.exit()
+          .transition()
+          .duration(duration)
+          .attr('d', function(d) {
+            var localSource = nodeIndex[d.edge.source];
+            return diagonal(localSource, localSource)
           })
+          .remove()
       ;
-
-
-      } else {
-        console.log('Hiding implements edges');
-        g.selectAll('path.coupling')
-          .data([])
-            .exit()
-            .transition()
-            .duration(duration)
-            .attr('d', function(d) {
-              var localSource = nodeIndex[d.edge.source];
-              return diagonal(localSource, localSource)
-            })
-            .remove()
-        ;
-      }
     }
-    observeStoreChanges(drawImplementsEdges, 'showImplements');
+    observeStoreChanges(drawImplementsEdges);
 
 
     // Init view
