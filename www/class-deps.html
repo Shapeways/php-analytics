@@ -882,6 +882,15 @@
     }
     observeStoreChanges(updateLegend);
 
+    function drawImplementsEdges(previousState, nextState) {
+      if (nextState.showImplements) {
+        console.log('Drawing implements edges');
+      } else {
+        console.log('Hiding implements edges');
+      }
+    }
+    observeStoreChanges(drawImplementsEdges, 'showImplements');
+
 
     // Init view
     root.children.forEach(function(d) {
