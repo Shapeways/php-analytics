@@ -997,7 +997,17 @@
 
       } else {
         console.log('Hiding implements edges');
-        g.selectAll('path.coupling').remove();
+        g.selectAll('path.coupling')
+          .data([])
+            .exit()
+            .transition()
+            .duration(duration)
+            .attr('d', function(d) {
+              var localSource = nodeIndex[d.edge.source];
+              return diagonal(localSource, localSource)
+            })
+            .remove()
+        ;
       }
     }
     observeStoreChanges(drawImplementsEdges, 'showImplements');
