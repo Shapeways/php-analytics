@@ -114,6 +114,12 @@
   var treeData;
 
   // Actions
+  function initTree() {
+    return {
+      type: 'INIT_TREE'
+    };
+  }
+
   function toggleImplements(value) {
     return {
       type: 'TOGGLE_IMPLEMENTS',
@@ -122,18 +128,6 @@
   }
 
   function selectNode(nodeId, expanded) {
-
-    var sourceNode = nodeIndex[nodeId];
-
-    if (sourceNode) {
-      if (expanded) {
-        expand(sourceNode);
-      }
-      else {
-        collapse(sourceNode);
-      }
-    }
-
     return {
       type: 'SELECT_NODE',
       nodeId: nodeId,
@@ -236,7 +230,33 @@
             return function (next) {
               return function (action) {
 
+                var doRecompute = false;
+
+                // Only recompute when expanding.
+                // Optimizes performance cost of selecting nodes.
                 if (action.type === 'SELECT_NODE') {
+
+                  var newSource = nodeIndex[action.nodeId];
+                  if (newSource && !isLeaf(newSource) && ((action.expanded && isCollapsed(newSource)) || (!action.expanded && isExpanded(newSource)))) {
+
+                    doRecompute = true;
+
+                    if (action.expanded) {
+                      expand(newSource);
+                    }
+                    else {
+                      collapse(newSource);
+                    }
+                  }
+                }
+
+                if (action.type === 'INIT_TREE') {
+                  doRecompute = true;
+                }
+
+                if (doRecompute) {
+                  console.log('RECOMPUTING NODE POSITIONS');
+
                   recomputeTree();
 
                   action.treeData = _.map(nodeIndex, function (node) {
@@ -341,6 +361,18 @@
         c.visible = true;
       });
     }
+  }
+
+  function isCollapsed(tData) {
+    return tData._children? true : false;
+  }
+
+  function isExpanded(tData) {
+    return tData.children? true : false;
+  }
+
+  function isLeaf(tData) {
+    return !tData.children && !tData._children;
   }
 
   function showTree(node) {
@@ -738,7 +770,7 @@
     drawNodes(treeData, sourceNode);
     drawLinks(treeData, sourceNode);
   }
-  observeStoreChanges(updateGraph, 'nodePositions');
+  observeStoreChanges(updateGraph);
 
   function updateLegend(previousState, nextState) {
     var sourceNode = roadRunnerDeps.nodes[nextState.selectedNode.nodeId];
@@ -900,7 +932,7 @@
   root.children.forEach(function (d) {
     collapse(d);
   });
-  store.dispatch(selectNode(root.id, true));
+  store.dispatch(initTree());
 </script>
 
 <div class="info-box">
