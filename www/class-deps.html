@@ -138,10 +138,6 @@
   // Reducers
   function showImplements(state, action) {
 
-    if (action.type === 'SELECT_NODE') {
-      return false;
-    }
-
     if (action.type === 'TOGGLE_IMPLEMENTS') {
       return action.value;
     }
@@ -255,7 +251,14 @@
                 }
 
                 if (((action.type === 'TOGGLE_IMPLEMENTS') && (action.value === true)) || store.getState().showImplements) {
-                  var newSource = nodeIndex[store.getState().selectedNode.nodeId];
+                  var newSource = root;
+
+                  if (action.type === 'SELECT_NODE') {
+                    newSource = nodeIndex[action.nodeId];
+                  } else if (store.getState().selectedNode.nodeId) {
+                    newSource = nodeIndex[store.getState().selectedNode.nodeId];
+                  }
+
                   var implementsEdges = findImplementsEdges(newSource);
 
                   _.each(implementsEdges, function(edge) {
@@ -375,12 +378,15 @@
     var dependencyEdges = {};
     _.each(implementsIndex, function (edge) {
 
-      if (dependencyEdges[edge.id]) {
+      var id = sourceNode.id + ':' + edge.id;
+
+      if (dependencyEdges[id]) {
         return;
       }
 
       if (edge.source === sourceNode.id) {
-        dependencyEdges[edge.id] = {
+        dependencyEdges[id] = {
+          id: id,
           edge: edge,
           source: true,
           target: false,
@@ -390,7 +396,8 @@
       }
 
       if (ancestorIds.indexOf(edge.source) >= 0) {
-        dependencyEdges[edge.id] = {
+        dependencyEdges[id] = {
+          id: id,
           edge: edge,
           source: false,
           target: false,
@@ -901,15 +908,17 @@
     if (nextState.showImplements) {
       console.log('Drawing implements edges');
 
-      var dependencyEdges = findImplementsEdges(sourceNode);
+      paths = _.values(findImplementsEdges(sourceNode));
+    }
 
-      paths = _.values(dependencyEdges);
 
-      g.selectAll('path.coupling')
-          .data(_.values(dependencyEdges), function (d) {
+    var selection = g.selectAll('path.coupling')
+          .data(_.values(paths), function (d) {
             return d.id;
-          })
-          .enter()
+          });
+
+
+    selection.enter()
           .insert('path', 'g')
           .attr('class', 'coupling')
           .attr('d', function (d) {
@@ -957,12 +966,8 @@
           })
       ;
 
-
-    } else {
       console.log('Hiding implements edges');
-      g.selectAll('path.coupling')
-          .data([])
-          .exit()
+      selection.exit()
           .transition()
           .duration(duration)
           .attr('d', function (d) {
@@ -971,7 +976,6 @@
           })
           .remove()
       ;
-    }
   }
   observeStoreChanges(drawImplementsEdges);
 
