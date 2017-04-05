@@ -122,6 +122,18 @@
   }
 
   function selectNode(nodeId, expanded) {
+
+    var sourceNode = nodeIndex[nodeId];
+
+    if (sourceNode) {
+      if (expanded) {
+        expand(sourceNode);
+      }
+      else {
+        collapse(sourceNode);
+      }
+    }
+
     return {
       type: 'SELECT_NODE',
       nodeId: nodeId,
@@ -708,26 +720,6 @@
 
     return treeData;
   }
-
-
-  /**
-   * Expand inheritance hierarchy for selected node
-   */
-  function expandInheritance(previousState, nextState) {
-    var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
-
-    if (!sourceNode) {
-      return;
-    }
-
-    if (nextState.selectedNode.expanded) {
-      expand(sourceNode);
-    } else {
-      collapse(sourceNode);
-    }
-  }
-  ;
-  observeStoreChanges(expandInheritance);
 
   function updateGraph(previousState, nextState) {
     var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
