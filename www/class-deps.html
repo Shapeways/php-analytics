@@ -254,6 +254,20 @@
                   doRecompute = true;
                 }
 
+                if (((action.type === 'TOGGLE_IMPLEMENTS') && (action.value === true)) || store.getState().showImplements) {
+                  var newSource = nodeIndex[store.getState().selectedNode.nodeId];
+                  var implementsEdges = findImplementsEdges(newSource);
+
+                  _.each(implementsEdges, function(edge) {
+                    var destination = nodeIndex[edge.edge.target];
+
+                    if (destination) {
+                      showTree(destination);
+                      doRecompute = true;
+                    }
+                  });
+                }
+
                 if (doRecompute) {
                   console.log('RECOMPUTING NODE POSITIONS');
 
@@ -340,6 +354,81 @@
       implementsIndex[edgeKey] = edge;
     }
   });
+
+  function findImplementsEdges(sourceNode) {
+    if (this.results && this.results[sourceNode.id]) {
+
+      console.log('Returning memoized implements edges');
+
+      return this.results[sourceNode.id];
+    }
+
+
+    var ancestorIds = [];
+    sourceNode.ancestors().forEach(function (a) {
+      if (a.id === sourceNode.id) {
+        return;
+      }
+      ancestorIds.push(a.id);
+    });
+
+    var dependencyEdges = {};
+    _.each(implementsIndex, function (edge) {
+
+      if (dependencyEdges[edge.id]) {
+        return;
+      }
+
+      if (edge.source === sourceNode.id) {
+        dependencyEdges[edge.id] = {
+          edge: edge,
+          source: true,
+          target: false,
+          ancestor: false,
+          actualSource: sourceNode
+        };
+      }
+
+      if (ancestorIds.indexOf(edge.source) >= 0) {
+        dependencyEdges[edge.id] = {
+          edge: edge,
+          source: false,
+          target: false,
+          ancestor: true,
+          actualSource: sourceNode
+        };
+      }
+    });
+
+    if (!this.results) {
+      this.results = {};
+    }
+
+    this.results[sourceNode.id] = dependencyEdges;
+
+    return dependencyEdges;
+  }
+
+  function previousNodePosition(node) {
+    var previousNodePositions = previousState.nodePositions;
+
+    var d = node;
+    var previousPositions = previousNodePositions[d.id];
+
+    // Implicit base-case is root node
+    while ((previousPositions.x === undefined) || (previousPositions.y === undefined)) {
+      if (d.parent) {
+        d = d.parent;
+      }
+
+      previousPositions = previousNodePositions[d.id];
+    }
+
+    return {
+      x: previousPositions.x,
+      y: previousPositions.y
+    }
+  }
 
   function collapse(tData) {
 
@@ -571,7 +660,8 @@
         .append('g')
         .attr('class', 'node')
         .attr("transform", function (d) {
-          var previousPositions = previousNodePositions[d.id];
+          var previousPositions = previousNodePosition(d);
+
           return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
         })
         .on('click', function (d) {
@@ -811,49 +901,7 @@
     if (nextState.showImplements) {
       console.log('Drawing implements edges');
 
-      var ancestorIds = [];
-      sourceNode.ancestors().forEach(function (a) {
-        if (a.id === sourceNode.id) {
-          return;
-        }
-        ancestorIds.push(a.id);
-      });
-
-      var dependencyEdges = {};
-      _.each(implementsIndex, function (edge) {
-
-        if (dependencyEdges[edge.id]) {
-          return;
-        }
-
-        if (edge.source === sourceNode.id) {
-          dependencyEdges[edge.id] = {
-            edge: edge,
-            source: true,
-            target: false,
-            ancestor: false
-          };
-        }
-
-//          if (edge.target === source.id) {
-//            dependencyEdges[edge.id] = {
-//              edge: edge,
-//              source: false,
-//              target: true,
-//              ancestor: false
-//            };
-//          }
-
-        if (ancestorIds.indexOf(edge.source) >= 0) {
-          dependencyEdges[edge.id] = {
-            edge: edge,
-            source: false,
-            target: false,
-            ancestor: true
-          };
-        }
-      });
-
+      var dependencyEdges = findImplementsEdges(sourceNode);
 
       paths = _.values(dependencyEdges);
 
@@ -900,7 +948,6 @@
               localSource = nodeIndex[d.edge.source];
             }
 
-
             if (dependencyNode.depth === localSource.depth) {
               return exaggeratedDiagonal(localSource, dependencyNode);
             }
@@ -918,7 +965,7 @@
           .transition()
           .duration(duration)
           .attr('d', function (d) {
-            var localSource = nodeIndex[d.edge.source];
+            var localSource = d.actualSource;
             return diagonal(localSource, localSource)
           })
           .remove()
