@@ -437,6 +437,8 @@
     }
   }
 
+
+  // D3 helpers
   function collapse(tData) {
 
     if (tData.children) {
@@ -480,6 +482,15 @@
       expand(d);
     });
 
+  }
+
+  function startTransition(selection) {
+    return selection
+        .transition()
+        .delay(function(d, i) {
+          return i * 250;
+        })
+        .duration(750);
   }
 
   var svg = d3.select('svg');
@@ -947,6 +958,9 @@
           .style('stroke-width', '2')
           .attr('fill', 'none')
           .transition()
+          .delay(function(d, i) {
+            return i * 250;
+          })
           .duration(duration)
           .attr('d', function (d) {
 
@@ -970,6 +984,9 @@
       selection.exit()
           .transition()
           .duration(duration)
+          .delay(function(d, i) {
+            return i * 250;
+          })
           .attr('d', function (d) {
             var localSource = d.actualSource;
             return diagonal(localSource, localSource)
