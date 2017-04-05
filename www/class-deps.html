@@ -37,7 +37,6 @@
       stroke-dasharray: 2, 2;
     }
 
-
     .node circle {
       fill: #fff;
       stroke: black;
@@ -69,739 +68,741 @@
 
 </head>
 <body>
-  <?xml version="1.0" standalone="no"?>
-  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <defs>
+<?xml version="1.0" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
 
-      <marker id="markerArrow" markerWidth="10" markerHeight="10" viewBox="0 0 20 20" markerUnits="strokeWidth" refX="9" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L9,3 z" fill="#000000" />
-      </marker>
+    <marker id="markerArrow" markerWidth="10" markerHeight="10" viewBox="0 0 20 20" markerUnits="strokeWidth" refX="9"
+            refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#000000"/>
+    </marker>
 
-    </defs>
-  </svg>
+  </defs>
+</svg>
 
-  <script src="js/redux/redux.min.js"></script>
-  <script src="js/underscore.js"></script>
-  <script src="js/d3/d3.js"></script>
-  <script src="js/d3-force/d3-force.js"></script>
-  <script src="js/class-graph.js"></script>
+<script src="js/redux/redux.min.js"></script>
+<script src="js/underscore.js"></script>
+<script src="js/d3/d3.js"></script>
+<script src="js/d3-force/d3-force.js"></script>
+<script src="js/class-graph.js"></script>
 
-  <script>
+<script>
 
-    // Bootstrap
-    var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
-    var root = d3.stratify()
-        .id(function(d) {
-          return d.source;
-        }).parentId(function(d) {
-          return d.target;
-        })
-        (classInheritanceEdges);
+  // Bootstrap
+  var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
+  var root = d3.stratify()
+      .id(function (d) {
+        return d.source;
+      }).parentId(function (d) {
+        return d.target;
+      })
+      (classInheritanceEdges);
 
-    root.sort(function(a, b) {
-      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
-      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
+  root.sort(function (a, b) {
+    var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
+    var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
 
-      return nodeA.localeCompare(nodeB);
-    });
+    return nodeA.localeCompare(nodeB);
+  });
 
-    // Build node index, init start positions and visibility
-    var nodeIndex = {};
-    root.each(function(d) {
-      d.visible = true;
-      nodeIndex[d.id] = d;
-    });
-    var treeData;
+  // Build node index, init start positions and visibility
+  var nodeIndex = {};
+  root.each(function (d) {
+    d.visible = true;
+    nodeIndex[d.id] = d;
+  });
+  var treeData;
 
-    // Actions
-    function toggleImplements(value) {
-      return {
-        type: 'TOGGLE_IMPLEMENTS',
-        value: value
-      };
+  // Actions
+  function toggleImplements(value) {
+    return {
+      type: 'TOGGLE_IMPLEMENTS',
+      value: value
+    };
+  }
+
+  function selectNode(nodeId, expanded) {
+    return {
+      type: 'SELECT_NODE',
+      nodeId: nodeId,
+      expanded: expanded
     }
+  }
 
-    function selectNode(nodeId, expanded) {
-      return {
-        type: 'SELECT_NODE',
-        nodeId: nodeId,
-        expanded: expanded
-      }
-    }
+  function recomputeTreeAction() {
+    recomputeTree();
+    return {
+      type: 'RECOMPUTE_TREE',
+      treeData: _.map(nodeIndex, function (node) {
 
-    function recomputeTreeAction() {
-      recomputeTree();
-      return {
-        type: 'RECOMPUTE_TREE',
-        treeData: _.map(nodeIndex, function(node) {
-
-          if (node.visible) {
-            return {
-              id: node.id,
-              x: node.x,
-              y: node.y,
-              visible: node.visible
-            };
-          }
-
-          if (node.parent) {
-            return {
-              id: node.id,
-              x: node.parent.x,
-              y: node.parent.y,
-              visible: node.visible
-            };
-          }
-
+        if (node.visible) {
           return {
             id: node.id,
-            x: 0,
-            y: 0,
+            x: node.x,
+            y: node.y,
             visible: node.visible
           };
-        })
+        }
+
+        if (node.parent) {
+          return {
+            id: node.id,
+            x: node.parent.x,
+            y: node.parent.y,
+            visible: node.visible
+          };
+        }
+
+        return {
+          id: node.id,
+          x: 0,
+          y: 0,
+          visible: node.visible
+        };
+      })
+    };
+  }
+
+  // Reducers
+  function showImplements(state, action) {
+
+    if (action.type === 'SELECT_NODE') {
+      return false;
+    }
+
+    if (action.type === 'TOGGLE_IMPLEMENTS') {
+      return action.value;
+    }
+
+    if (state === undefined) {
+      return false;
+    }
+
+    return state;
+  }
+
+  function selectedNode(state, action) {
+
+    if (action.type === 'SELECT_NODE') {
+      return {
+        nodeId: action.nodeId,
+        expanded: action.expanded
       };
     }
 
-    // Reducers
-    function showImplements(state, action) {
-
-      if (action.type === 'SELECT_NODE') {
-        return false;
-      }
-
-      if (action.type === 'TOGGLE_IMPLEMENTS') {
-        return action.value;
-      }
-
-      if (state === undefined) {
-        return false;
-      }
-
-      return state;
+    if (state === undefined) {
+      return {
+        nodeId: null,
+        expanded: false
+      };
     }
 
-    function selectedNode(state, action) {
+    return state;
+  }
 
-      if (action.type === 'SELECT_NODE') {
-        return {
-          nodeId: action.nodeId,
-          expanded: action.expanded
+  function nodePositions(state, action) {
+
+    if (action.type === 'RECOMPUTE_TREE') {
+      var nodePositions = {};
+      action.treeData.forEach(function (d) {
+        nodePositions[d.id] = {
+          visible: d.visible,
+          x: d.x,
+          y: d.y
         };
-      }
+      });
 
-      if (state === undefined) {
-        return {
-          nodeId: null,
-          expanded: false
+      return Object.assign(JSON.parse(JSON.stringify(state)), nodePositions);
+    }
+
+    // Default state
+    if (state === undefined) {
+      var nodePositions = {};
+      _.each(nodeIndex, function (node) {
+        nodePositions[node.id] = {
+          visible: true,
+          x: 0,
+          y: 0
         };
-      }
+      });
 
-      return state;
+      return nodePositions;
     }
 
-    function nodePositions(state, action) {
+    return state;
+  }
 
-      if (action.type === 'RECOMPUTE_TREE') {
-        var nodePositions = {};
-        action.treeData.forEach(function(d) {
-          nodePositions[d.id] = {
-            visible: d.visible,
-            x: d.x,
-            y: d.y
-          };
-        });
+  var reducer = Redux.combineReducers({
+    showImplements,
+    selectedNode,
+    nodePositions
+  });
 
-        return Object.assign(JSON.parse(JSON.stringify(state)), nodePositions);
-      }
-
-      // Default state
-      if (state === undefined) {
-        var nodePositions = {};
-        _.each(nodeIndex, function (node) {
-          nodePositions[node.id] = {
-            visible: true,
-            x: 0,
-            y: 0
-          };
-        });
-
-        return nodePositions;
-      }
-
-      return state;
-    }
-
-    var reducer = Redux.combineReducers({
-      showImplements,
-      selectedNode,
-      nodePositions
-    });
-
-    // Store
-    var previousState = {};
-    var store = Redux.createStore(
-        reducer,
-        Redux.applyMiddleware(
-            // Previous state middleware
-            function (store) {
-              return function (next) {
-                return function (action) {
-                  previousState = store.getState();
-                  next(action);
-                }
-              }
-            },
-
-            // Logging Middleware
-            function (store) {
-              return function (next) {
-                return function (action) {
-                  console.log(action);
-                  next(action);
-                }
+  // Store
+  var previousState = {};
+  var store = Redux.createStore(
+      reducer,
+      Redux.applyMiddleware(
+          // Previous state middleware
+          function (store) {
+            return function (next) {
+              return function (action) {
+                previousState = store.getState();
+                next(action);
               }
             }
-        )
-    );
-    var previousState = store.getState();
+          },
 
-    // Utils
-    function observeStore(fn) {
-      store.subscribe(function() {
-        fn(previousState, store.getState());
-      });
-    }
-
-    function observeStoreChanges(fn, key) {
-
-      if (key) {
-        observeStore(function (previousState, nextState) {
-          if (previousState[key] !== nextState[key]) {
-            fn(previousState, nextState);
+          // Logging Middleware
+          function (store) {
+            return function (next) {
+              return function (action) {
+                console.log(action);
+                next(action);
+              }
+            }
           }
-        });
-      } else {
-        observeStore(function (previousState, nextState) {
-          if (previousState !== nextState) {
-            fn(previousState, nextState);
-          }
-        });
-      }
-    }
+      )
+  );
+  var previousState = store.getState();
 
-    // Begin App
-    var nodeRadius = 10;
-
-    var implementsIndex = {};
-    _.each(roadRunnerDeps.edges, function(edge, edgeKey) {
-
-      if (edge.type === 'implements') {
-        implementsIndex[edgeKey] = edge;
-      }
+  // Utils
+  function observeStore(fn) {
+    store.subscribe(function () {
+      fn(previousState, store.getState());
     });
+  }
 
-    function collapse(tData) {
+  function observeStoreChanges(fn, key) {
 
-      if (tData.children) {
-        tData._children = tData.children;
-        tData._children.forEach(function(c) {
-          collapse(c);
-          c.visible = false;
-        });
-        tData.children = null;
-      }
-    }
-
-    function expand(tData) {
-      if (tData._children) {
-        tData.children = tData._children;
-        tData._children = null;
-        tData.children.forEach(function(c) {
-          c.visible = true;
-        });
-      }
-    }
-
-    function showTree(node) {
-
-      node.ancestors().forEach(function(d) {
-        if (d.id === node.id) {
-          return;
+    if (key) {
+      observeStore(function (previousState, nextState) {
+        if (previousState[key] !== nextState[key]) {
+          fn(previousState, nextState);
         }
-        expand(d);
       });
-
+    } else {
+      observeStore(function (previousState, nextState) {
+        if (previousState !== nextState) {
+          fn(previousState, nextState);
+        }
+      });
     }
+  }
 
-    var svg = d3.select('svg');
+  // Begin App
+  var nodeRadius = 10;
 
-    var width = 20000;
-    var height = 40000;
-    svg.attr('width', width);
-    svg.attr('height', height);
-    var g = svg.append('g');
+  var implementsIndex = {};
+  _.each(roadRunnerDeps.edges, function (edge, edgeKey) {
 
-//    var tree = d3.tree();
-    var tree = d3.cluster();
-    tree.separation(function(a, b) {
-      return a.parent == b.parent ? 0.25 : 0.5;
+    if (edge.type === 'implements') {
+      implementsIndex[edgeKey] = edge;
+    }
+  });
+
+  function collapse(tData) {
+
+    if (tData.children) {
+      tData._children = tData.children;
+      tData._children.forEach(function (c) {
+        collapse(c);
+        c.visible = false;
+      });
+      tData.children = null;
+    }
+  }
+
+  function expand(tData) {
+    if (tData._children) {
+      tData.children = tData._children;
+      tData._children = null;
+      tData.children.forEach(function (c) {
+        c.visible = true;
+      });
+    }
+  }
+
+  function showTree(node) {
+
+    node.ancestors().forEach(function (d) {
+      if (d.id === node.id) {
+        return;
+      }
+      expand(d);
     });
-    tree.nodeSize([100, 100]);
 
-    var i = 0,
-        duration = 750;
+  }
 
-    var nodeHeight = 30;
-    var nodeWidth = 380;
+  var svg = d3.select('svg');
 
-    function exaggeratedDiagonal(s, d) {
+  var width = 20000;
+  var height = 40000;
+  svg.attr('width', width);
+  svg.attr('height', height);
+  var g = svg.append('g');
 
-      var x1 = s.x;
-      var y1 = s.y;
-      var x2 = d.x;
-      var y2 = d.y;
+  //    var tree = d3.tree();
+  var tree = d3.cluster();
+  tree.separation(function (a, b) {
+    return a.parent == b.parent ? 0.25 : 0.5;
+  });
+  tree.nodeSize([100, 100]);
 
-      if (x1 === x2) {
+  var i = 0,
+      duration = 750;
 
-        if (y1 === 0) {
-          y1 += nodeRadius;
-          y2 += nodeRadius;
+  var nodeHeight = 30;
+  var nodeWidth = 380;
 
-          return `M ${y1} ${x1}
+  function exaggeratedDiagonal(s, d) {
+
+    var x1 = s.x;
+    var y1 = s.y;
+    var x2 = d.x;
+    var y2 = d.y;
+
+    if (x1 === x2) {
+
+      if (y1 === 0) {
+        y1 += nodeRadius;
+        y2 += nodeRadius;
+
+        return `M ${y1} ${x1}
               C ${(y1) + (4 * nodeRadius)} ${x1 + (4 * nodeRadius)},
                 ${(y1) + (4 * nodeRadius)} ${x2 - (4 * nodeRadius)},
                 ${y2} ${x2}`;
-        }
-        else {
-          y1 -= nodeRadius;
-          y2 -= nodeRadius;
+      }
+      else {
+        y1 -= nodeRadius;
+        y2 -= nodeRadius;
 
-          return `M ${y1} ${x1}
+        return `M ${y1} ${x1}
               C ${(y1) + (4 * -nodeRadius)} ${x1 + (4 * nodeRadius)},
                 ${(y1) + (4 * -nodeRadius)} ${x2 - (4 * nodeRadius)},
                 ${y2} ${x2}`;
-        }
       }
-      else if ((y1 === 0) && (y2 === 0)) {
-        y1 += nodeRadius;
-        y2 += nodeRadius;
+    }
+    else if ((y1 === 0) && (y2 === 0)) {
+      y1 += nodeRadius;
+      y2 += nodeRadius;
 
-        return `M ${y1} ${x1}
+      return `M ${y1} ${x1}
             C ${(y1) + (nodeWidth / 2)} ${x1},
               ${(y1) + (nodeWidth / 2)} ${x2},
               ${y2} ${x2}`;
 
-      }
-      else if (y1 === y2) {
-        y1 -= nodeRadius;
-        y2 -= nodeRadius;
+    }
+    else if (y1 === y2) {
+      y1 -= nodeRadius;
+      y2 -= nodeRadius;
 
-        return `M ${y1} ${x1}
+      return `M ${y1} ${x1}
             C ${(y1) - (nodeWidth / 2)} ${x1},
               ${(y1) - (nodeWidth / 2)} ${x2},
               ${y2} ${x2}`;
-      }
+    }
 
-      var path = `M ${y1} ${x1}
+    var path = `M ${y1} ${x1}
             C ${(y1) + (nodeWidth / 2)} ${x1},
               ${(y1) + (nodeWidth / 2)} ${x2},
               ${y2} ${x2}`;
 
-      return path;
+    return path;
 
+  }
+
+  // Creates a curved (diagonal) path from parent to the child nodes
+  function diagonal(s, d) {
+
+    var y1 = s.y;
+    var x1 = s.x;
+
+    var y2 = d.y;
+    var x2 = d.x;
+
+    if (y1 > y2) {
+      y1 -= nodeRadius;
+      y2 += nodeRadius;
+    } else {
+      y1 += nodeRadius;
+      y2 -= nodeRadius;
     }
 
-    // Creates a curved (diagonal) path from parent to the child nodes
-    function diagonal(s, d) {
-
-      var y1 = s.y;
-      var x1 = s.x;
-
-      var y2 = d.y;
-      var x2 = d.x;
-
-      if (y1 > y2) {
-        y1 -= nodeRadius;
-        y2 += nodeRadius;
-      } else {
-        y1 += nodeRadius;
-        y2 -= nodeRadius;
-      }
-
-      var path = `M ${y1} ${x1}
+    var path = `M ${y1} ${x1}
             C ${(y1 + y2) / 2} ${x1},
               ${(y1 + y2) / 2} ${x2},
               ${y2} ${x2}`;
 
-      return path;
-    }
+    return path;
+  }
 
-    /**
-     *
-     * Resize the svg container according to the new layout
-     *
-     * @param treeData
-     */
-    function updateSvgDimensions(treeData) {
-      var maxX = treeData.x;
-      var minX = treeData.x;
-      var maxY = treeData.y;
-      var minY = treeData.y;
+  /**
+   *
+   * Resize the svg container according to the new layout
+   *
+   * @param treeData
+   */
+  function updateSvgDimensions(treeData) {
+    var maxX = treeData.x;
+    var minX = treeData.x;
+    var maxY = treeData.y;
+    var minY = treeData.y;
 
-      var nodes = treeData.descendants();
+    var nodes = treeData.descendants();
 
-      // Normalize for fixed-depth.
-      nodes.forEach(function(d){
-        if (d.x > maxX) {
-          maxX = d.x;
-        }
+    // Normalize for fixed-depth.
+    nodes.forEach(function (d) {
+      if (d.x > maxX) {
+        maxX = d.x;
+      }
 
-        if (d.x < minX) {
-          minX = d.x;
-        }
+      if (d.x < minX) {
+        minX = d.x;
+      }
 
-        if (d.y > maxY) {
-          maxY = d.y;
-        }
+      if (d.y > maxY) {
+        maxY = d.y;
+      }
 
-        if (d.y < minY) {
-          minY = d.y;
-        }
-      });
+      if (d.y < minY) {
+        minY = d.y;
+      }
+    });
 
-      var svgHeight = maxY - minY;
-      var svgWidth = maxX - minX;
+    var svgHeight = maxY - minY;
+    var svgWidth = maxX - minX;
 
-      svgWidth += 50; // padding
-      svgHeight += 400; // padding
+    svgWidth += 50; // padding
+    svgHeight += 400; // padding
 
-      g.transition()
-          .duration(duration)
-          .attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
+    g.transition()
+        .duration(duration)
+        .attr('transform', 'translate(' + 20 + ',' + (Math.abs(minX) + 25) + ')');
 
 
-      var currentWidth = svg.attr('height');
-      var currentHeight = svg.attr('width');
+    var currentWidth = svg.attr('height');
+    var currentHeight = svg.attr('width');
 
-      if (svgWidth < currentWidth) {
-        window.setTimeout(function () {
-          svg.attr('height', svgWidth);
-        }, duration);
-      } else {
+    if (svgWidth < currentWidth) {
+      window.setTimeout(function () {
         svg.attr('height', svgWidth);
-      }
+      }, duration);
+    } else {
+      svg.attr('height', svgWidth);
+    }
 
-      if (svgHeight < currentHeight) {
-        window.setTimeout(function () {
-          svg.attr('width', svgHeight);
-        }, duration);
-      } else {
+    if (svgHeight < currentHeight) {
+      window.setTimeout(function () {
         svg.attr('width', svgHeight);
-      }
+      }, duration);
+    } else {
+      svg.attr('width', svgHeight);
     }
+  }
 
-    function drawNodes(treeData, source) {
+  function drawNodes(treeData, source) {
 
-      var previousNodePositions = previousState.nodePositions;
+    var previousNodePositions = previousState.nodePositions;
 
-      // ignore the root node
-      var nodes = treeData.descendants().slice(1);
+    // ignore the root node
+    var nodes = treeData.descendants().slice(1);
 
-      // Update the nodes...
-      var node = g.selectAll('g.node')
-          .data(nodes, function(d) {
-            return d.id;
-          });
-
-      // Enter any new modes at the parent's previous position.
-      var nodeEnter = node.enter()
-          .append('g')
-          .attr('class', 'node')
-          .attr("transform", function(d) {
-            var previousPositions = previousNodePositions[d.id];
-            return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
-          })
-          .on('click', function(d) {
-            store.dispatch(selectNode(d.id, d._children? true : true));
-            store.dispatch(recomputeTreeAction());
-          });
-
-      // Add Circle for the nodes
-      nodeEnter.append('circle')
-          .attr('class', 'node')
-          .attr('r', 0)
-      ;
-
-      // Add labels for the nodes
-      nodeEnter.append('text')
-          .attr("dy", ".35em")
-          .attr("x", 13)
-          .attr("y", 0)
-          .attr("text-anchor", "start")
-          .text(function(d) {
-            var parts = d.id.split(':');
-            return (parts.length === 1)? parts[0] : parts[1];
-          })
-      ;
-
-      // UPDATE
-      var nodeUpdate = nodeEnter.merge(node);
-
-      // Transition to the proper position for the node
-      nodeUpdate.transition()
-          .duration(duration)
-          .attr("transform", function(d) {
-            return "translate(" + d.y + "," + d.x + ")";
-          });
-
-      // Update the node attributes and style
-      nodeUpdate.select('circle.node')
-          .attr('r', nodeRadius)
-          .style('stroke', function(d) {
-            var nodeData = roadRunnerDeps.nodes[d.id];
-
-            if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
-              return "#67757B";
-            }
-
-            if (!nodeData || nodeData.type === 'class') {
-              return "#4FC9FF";
-            }
-
-            if (nodeData.type === 'interface') {
-              return "#a4d765";
-            }
-
-            if (nodeData.type === 'trait') {
-              return "#ffc545";
-            }
-          })
-          .style("fill", function(d) {
-            var nodeData = roadRunnerDeps.nodes[d.id];
-
-            if (!d._children) {
-              return "#fff";
-            }
-
-            if (!nodeData || nodeData.type === 'class') {
-              return "#9be0ff";
-            }
-
-            if (nodeData.type === 'interface') {
-              return "#E4F7CB";
-            }
-
-            if (nodeData.type === 'trait') {
-              return "#ffde96";
-            }
-
-          })
-          .attr('cursor', 'pointer')
-          .style('stroke-width', function(d) {
-            if (d.id === source.id) {
-              return '5px';
-            }
-
-            return '3px';
-          });
-      ;
-
-      nodeUpdate.select('text')
-          .style('font-weight', function(d) {
-            if (d.id === source.id) {
-              return 'bold';
-            }
-
-            return 'normal';
-          });
-
-
-      // Remove any exiting nodes
-      var nodeExit = node.exit().transition()
-          .duration(duration)
-          .attr("transform", function(d) {
-            return "translate(" + source.y + "," + source.x + ")";
-          })
-          .remove();
-
-      // On exit reduce the node circles size to 0
-      nodeExit.select('circle')
-          .attr('r', 1e-6);
-
-      // On exit reduce the opacity of text labels
-      nodeExit.select('text').style('fill-opacity', 1e-6);
-    }
-
-    function drawLinks(treeData, source) {
-      var previousNodePositions = previousState.nodePositions;
-
-      var links = treeData.descendants().slice(1);
-
-      // Update the links...
-      var link = g.selectAll('path.link')
-          .data(links, function(d) {
-            return d.id;
-          });
-
-      // Enter any new links at the parent's previous position.
-      var linkEnter = link.enter().insert('path', "g")
-          .attr("class", "link")
-          .attr('d', function(d){
-
-            var lastVisibleParent = null;
-            d.ancestors().forEach(function(a) {
-              if (previousNodePositions[a.id].visible && !lastVisibleParent) {
-                lastVisibleParent = a;
-              }
-            });
-
-            if (!lastVisibleParent) {
-              lastVisibleParent = root;
-            }
-
-            var lastVisibleParentPreviousPositions = previousNodePositions[lastVisibleParent.id];
-
-            var o = {
-              x: lastVisibleParentPreviousPositions.x,
-              y: lastVisibleParentPreviousPositions.y
-            };
-            return diagonal(o, o)
-          });
-
-      // UPDATE
-      var linkUpdate = linkEnter.merge(link);
-
-      // Transition back to the parent element position
-      linkUpdate
-          .filter(function (d) {
-            // don't draw edges to the namespace root
-            return d.depth > 1;
-          })
-          .transition()
-          .duration(duration)
-          .attr('d', function(d) {
-            return diagonal(d, d.parent)
-          });
-
-      // Remove any exiting links
-      var linkExit = link.exit().transition()
-          .duration(duration)
-          .attr('d', function(d) {
-            var o = {
-              x: source.x,
-              y: source.y
-            };
-            return diagonal(o, o)
-          })
-          .remove();
-    }
-
-    function recomputeTree() {
-      treeData = tree(root);
-      // Update y-position for nicely normalized depth
-      treeData.descendants().forEach(function(d) {
-        d.y = (d.depth - 1) * nodeWidth;
-      });
-
-      updateSvgDimensions(treeData);
-
-      return treeData;
-    }
-
-
-    /**
-     * Expand inheritance hierarchy for selected node
-     */
-    function expandInheritance(previousState, nextState) {
-      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
-
-      if (!sourceNode) {
-        return;
-      }
-
-      if (nextState.selectedNode.expanded) {
-        expand(sourceNode);
-      } else {
-        collapse(sourceNode);
-      }
-    };
-    observeStoreChanges(expandInheritance);
-
-    function updateGraph(previousState, nextState) {
-      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
-
-      if (!sourceNode) {
-        sourceNode = root;
-      }
-
-      drawNodes(treeData, sourceNode);
-      drawLinks(treeData, sourceNode);
-    }
-    observeStoreChanges(updateGraph, 'nodePositions');
-
-    function updateLegend(previousState, nextState) {
-      var sourceNode = roadRunnerDeps.nodes[nextState.selectedNode.nodeId];
-
-      document.querySelectorAll('.legend--selected-node').forEach(function(domNode) {
-        domNode.innerHTML = '';
-      });
-
-      if (sourceNode) {
-        document.querySelectorAll('.legend--selected-node').forEach(function(domNode) {
-          domNode.appendChild(document.createTextNode(' ' + sourceNode.name));
-        });
-      }
-
-      if (nextState.showImplements) {
-        var checkbox = document.querySelector('input[name="toggleImplements"]');
-        if (checkbox) {
-          checkbox.checked = 'checked';
-        }
-      } else {
-        var checkbox = document.querySelector('input[name="toggleImplements"]');
-        if (checkbox) {
-          checkbox.checked = false;
-        }
-      }
-    }
-    observeStoreChanges(updateLegend);
-
-    function drawImplementsEdges(previousState, nextState) {
-      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
-
-      if (!sourceNode) {
-        return;
-      }
-
-      var paths = [];
-
-      if (nextState.showImplements) {
-        console.log('Drawing implements edges');
-
-        var ancestorIds = [];
-        sourceNode.ancestors().forEach(function (a) {
-          if (a.id === sourceNode.id) {
-            return;
-          }
-          ancestorIds.push(a.id);
+    // Update the nodes...
+    var node = g.selectAll('g.node')
+        .data(nodes, function (d) {
+          return d.id;
         });
 
-        var dependencyEdges = {};
-        _.each(implementsIndex, function (edge) {
+    // Enter any new modes at the parent's previous position.
+    var nodeEnter = node.enter()
+        .append('g')
+        .attr('class', 'node')
+        .attr("transform", function (d) {
+          var previousPositions = previousNodePositions[d.id];
+          return "translate(" + previousPositions.y + "," + previousPositions.x + ")";
+        })
+        .on('click', function (d) {
+          store.dispatch(selectNode(d.id, d._children ? true : true));
+          store.dispatch(recomputeTreeAction());
+        });
 
-          if (dependencyEdges[edge.id]) {
-            return;
+    // Add Circle for the nodes
+    nodeEnter.append('circle')
+        .attr('class', 'node')
+        .attr('r', 0)
+    ;
+
+    // Add labels for the nodes
+    nodeEnter.append('text')
+        .attr("dy", ".35em")
+        .attr("x", 13)
+        .attr("y", 0)
+        .attr("text-anchor", "start")
+        .text(function (d) {
+          var parts = d.id.split(':');
+          return (parts.length === 1) ? parts[0] : parts[1];
+        })
+    ;
+
+    // UPDATE
+    var nodeUpdate = nodeEnter.merge(node);
+
+    // Transition to the proper position for the node
+    nodeUpdate.transition()
+        .duration(duration)
+        .attr("transform", function (d) {
+          return "translate(" + d.y + "," + d.x + ")";
+        });
+
+    // Update the node attributes and style
+    nodeUpdate.select('circle.node')
+        .attr('r', nodeRadius)
+        .style('stroke', function (d) {
+          var nodeData = roadRunnerDeps.nodes[d.id];
+
+          if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
+            return "#67757B";
           }
 
-          if (edge.source === sourceNode.id) {
-            dependencyEdges[edge.id] = {
-              edge: edge,
-              source: true,
-              target: false,
-              ancestor: false
-            };
+          if (!nodeData || nodeData.type === 'class') {
+            return "#4FC9FF";
           }
+
+          if (nodeData.type === 'interface') {
+            return "#a4d765";
+          }
+
+          if (nodeData.type === 'trait') {
+            return "#ffc545";
+          }
+        })
+        .style("fill", function (d) {
+          var nodeData = roadRunnerDeps.nodes[d.id];
+
+          if (!d._children) {
+            return "#fff";
+          }
+
+          if (!nodeData || nodeData.type === 'class') {
+            return "#9be0ff";
+          }
+
+          if (nodeData.type === 'interface') {
+            return "#E4F7CB";
+          }
+
+          if (nodeData.type === 'trait') {
+            return "#ffde96";
+          }
+
+        })
+        .attr('cursor', 'pointer')
+        .style('stroke-width', function (d) {
+          if (d.id === source.id) {
+            return '5px';
+          }
+
+          return '3px';
+        });
+    ;
+
+    nodeUpdate.select('text')
+        .style('font-weight', function (d) {
+          if (d.id === source.id) {
+            return 'bold';
+          }
+
+          return 'normal';
+        });
+
+
+    // Remove any exiting nodes
+    var nodeExit = node.exit().transition()
+        .duration(duration)
+        .attr("transform", function (d) {
+          return "translate(" + source.y + "," + source.x + ")";
+        })
+        .remove();
+
+    // On exit reduce the node circles size to 0
+    nodeExit.select('circle')
+        .attr('r', 1e-6);
+
+    // On exit reduce the opacity of text labels
+    nodeExit.select('text').style('fill-opacity', 1e-6);
+  }
+
+  function drawLinks(treeData, source) {
+    var previousNodePositions = previousState.nodePositions;
+
+    var links = treeData.descendants().slice(1);
+
+    // Update the links...
+    var link = g.selectAll('path.link')
+        .data(links, function (d) {
+          return d.id;
+        });
+
+    // Enter any new links at the parent's previous position.
+    var linkEnter = link.enter().insert('path', "g")
+        .attr("class", "link")
+        .attr('d', function (d) {
+
+          var lastVisibleParent = null;
+          d.ancestors().forEach(function (a) {
+            if (previousNodePositions[a.id].visible && !lastVisibleParent) {
+              lastVisibleParent = a;
+            }
+          });
+
+          if (!lastVisibleParent) {
+            lastVisibleParent = root;
+          }
+
+          var lastVisibleParentPreviousPositions = previousNodePositions[lastVisibleParent.id];
+
+          var o = {
+            x: lastVisibleParentPreviousPositions.x,
+            y: lastVisibleParentPreviousPositions.y
+          };
+          return diagonal(o, o)
+        });
+
+    // UPDATE
+    var linkUpdate = linkEnter.merge(link);
+
+    // Transition back to the parent element position
+    linkUpdate
+        .filter(function (d) {
+          // don't draw edges to the namespace root
+          return d.depth > 1;
+        })
+        .transition()
+        .duration(duration)
+        .attr('d', function (d) {
+          return diagonal(d, d.parent)
+        });
+
+    // Remove any exiting links
+    var linkExit = link.exit().transition()
+        .duration(duration)
+        .attr('d', function (d) {
+          var o = {
+            x: source.x,
+            y: source.y
+          };
+          return diagonal(o, o)
+        })
+        .remove();
+  }
+
+  function recomputeTree() {
+    treeData = tree(root);
+    // Update y-position for nicely normalized depth
+    treeData.descendants().forEach(function (d) {
+      d.y = (d.depth - 1) * nodeWidth;
+    });
+
+    updateSvgDimensions(treeData);
+
+    return treeData;
+  }
+
+
+  /**
+   * Expand inheritance hierarchy for selected node
+   */
+  function expandInheritance(previousState, nextState) {
+    var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+
+    if (!sourceNode) {
+      return;
+    }
+
+    if (nextState.selectedNode.expanded) {
+      expand(sourceNode);
+    } else {
+      collapse(sourceNode);
+    }
+  }
+  ;
+  observeStoreChanges(expandInheritance);
+
+  function updateGraph(previousState, nextState) {
+    var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+
+    if (!sourceNode) {
+      sourceNode = root;
+    }
+
+    drawNodes(treeData, sourceNode);
+    drawLinks(treeData, sourceNode);
+  }
+  observeStoreChanges(updateGraph, 'nodePositions');
+
+  function updateLegend(previousState, nextState) {
+    var sourceNode = roadRunnerDeps.nodes[nextState.selectedNode.nodeId];
+
+    document.querySelectorAll('.legend--selected-node').forEach(function (domNode) {
+      domNode.innerHTML = '';
+    });
+
+    if (sourceNode) {
+      document.querySelectorAll('.legend--selected-node').forEach(function (domNode) {
+        domNode.appendChild(document.createTextNode(' ' + sourceNode.name));
+      });
+    }
+
+    if (nextState.showImplements) {
+      var checkbox = document.querySelector('input[name="toggleImplements"]');
+      if (checkbox) {
+        checkbox.checked = 'checked';
+      }
+    } else {
+      var checkbox = document.querySelector('input[name="toggleImplements"]');
+      if (checkbox) {
+        checkbox.checked = false;
+      }
+    }
+  }
+  observeStoreChanges(updateLegend);
+
+  function drawImplementsEdges(previousState, nextState) {
+    var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+
+    if (!sourceNode) {
+      return;
+    }
+
+    var paths = [];
+
+    if (nextState.showImplements) {
+      console.log('Drawing implements edges');
+
+      var ancestorIds = [];
+      sourceNode.ancestors().forEach(function (a) {
+        if (a.id === sourceNode.id) {
+          return;
+        }
+        ancestorIds.push(a.id);
+      });
+
+      var dependencyEdges = {};
+      _.each(implementsIndex, function (edge) {
+
+        if (dependencyEdges[edge.id]) {
+          return;
+        }
+
+        if (edge.source === sourceNode.id) {
+          dependencyEdges[edge.id] = {
+            edge: edge,
+            source: true,
+            target: false,
+            ancestor: false
+          };
+        }
 
 //          if (edge.target === source.id) {
 //            dependencyEdges[edge.id] = {
@@ -812,31 +813,31 @@
 //            };
 //          }
 
-          if (ancestorIds.indexOf(edge.source) >= 0) {
-            dependencyEdges[edge.id] = {
-              edge: edge,
-              source: false,
-              target: false,
-              ancestor: true
-            };
-          }
-        });
+        if (ancestorIds.indexOf(edge.source) >= 0) {
+          dependencyEdges[edge.id] = {
+            edge: edge,
+            source: false,
+            target: false,
+            ancestor: true
+          };
+        }
+      });
 
 
-        paths = _.values(dependencyEdges);
+      paths = _.values(dependencyEdges);
 
       g.selectAll('path.coupling')
-          .data(_.values(dependencyEdges), function(d) {
+          .data(_.values(dependencyEdges), function (d) {
             return d.id;
           })
           .enter()
           .insert('path', 'g')
           .attr('class', 'coupling')
-          .attr('d', function(d) {
+          .attr('d', function (d) {
             return diagonal(sourceNode, sourceNode);
           })
           .attr('marker-end', 'url(#markerArrow)')
-          .style('stroke-dasharray', function(d) {
+          .style('stroke-dasharray', function (d) {
             if (d.ancestor) {
               return ('3, 3, 5, 3');
             }
@@ -847,7 +848,7 @@
 
             return ('1, 0');
           })
-          .attr('stroke', function(d) {
+          .attr('stroke', function (d) {
             if (d.edge.type === 'implements') {
               return '#a4d765';
             }
@@ -858,7 +859,7 @@
           .attr('fill', 'none')
           .transition()
           .duration(duration)
-          .attr('d', function(d) {
+          .attr('d', function (d) {
 
             var dependencyNode = nodeIndex[d.edge.target];
             var localSource = sourceNode;
@@ -878,46 +879,46 @@
       ;
 
 
-      } else {
-        console.log('Hiding implements edges');
-        g.selectAll('path.coupling')
+    } else {
+      console.log('Hiding implements edges');
+      g.selectAll('path.coupling')
           .data([])
-            .exit()
-            .transition()
-            .duration(duration)
-            .attr('d', function(d) {
-              var localSource = nodeIndex[d.edge.source];
-              return diagonal(localSource, localSource)
-            })
-            .remove()
-        ;
-      }
+          .exit()
+          .transition()
+          .duration(duration)
+          .attr('d', function (d) {
+            var localSource = nodeIndex[d.edge.source];
+            return diagonal(localSource, localSource)
+          })
+          .remove()
+      ;
     }
-    observeStoreChanges(drawImplementsEdges);
+  }
+  observeStoreChanges(drawImplementsEdges);
 
 
-    // Init view
-    root.children.forEach(function(d) {
-      collapse(d);
-    });
-    store.dispatch(recomputeTreeAction());
-  </script>
+  // Init view
+  root.children.forEach(function (d) {
+    collapse(d);
+  });
+  store.dispatch(recomputeTreeAction());
+</script>
 
-  <div class="info-box">
-    Selected node:<span class="legend--selected-node"></span>
-    <form id="graph-controls" name="legend" action="#" method="GET">
-      <label><input type="checkbox" name="toggleImplements" value="true" /> Show implementation edges</label>
-    </form>
-  </div>
+<div class="info-box">
+  Selected node:<span class="legend--selected-node"></span>
+  <form id="graph-controls" name="legend" action="#" method="GET">
+    <label><input type="checkbox" name="toggleImplements" value="true"/> Show implementation edges</label>
+  </form>
+</div>
 
-  <script>
-    // Set up event handlers
+<script>
+  // Set up event handlers
 
-    var form = document.getElementById('graph-controls');
-    form.addEventListener('change', function() {
-      var formData = new FormData(form);
-      store.dispatch(toggleImplements(formData.get('toggleImplements') === 'true'? true : false));
-    });
-  </script>
+  var form = document.getElementById('graph-controls');
+  form.addEventListener('change', function () {
+    var formData = new FormData(form);
+    store.dispatch(toggleImplements(formData.get('toggleImplements') === 'true' ? true : false));
+  });
+</script>
 </body>
 </html>
