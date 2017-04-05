@@ -913,7 +913,8 @@
           .insert('path', 'g')
           .attr('class', 'coupling')
           .attr('d', function (d) {
-            return diagonal(sourceNode, sourceNode);
+            var pos = previousNodePosition(sourceNode);
+            return diagonal(pos, pos);
           })
           .attr('marker-end', 'url(#markerArrow)')
           .style('stroke-dasharray', function (d) {
