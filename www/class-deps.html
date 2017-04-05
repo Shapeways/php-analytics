@@ -141,40 +141,6 @@
     }
   }
 
-  function recomputeTreeAction() {
-    recomputeTree();
-    return {
-      type: 'RECOMPUTE_TREE',
-      treeData: _.map(nodeIndex, function (node) {
-
-        if (node.visible) {
-          return {
-            id: node.id,
-            x: node.x,
-            y: node.y,
-            visible: node.visible
-          };
-        }
-
-        if (node.parent) {
-          return {
-            id: node.id,
-            x: node.parent.x,
-            y: node.parent.y,
-            visible: node.visible
-          };
-        }
-
-        return {
-          id: node.id,
-          x: 0,
-          y: 0,
-          visible: node.visible
-        };
-      })
-    };
-  }
-
   // Reducers
   function showImplements(state, action) {
 
@@ -214,7 +180,7 @@
 
   function nodePositions(state, action) {
 
-    if (action.type === 'RECOMPUTE_TREE') {
+    if (action.treeData) {
       var nodePositions = {};
       action.treeData.forEach(function (d) {
         nodePositions[d.id] = {
@@ -260,6 +226,48 @@
             return function (next) {
               return function (action) {
                 previousState = store.getState();
+                next(action);
+              }
+            }
+          },
+
+          // Recompute tree middleware
+          function (store) {
+            return function (next) {
+              return function (action) {
+
+                if (action.type === 'SELECT_NODE') {
+                  recomputeTree();
+
+                  action.treeData = _.map(nodeIndex, function (node) {
+
+                    if (node.visible) {
+                      return {
+                        id: node.id,
+                        x: node.x,
+                        y: node.y,
+                        visible: node.visible
+                      };
+                    }
+
+                    if (node.parent) {
+                      return {
+                        id: node.id,
+                        x: node.parent.x,
+                        y: node.parent.y,
+                        visible: node.visible
+                      };
+                    }
+
+                    return {
+                      id: node.id,
+                      x: 0,
+                      y: 0,
+                      visible: node.visible
+                    };
+                  });
+                }
+
                 next(action);
               }
             }
@@ -536,7 +544,6 @@
         })
         .on('click', function (d) {
           store.dispatch(selectNode(d.id, d._children ? true : true));
-          store.dispatch(recomputeTreeAction());
         });
 
     // Add Circle for the nodes
@@ -893,7 +900,7 @@
   root.children.forEach(function (d) {
     collapse(d);
   });
-  store.dispatch(recomputeTreeAction());
+  store.dispatch(selectNode(root.id, true));
 </script>
 
 <div class="info-box">
