@@ -126,7 +126,6 @@
   // Build node index, init start positions and visibility
   var nodeIndex = {};
   root.each(function (d) {
-    d.visible = true;
     nodeIndex[d.id] = d;
   });
   var treeData;
@@ -202,7 +201,6 @@
       var nodePositions = {};
       action.treeData.forEach(function (d) {
         nodePositions[d.id] = {
-          visible: d.visible,
           x: d.x,
           y: d.y
         };
@@ -216,7 +214,6 @@
       var nodePositions = {};
       _.each(nodeIndex, function (node) {
         nodePositions[node.id] = {
-          visible: true,
           x: 0,
           y: 0
         };
@@ -328,12 +325,11 @@
 
                   action.treeData = _.map(nodeIndex, function (node) {
 
-                    if (node.visible) {
+                    if (node.x && node.y) {
                       return {
                         id: node.id,
                         x: node.x,
-                        y: node.y,
-                        visible: node.visible
+                        y: node.y
                       };
                     }
 
@@ -341,16 +337,14 @@
                       return {
                         id: node.id,
                         x: node.parent.x,
-                        y: node.parent.y,
-                        visible: node.visible
+                        y: node.parent.y
                       };
                     }
 
                     return {
                       id: node.id,
                       x: 0,
-                      y: 0,
-                      visible: node.visible
+                      y: 0
                     };
                   });
                 }
@@ -471,7 +465,6 @@
       tData._children = tData.children;
       tData._children.forEach(function (c) {
         collapse(c);
-        c.visible = false;
       });
       tData.children = null;
     }
@@ -481,9 +474,6 @@
     if (tData._children) {
       tData.children = tData._children;
       tData._children = null;
-      tData.children.forEach(function (c) {
-        c.visible = true;
-      });
     }
   }
 
@@ -834,24 +824,7 @@
     var linkEnter = link.enter().insert('path', 'g')
         .attr('class', 'link')
         .attr('d', function (d) {
-
-          var lastVisibleParent = null;
-          d.ancestors().forEach(function (a) {
-            if (previousNodePositions[a.id].visible && !lastVisibleParent) {
-              lastVisibleParent = a;
-            }
-          });
-
-          if (!lastVisibleParent) {
-            lastVisibleParent = root;
-          }
-
-          var lastVisibleParentPreviousPositions = previousNodePositions[lastVisibleParent.id];
-
-          var o = {
-            x: lastVisibleParentPreviousPositions.x,
-            y: lastVisibleParentPreviousPositions.y
-          };
+          var o = previousNodePosition(d);
           return diagonal(o, o)
         });
 
