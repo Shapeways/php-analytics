@@ -47,6 +47,10 @@
       font: 12px sans-serif;
     }
 
+    .node--selected-text {
+      font-weight: bold;
+    }
+
     .link {
       fill: none;
       stroke: #ccc;
@@ -134,10 +138,12 @@
     };
   }
 
-  function toggleImplements(value) {
+  function toggleImplements(toggleImplements, toggleImplementsImplicit, toggleImplementsTarget) {
     return {
       type: 'TOGGLE_IMPLEMENTS',
-      value: value
+      toggleImplements: toggleImplements,
+      toggleImplementsImplicit: toggleImplementsImplicit,
+      toggleImplementsTarget: toggleImplementsTarget
     };
   }
 
@@ -153,11 +159,19 @@
   function showImplements(state, action) {
 
     if (action.type === 'TOGGLE_IMPLEMENTS') {
-      return action.value;
+      return {
+        showImplements: action.toggleImplements,
+        showImplementsImplicit: action.toggleImplementsImplicit,
+        showImplementsTarget: action.toggleImplementsTarget
+      };
     }
 
     if (state === undefined) {
-      return false;
+      return {
+        showImplements: false,
+        showImplementsImplicit: false,
+        showImplementsTarget: false
+      };
     }
 
     return state;
@@ -225,6 +239,22 @@
   var store = Redux.createStore(
       reducer,
       Redux.applyMiddleware(
+          // Perf timing middleware
+          function (store) {
+            return function(next) {
+              return function (action) {
+                var startDispatch = window.performance.now();
+
+                next(action);
+
+                var endDispatch = window.performance.now();
+
+                console.log(action.type + ' – ' + (endDispatch - startDispatch).toFixed(2) + 'ms', action);
+
+              }
+            }
+          },
+
           // Previous state middleware
           function (store) {
             return function (next) {
@@ -264,7 +294,8 @@
                   doRecompute = true;
                 }
 
-                if (((action.type === 'TOGGLE_IMPLEMENTS') && (action.value === true)) || store.getState().showImplements) {
+                if ((action.type === 'TOGGLE_IMPLEMENTS') && ((action.toggleImplements === true) || (action.toggleImplementsImplicit === true) || (action.toggleImplementsTarget === true))
+                    || ((store.getState().showImplements.showImplements === true) || (store.getState().showImplements.showImplementsImplicit === true) || (store.getState().showImplements.showImplementsTarget === true))) {
                   var newSource = root;
 
                   if (action.type === 'SELECT_NODE') {
@@ -273,7 +304,12 @@
                     newSource = nodeIndex[store.getState().selectedNode.nodeId];
                   }
 
-                  var implementsEdges = findImplementsEdges(newSource);
+                  var implementsEdges = findImplementsEdges(
+                      newSource,
+                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplements : store.getState().showImplements.showImplements,
+                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplementsImplicit : store.getState().showImplements.showImplementsImplicit,
+                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplementsTarget : store.getState().showImplements.showImplementsTarget
+                  );
 
                   _.each(implementsEdges, function(edge) {
                     var destination = nodeIndex[edge.edge.target];
@@ -322,16 +358,6 @@
                 next(action);
               }
             }
-          },
-
-          // Logging Middleware
-          function (store) {
-            return function (next) {
-              return function (action) {
-                console.log(action);
-                next(action);
-              }
-            }
           }
       )
   );
@@ -372,14 +398,7 @@
     }
   });
 
-  function findImplementsEdges(sourceNode) {
-    if (this.results && this.results[sourceNode.id]) {
-
-      console.log('Returning memoized implements edges');
-
-      return this.results[sourceNode.id];
-    }
-
+  function findImplementsEdges(sourceNode, includeSourceDeps, includeAncestors, includeTarget) {
 
     var ancestorIds = [];
     sourceNode.ancestors().forEach(function (a) {
@@ -398,7 +417,7 @@
         return;
       }
 
-      if (edge.source === sourceNode.id) {
+      if (includeSourceDeps && (edge.source === sourceNode.id)) {
         dependencyEdges[id] = {
           id: id,
           edge: edge,
@@ -408,8 +427,7 @@
           actualSource: sourceNode
         };
       }
-
-      if (ancestorIds.indexOf(edge.source) >= 0) {
+      else if (includeAncestors && ancestorIds.indexOf(edge.source) >= 0) {
         dependencyEdges[id] = {
           id: id,
           edge: edge,
@@ -420,12 +438,6 @@
         };
       }
     });
-
-    if (!this.results) {
-      this.results = {};
-    }
-
-    this.results[sourceNode.id] = dependencyEdges;
 
     return dependencyEdges;
   }
@@ -504,7 +516,8 @@
         .delay(function(d, i) {
           return i * 250;
         })
-        .duration(750);
+        .duration(750)
+        ;
   }
 
   var svg = d3.select('svg');
@@ -781,12 +794,12 @@
     ;
 
     nodeUpdate.select('text')
-        .style('font-weight', function (d) {
+        .attr('class', function (d) {
           if (d.id === source.id) {
-            return 'bold';
+            return 'node--selected-text';
           }
 
-          return 'normal';
+          return '';
         });
 
 
@@ -818,8 +831,8 @@
         });
 
     // Enter any new links at the parent's previous position.
-    var linkEnter = link.enter().insert('path', "g")
-        .attr("class", "link")
+    var linkEnter = link.enter().insert('path', 'g')
+        .attr('class', 'link')
         .attr('d', function (d) {
 
           var lastVisibleParent = null;
@@ -907,7 +920,7 @@
       });
     }
 
-    if (nextState.showImplements) {
+    if (nextState.showImplements.showImplements) {
       var checkbox = document.querySelector('input[name="toggleImplements"]');
       if (checkbox) {
         checkbox.checked = 'checked';
@@ -930,12 +943,14 @@
 
     var paths = [];
 
-    if (nextState.showImplements) {
-      console.log('Drawing implements edges');
+    if (
+        nextState.showImplements.showImplements
+        || nextState.showImplements.showImplementsImplicit
+        || nextState.showImplements.showImplementsTarget
+    ) {
 
-      paths = _.values(findImplementsEdges(sourceNode));
+      paths = _.values(findImplementsEdges(sourceNode, nextState.showImplements.showImplements, nextState.showImplements.showImplementsImplicit, nextState.showImplements.showImplementsTarget));
     }
-
 
     var selection = g.selectAll('path.implements')
           .data(_.values(paths), function (d) {
@@ -978,10 +993,8 @@
             }
 
             return diagonal(localSource, dependencyNode);
-          })
-      ;
+          });
 
-      console.log('Hiding implements edges');
       selection.exit()
           .transition()
           .duration(duration)
@@ -992,8 +1005,7 @@
             var localSource = d.actualSource;
             return diagonal(localSource, localSource)
           })
-          .remove()
-      ;
+          .remove();
   }
   observeStoreChanges(drawImplementsEdges);
 
@@ -1008,7 +1020,18 @@
 <div class="info-box">
   Selected node:<span class="legend--selected-node"></span>
   <form id="graph-controls" name="legend" action="#" method="GET">
-    <label><input type="checkbox" name="toggleImplements" value="true"/> Show implementation edges</label>
+    <fieldset>
+      <legend>Implements</legend>
+      <div>
+        <label><input type="checkbox" name="toggleImplements" value="true"/> Show dependencies</label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="toggleImplementsImplicit" value="true"/> Show implicit dependencies</label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="toggleImplementsTarget" value="true"/> Show dependent nodes</label>
+      </div>
+    </fieldset>
   </form>
 </div>
 
@@ -1018,7 +1041,11 @@
   var form = document.getElementById('graph-controls');
   form.addEventListener('change', function () {
     var formData = new FormData(form);
-    store.dispatch(toggleImplements(formData.get('toggleImplements') === 'true' ? true : false));
+
+    var toggleImplementsValue = formData.get('toggleImplements') === 'true' ? true : false
+    var toggleImplementsImplicit = formData.get('toggleImplementsImplicit') === 'true' ? true : false
+    var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false
+    store.dispatch(toggleImplements(toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
   });
 </script>
 </body>
