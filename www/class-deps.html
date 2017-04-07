@@ -63,7 +63,6 @@
       top: 20px;
       right: 20px;
       width: 420px;
-      height: 160px;
 
       padding: 10px;
     }
@@ -89,6 +88,10 @@
 
     .traitUse {
       stroke: #ffc545;
+    }
+
+    .instantiates {
+      stroke: #EC3737;
     }
 
   </style>
@@ -123,6 +126,7 @@
   var roadRunnerNodes;
   var implementsIndex;
   var traitsIndex;
+  var instantiatesIndex;
 
   // Actions
   function initTree(classInheritanceEdges, nodes, edges) {
@@ -164,6 +168,14 @@
       }
     });
 
+    instantiatesIndex = {};
+    _.each(edges, function (edge, edgeKey) {
+
+      if (edge.type === 'instantiates') {
+        instantiatesIndex[edgeKey] = edge;
+      }
+    });
+
     return {
       type: 'INIT_TREE'
     };
@@ -194,6 +206,20 @@
 
     return {
       type: 'TOGGLE_TRAITS',
+      showDependency: showDependency
+    };
+  }
+
+  function toggleInstantiates(showSource, showImplicit, showTargets) {
+    var showDependency = {
+      dependencyType: 'instantiates',
+      showSource: showSource || false,
+      showImplicit: showImplicit || false,
+      showTargets: showTargets || false
+    };
+
+    return {
+      type: 'TOGGLE_INSTANTIATES',
       showDependency: showDependency
     };
   }
@@ -234,6 +260,24 @@
     if (state === undefined) {
       return {
         dependencyType: 'traitUse',
+        showSource: false,
+        showImplicit: false,
+        showTargets: false
+      };
+    }
+
+    return state;
+  }
+
+  function showInstantiates(state, action) {
+
+    if (action.type === 'TOGGLE_INSTANTIATES') {
+      return action.showDependency;
+    }
+
+    if (state === undefined) {
+      return {
+        dependencyType: 'instantiates',
         showSource: false,
         showImplicit: false,
         showTargets: false
@@ -295,6 +339,7 @@
   var reducer = Redux.combineReducers({
     showImplements,
     showTraits,
+    showInstantiates,
     selectedNode,
     nodePositions
   });
@@ -374,6 +419,12 @@
                 }
                 expandDependencyTrees(newSource, showTraitsValue);
 
+                var showInstantiatesValue = store.getState().showInstantiates;
+                if (action.type === 'TOGGLE_INSTANTIATES') {
+                  showInstantiatesValue = action.showDependency;
+                }
+                expandDependencyTrees(newSource, showInstantiatesValue);
+
 
                 console.log('RECOMPUTING NODE POSITIONS');
                 recomputeTree();
@@ -445,6 +496,8 @@
         return implementsIndex;
       case 'traitUse':
         return traitsIndex;
+      case 'instantiates':
+        return instantiatesIndex;
     }
   }
 
@@ -1039,6 +1092,9 @@
         case 'traitUse':
           dependencyState = nextState.showTraits;
           break;
+        case 'instantiates':
+          dependencyState = nextState.showInstantiates;
+          break;
       }
 
       if (
@@ -1097,6 +1153,7 @@
   }
   observeStoreChanges(drawDependencyEdges('implements'));
   observeStoreChanges(drawDependencyEdges('traitUse'));
+  observeStoreChanges(drawDependencyEdges('instantiates'));
 </script>
 
 <div class="info-box">
@@ -1124,6 +1181,19 @@
         <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/> Show trait dependencies</label>
       </div>
     </fieldset>
+
+    <fieldset>
+      <legend>Class Instantiations</legend>
+      <div>
+        <label><input type="checkbox" name="toggleShowInstantiates" value="true"/> Show instantiates</label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="toggleShowInstantiatesImplicit" value="true"/> Show implicit instantiates</label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="toggleShowInstantiatesTarget" value="true"/> Show instantiates dependencies</label>
+      </div>
+    </fieldset>
   </form>
 </div>
 
@@ -1142,6 +1212,11 @@
     var toggleShowTraits = formData.get('toggleShowTraits') === 'true' ? true : false;
     var toggleShowTraitsTarget = formData.get('toggleShowTraitsTarget') === 'true' ? true : false;
     store.dispatch(toggleTraits(toggleShowTraits, toggleShowTraitsTarget));
+
+    var toggleShowInstantiates = formData.get('toggleShowInstantiates') === 'true' ? true : false;
+    var toggleShowInstantiatesImplicit = formData.get('toggleShowInstantiatesImplicit') === 'true' ? true : false;
+    var toggleShowInstantiatesTarget = formData.get('toggleShowInstantiatesTarget') === 'true' ? true : false;
+    store.dispatch(toggleInstantiates(toggleShowInstantiates, toggleShowInstantiatesImplicit, toggleShowInstantiatesTarget));
   });
 
   // Init
