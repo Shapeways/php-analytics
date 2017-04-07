@@ -107,31 +107,34 @@
 <script>
 
   // Bootstrap
-  var classInheritanceEdges = roadRunnerDeps.classInheritanceEdges;
-  var root = d3.stratify()
-      .id(function (d) {
-        return d.source;
-      }).parentId(function (d) {
-        return d.target;
-      })
-      (classInheritanceEdges);
-
-  root.sort(function (a, b) {
-    var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
-    var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
-
-    return nodeA.localeCompare(nodeB);
-  });
+  var root;
 
   // Build node index, init start positions and visibility
-  var nodeIndex = {};
-  root.each(function (d) {
-    nodeIndex[d.id] = d;
-  });
+  var nodeIndex;
   var treeData;
 
   // Actions
-  function initTree() {
+  function initTree(classInheritanceEdges, nodes) {
+    root = d3.stratify()
+        .id(function (d) {
+          return d.source;
+        }).parentId(function (d) {
+          return d.target;
+        })
+        (classInheritanceEdges);
+
+    root.sort(function (a, b) {
+      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
+      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
+
+      return nodeA.localeCompare(nodeB);
+    });
+
+    nodeIndex = {};
+    root.each(function (d) {
+      nodeIndex[d.id] = d;
+    });
+
     return {
       type: 'INIT_TREE'
     };
@@ -269,6 +272,13 @@
 
                 var doRecompute = false;
 
+                if (action.type === 'INIT_TREE') {
+                  root.children.forEach(function (d) {
+                    collapse(d);
+                  });
+                  doRecompute = true;
+                }
+
                 // Only recompute when expanding.
                 // Optimizes performance cost of selecting nodes.
                 if (action.type === 'SELECT_NODE') {
@@ -285,10 +295,6 @@
                       collapse(newSource);
                     }
                   }
-                }
-
-                if (action.type === 'INIT_TREE') {
-                  doRecompute = true;
                 }
 
                 if ((action.type === 'TOGGLE_IMPLEMENTS') && ((action.toggleImplements === true) || (action.toggleImplementsImplicit === true) || (action.toggleImplementsTarget === true))
@@ -441,6 +447,14 @@
 
     var d = node;
     var previousPositions = previousNodePositions[d.id];
+
+    // base case
+    if (previousPositions === undefined) {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
 
     // Implicit base-case is root node
     while ((previousPositions.x === undefined) || (previousPositions.y === undefined)) {
@@ -981,13 +995,6 @@
           .remove();
   }
   observeStoreChanges(drawImplementsEdges);
-
-
-  // Init view
-  root.children.forEach(function (d) {
-    collapse(d);
-  });
-  store.dispatch(initTree());
 </script>
 
 <div class="info-box">
@@ -1020,6 +1027,9 @@
     var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false
     store.dispatch(toggleImplements(toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
   });
+
+  // Init
+  store.dispatch(initTree(roadRunnerDeps.classInheritanceEdges));
 </script>
 </body>
 </html>
