@@ -69,17 +69,22 @@
     }
 
     .dependency {
+      fill: none;
+      stroke: #000;
+      stroke-width: 2;
+      marker-end: url(#markerArrow);
     }
 
     .dependency--ancestor {
       stroke-dasharray: 3, 3, 5, 3;
     }
 
+    .dependency--target {
+      stroke-dasharray: 3, 6;
+    }
+
     .implements {
       stroke: #a4d765;
-      fill: none;
-      stroke-width: 2;
-      marker-end: url(#markerArrow);
     }
 
   </style>
@@ -113,6 +118,7 @@
   var treeData;
   var roadRunnerNodes;
   var implementsIndex;
+  var traitsIndex;
 
   // Actions
   function initTree(classInheritanceEdges, nodes, edges) {
@@ -146,6 +152,14 @@
       }
     });
 
+    traitsIndex = {};
+    _.each(edges, function (edge, edgeKey) {
+
+      if (edge.type === 'traitUse') {
+        traitsIndex[edgeKey] = edge;
+      }
+    });
+
     return {
       type: 'INIT_TREE'
     };
@@ -153,7 +167,7 @@
 
   function toggleImplements(toggleImplements, toggleImplementsImplicit, toggleImplementsTarget) {
 
-    var showImplements = {
+    var showDependency = {
       dependencyType: 'implements',
       showSource: toggleImplements,
       showImplicit: toggleImplementsImplicit,
@@ -162,7 +176,21 @@
 
     return {
       type: 'TOGGLE_IMPLEMENTS',
-      showImplements: showImplements
+      showDependency: showDependency
+    };
+  }
+
+  function toggleTraits(showSource) {
+    var showDependency = {
+      dependencyType: 'traitUse',
+      showSource: showSource,
+      showImplicit: false,
+      showTargets: false
+    };
+
+    return {
+      type: 'TOGGLE_TRAITS',
+      showDependency: showDependency
     };
   }
 
@@ -178,12 +206,30 @@
   function showImplements(state, action) {
 
     if (action.type === 'TOGGLE_IMPLEMENTS') {
-      return action.showImplements;
+      return action.showDependency;
     }
 
     if (state === undefined) {
       return {
         dependencyType: 'implements',
+        showSource: false,
+        showImplicit: false,
+        showTargets: false
+      };
+    }
+
+    return state;
+  }
+
+  function showTraits(state, action) {
+
+    if (action.type === 'TOGGLE_TRAITS') {
+      return action.showDependency;
+    }
+
+    if (state === undefined) {
+      return {
+        dependencyType: 'traitUse',
         showSource: false,
         showImplicit: false,
         showTargets: false
@@ -244,6 +290,7 @@
 
   var reducer = Redux.combineReducers({
     showImplements,
+    showTraits,
     selectedNode,
     nodePositions
   });
@@ -284,8 +331,6 @@
             return function (next) {
               return function (action) {
 
-                var doRecompute = false;
-
                 if (action.type === 'INIT_TREE') {
                   root.children.forEach(function (d) {
                     collapse(d);
@@ -315,27 +360,9 @@
 
                 var showImplementsValue = store.getState().showImplements;
                 if (action.type === 'TOGGLE_IMPLEMENTS') {
-                  showImplementsValue = action.showImplements;
+                  showImplementsValue = action.showDependency;
                 }
-
-                if (showImplementsValue.showSource || showImplementsValue.showImplicit || showImplementsValue.showTargets) {
-
-                  var implementsEdges = findImplementsEdges(newSource, showImplementsValue.showSource, showImplementsValue.showImplicit, showImplementsValue.showTargets);
-
-                  _.each(implementsEdges, function(edge) {
-                    var destination;
-                    if (edge.target) {
-                      destination = nodeIndex[edge.edge.source];
-                    }
-                    else {
-                      destination = nodeIndex[edge.edge.target];
-                    }
-
-                    if (destination) {
-                      showTree(destination);
-                    }
-                  });
-                }
+                expandDependencyTrees(newSource, showImplementsValue);
 
 
                 console.log('RECOMPUTING NODE POSITIONS');
@@ -402,7 +429,37 @@
   // Begin App
   var nodeRadius = 10;
 
-  function findImplementsEdges(sourceNode, includeSourceDeps, includeAncestors, includeTarget) {
+  function getDependencyIndex(dependencyType) {
+    switch (dependencyType) {
+      case 'implements':
+        return implementsIndex;
+      case 'traitUse':
+        return traitsIndex;
+    }
+  }
+
+  function expandDependencyTrees(sourceNode, dependencyToggles) {
+    if (dependencyToggles.showSource || dependencyToggles.showImplicit || dependencyToggles.showTargets) {
+
+      var dependencyEdges = findDependencyEdges(sourceNode, dependencyToggles.dependencyType, dependencyToggles.showSource, dependencyToggles.showImplicit, dependencyToggles.showTargets);
+
+      _.each(dependencyEdges, function(edge) {
+        var destination;
+        if (edge.target) {
+          destination = nodeIndex[edge.edge.source];
+        }
+        else {
+          destination = nodeIndex[edge.edge.target];
+        }
+
+        if (destination) {
+          showTree(destination);
+        }
+      });
+    }
+  }
+
+  function findDependencyEdges(sourceNode, dependencyType, includeSourceDeps, includeAncestors, includeTarget) {
     var dependencyEdges = {};
 
     if (!sourceNode) {
@@ -417,8 +474,9 @@
       ancestorIds.push(a.id);
     });
 
+    var index = getDependencyIndex(dependencyType);
 
-    _.each(implementsIndex, function (edge) {
+    _.each(index, function (edge) {
 
       var id = sourceNode.id + ':' + edge.id;
 
@@ -434,7 +492,8 @@
           target: false,
           ancestor: false,
           actualSource: sourceNode,
-          actualTarget: nodeIndex[edge.target]
+          actualTarget: nodeIndex[edge.target],
+          dependencyType: dependencyType
         };
       }
       else if (includeAncestors && ancestorIds.indexOf(edge.source) >= 0) {
@@ -445,7 +504,8 @@
           target: false,
           ancestor: true,
           actualSource: sourceNode,
-          actualTarget: nodeIndex[edge.target]
+          actualTarget: nodeIndex[edge.target],
+          dependencyType: dependencyType
         };
       }
       else if (includeTarget && (edge.target === sourceNode.id)) {
@@ -456,7 +516,8 @@
           target: true,
           ancestor: false,
           actualSource: nodeIndex[edge.target],
-          actualTarget: nodeIndex[edge.source]
+          actualTarget: nodeIndex[edge.source],
+          dependencyType: dependencyType
         };
       }
     });
@@ -943,34 +1004,48 @@
   }
   observeStoreChanges(updateLegend);
 
-  function drawImplementsEdges(previousState, nextState) {
-    var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
+  /**
+   * Higher order function to draw dependency edges for all sorts of dependencies
+   *
+   * @param dependencyType
+   * @returns {Function}
+   */
+  function drawDependencyEdges(dependencyType) {
 
-    if (!sourceNode) {
-      return;
-    }
+    return function(previousState, nextState) {
+      var sourceNode = nodeIndex[nextState.selectedNode.nodeId];
 
-    var paths = [];
+      if (!sourceNode) {
+        return;
+      }
 
-    if (
-        nextState.showImplements.showSource
-        || nextState.showImplements.showImplicit
-        || nextState.showImplements.showTargets
-    ) {
+      var paths = [];
 
-      paths = _.values(findImplementsEdges(sourceNode, nextState.showImplements.showSource, nextState.showImplements.showImplicit, nextState.showImplements.showTargets));
-    }
+      var dependencyState = {};
+      switch (dependencyType) {
+        case 'implements':
+          dependencyState = nextState.showImplements;
+      }
 
-    var selection = g.selectAll('path.implements')
+      if (
+          dependencyState.showSource
+          || dependencyState.showImplicit
+          || dependencyState.showTargets
+      ) {
+
+        paths = _.values(findDependencyEdges(sourceNode, dependencyType, dependencyState.showSource, dependencyState.showImplicit, dependencyState.showTargets));
+      }
+
+      var selection = g.selectAll('path.' + dependencyType)
           .data(_.values(paths), function (d) {
             return d.id;
           });
 
 
-    selection.enter()
+      selection.enter()
           .insert('path', 'g')
-          .attr('class', function(d) {
-            var classList = ['dependency', 'implements'];
+          .attr('class', function (d) {
+            var classList = ['dependency', dependencyType];
 
             if (d.ancestor) {
               classList.push('dependency--ancestor');
@@ -1004,8 +1079,10 @@
             return diagonal(d.actualSource, d.actualSource)
           })
           .remove();
+    }
   }
-  observeStoreChanges(drawImplementsEdges);
+  observeStoreChanges(drawDependencyEdges('implements'));
+  observeStoreChanges(drawDependencyEdges('traitUse'));
 </script>
 
 <div class="info-box">
@@ -1021,6 +1098,13 @@
       </div>
       <div>
         <label><input type="checkbox" name="toggleImplementsTarget" value="true"/> Show dependent nodes</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Traits</legend>
+      <div>
+        <label><input type="checkbox" name="toggleShowTraits" value="true"/> Show traits</label>
       </div>
     </fieldset>
   </form>
