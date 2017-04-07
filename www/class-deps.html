@@ -87,6 +87,10 @@
       stroke: #a4d765;
     }
 
+    .traitUse {
+      stroke: #ffc545;
+    }
+
   </style>
 
 </head>
@@ -180,12 +184,12 @@
     };
   }
 
-  function toggleTraits(showSource) {
+  function toggleTraits(showSource, showTargets) {
     var showDependency = {
       dependencyType: 'traitUse',
       showSource: showSource,
       showImplicit: false,
-      showTargets: false
+      showTargets: showTargets || false
     };
 
     return {
@@ -363,6 +367,12 @@
                   showImplementsValue = action.showDependency;
                 }
                 expandDependencyTrees(newSource, showImplementsValue);
+
+                var showTraitsValue = store.getState().showTraits;
+                if (action.type === 'TOGGLE_TRAITS') {
+                  showTraitsValue = action.showDependency;
+                }
+                expandDependencyTrees(newSource, showTraitsValue);
 
 
                 console.log('RECOMPUTING NODE POSITIONS');
@@ -1025,6 +1035,10 @@
       switch (dependencyType) {
         case 'implements':
           dependencyState = nextState.showImplements;
+          break;
+        case 'traitUse':
+          dependencyState = nextState.showTraits;
+          break;
       }
 
       if (
@@ -1106,6 +1120,9 @@
       <div>
         <label><input type="checkbox" name="toggleShowTraits" value="true"/> Show traits</label>
       </div>
+      <div>
+        <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/> Show trait dependencies</label>
+      </div>
     </fieldset>
   </form>
 </div>
@@ -1117,10 +1134,14 @@
   form.addEventListener('change', function () {
     var formData = new FormData(form);
 
-    var toggleImplementsValue = formData.get('toggleImplements') === 'true' ? true : false
-    var toggleImplementsImplicit = formData.get('toggleImplementsImplicit') === 'true' ? true : false
-    var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false
+    var toggleImplementsValue = formData.get('toggleImplements') === 'true' ? true : false;
+    var toggleImplementsImplicit = formData.get('toggleImplementsImplicit') === 'true' ? true : false;
+    var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false;
     store.dispatch(toggleImplements(toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
+
+    var toggleShowTraits = formData.get('toggleShowTraits') === 'true' ? true : false;
+    var toggleShowTraitsTarget = formData.get('toggleShowTraitsTarget') === 'true' ? true : false;
+    store.dispatch(toggleTraits(toggleShowTraits, toggleShowTraitsTarget));
   });
 
   // Init
