@@ -214,9 +214,9 @@
 
   function nodePositions(state, action) {
 
-    if (action.treeData) {
+    if (nodeIndex) {
       var nodePositions = {};
-      action.treeData.forEach(function (d) {
+      _.each(nodeIndex, function (d) {
         nodePositions[d.id] = {
           x: d.x,
           y: d.y
@@ -433,7 +433,8 @@
           source: true,
           target: false,
           ancestor: false,
-          actualSource: sourceNode
+          actualSource: sourceNode,
+          actualTarget: nodeIndex[edge.target]
         };
       }
       else if (includeAncestors && ancestorIds.indexOf(edge.source) >= 0) {
@@ -443,7 +444,8 @@
           source: false,
           target: false,
           ancestor: true,
-          actualSource: sourceNode
+          actualSource: sourceNode,
+          actualTarget: nodeIndex[edge.target]
         };
       }
       else if (includeTarget && (edge.target === sourceNode.id)) {
@@ -453,7 +455,8 @@
           source: false,
           target: true,
           ancestor: false,
-          actualSource: nodeIndex[edge.source]
+          actualSource: nodeIndex[edge.target],
+          actualTarget: nodeIndex[edge.source]
         };
       }
     });
@@ -984,34 +987,21 @@
             return diagonal(pos, pos);
           })
           .transition()
-          .delay(function(d, i) {
-            return i * 250;
-          })
           .duration(duration)
           .attr('d', function (d) {
 
-            var dependencyNode = nodeIndex[d.edge.target];
-
-            if (d.target) {
-              dependencyNode = nodeIndex[d.edge.target];
+            if (d.actualSource.depth === d.actualTarget.depth) {
+              return exaggeratedDiagonal(d.actualSource, d.actualTarget);
             }
 
-            if (d.actualSource.depth === dependencyNode.depth) {
-              return exaggeratedDiagonal(d.actualSource, dependencyNode);
-            }
-
-            return diagonal(d.actualSource, dependencyNode);
+            return diagonal(d.actualSource, d.actualTarget);
           });
 
       selection.exit()
           .transition()
           .duration(duration)
-          .delay(function(d, i) {
-            return i * 250;
-          })
           .attr('d', function (d) {
-            var localSource = d.actualSource;
-            return diagonal(localSource, localSource)
+            return diagonal(d.actualSource, d.actualSource)
           })
           .remove();
   }
