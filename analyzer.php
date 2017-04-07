@@ -119,15 +119,12 @@ $passTwoTime = microtime(true);
 $logger->info("Pass two complete in " . ($passTwoTime - $nodeTime) . " seconds.");
 
 
-$js = 'var roadRunnerDeps = ';
-$js .= json_encode(array(
-                     'edges' => $edgeBuilder->getEdges(),
-                     'nodes' => $nodeBuilder->getNodes(),
-                     'classInheritanceEdges' => (new InheritanceHierarchyFormatter())->format($nodeBuilder, $edgeBuilder)
-                   ));
-
-$jsFilename = dirname(__FILE__) . '/www/js/class-graph.js';
-file_put_contents($jsFilename, $js);
+$nodesJsonFilename = dirname(__FILE__) . '/www/js/class-nodes.json';
+$edgeJsonFilename = dirname(__FILE__) . '/www/js/class-edges.json';
+$hierarchyJsonFilename = dirname(__FILE__) . '/www/js/class-hierarchy.json';
+file_put_contents($nodesJsonFilename, json_encode($nodeBuilder->getNodes()));
+file_put_contents($edgeJsonFilename, json_encode($edgeBuilder->getEdges()));
+file_put_contents($hierarchyJsonFilename, json_encode((new InheritanceHierarchyFormatter())->format($nodeBuilder, $edgeBuilder)));
 
 $endTime = microtime(true);
 $elapsedTime = $endTime - $starttime;
