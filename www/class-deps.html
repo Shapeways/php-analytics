@@ -94,6 +94,10 @@
       stroke: #EC3737;
     }
 
+    .staticAccess {
+      stroke: #db6200;
+    }
+
   </style>
 
 </head>
@@ -127,6 +131,7 @@
   var implementsIndex;
   var traitsIndex;
   var instantiatesIndex;
+  var staticAccessIndex;
 
   // Actions
   function initTree(classInheritanceEdges, nodes, edges) {
@@ -176,6 +181,14 @@
       }
     });
 
+    staticAccessIndex = {};
+    _.each(edges, function (edge, edgeKey) {
+
+      if (edge.type === 'staticAccess') {
+        staticAccessIndex[edgeKey] = edge;
+      }
+    });
+
     return {
       type: 'INIT_TREE'
     };
@@ -222,6 +235,36 @@
       type: 'TOGGLE_INSTANTIATES',
       showDependency: showDependency
     };
+  }
+
+  function toggleDependency(dependencyType, showSource, showImplicit, showTargets) {
+    var showDependency = {
+      dependencyType: dependencyType,
+      showSource: showSource || false,
+      showImplicit: showImplicit || false,
+      showTargets: showTargets || false
+    };
+
+    var actionType;
+    switch (dependencyType) {
+      case 'implements':
+        actionType = 'TOGGLE_IMPLEMENTS';
+        break;
+      case 'traitUse':
+        actionType = 'TOGGLE_TRAITS';
+        break;
+      case 'instantiates':
+        actionType = 'TOGGLE_INSTANTIATES';
+        break;
+      case 'staticAccess':
+        actionType = 'TOGGLE_STATIC_ACCESS';
+        break;
+    }
+
+    return {
+      type: actionType,
+      showDependency: showDependency
+    }
   }
 
   function selectNode(nodeId, expanded) {
@@ -287,6 +330,24 @@
     return state;
   }
 
+  function showStaticAccess(state, action) {
+
+    if (action.type === 'TOGGLE_STATIC_ACCESS') {
+      return action.showDependency;
+    }
+
+    if (state === undefined) {
+      return {
+        dependencyType: 'staticAccess',
+        showSource: false,
+        showImplicit: false,
+        showTargets: false
+      };
+    }
+
+    return state;
+  }
+
   function selectedNode(state, action) {
 
     if (action.type === 'SELECT_NODE') {
@@ -340,6 +401,7 @@
     showImplements,
     showTraits,
     showInstantiates,
+    showStaticAccess,
     selectedNode,
     nodePositions
   });
@@ -425,6 +487,12 @@
                 }
                 expandDependencyTrees(newSource, showInstantiatesValue);
 
+                var showStaticAccessValue = store.getState().showStaticAccess;
+                if (action.type === 'TOGGLE_STATIC_ACCESS') {
+                  showStaticAccessValue = action.showDependency;
+                }
+                expandDependencyTrees(newSource, showStaticAccessValue);
+
 
                 console.log('RECOMPUTING NODE POSITIONS');
                 recomputeTree();
@@ -498,6 +566,8 @@
         return traitsIndex;
       case 'instantiates':
         return instantiatesIndex;
+      case 'staticAccess':
+        return staticAccessIndex;
     }
   }
 
@@ -1095,6 +1165,9 @@
         case 'instantiates':
           dependencyState = nextState.showInstantiates;
           break;
+        case 'staticAccess':
+          dependencyState = nextState.showStaticAccess;
+          break;
       }
 
       if (
@@ -1154,6 +1227,7 @@
   observeStoreChanges(drawDependencyEdges('implements'));
   observeStoreChanges(drawDependencyEdges('traitUse'));
   observeStoreChanges(drawDependencyEdges('instantiates'));
+  observeStoreChanges(drawDependencyEdges('staticAccess'));
 </script>
 
 <div class="info-box">
@@ -1194,6 +1268,19 @@
         <label><input type="checkbox" name="toggleShowInstantiatesTarget" value="true"/> Show instantiates dependencies</label>
       </div>
     </fieldset>
+
+    <fieldset>
+      <legend>Class Static Member Access</legend>
+      <div>
+        <label><input type="checkbox" name="staticMemberAccess" value="true"/>Show Static Member Access </label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="staticMemberAccessImplicit" value="true"/>Show implicit Static Member Access </label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="staticMemberAccessTarget" value="true"/>Static Member Access dependencies</label>
+      </div>
+    </fieldset>
   </form>
 </div>
 
@@ -1217,6 +1304,11 @@
     var toggleShowInstantiatesImplicit = formData.get('toggleShowInstantiatesImplicit') === 'true' ? true : false;
     var toggleShowInstantiatesTarget = formData.get('toggleShowInstantiatesTarget') === 'true' ? true : false;
     store.dispatch(toggleInstantiates(toggleShowInstantiates, toggleShowInstantiatesImplicit, toggleShowInstantiatesTarget));
+
+    var staticMemberAccess = formData.get('staticMemberAccess') === 'true' ? true : false;
+    var staticMemberAccessImplicit = formData.get('staticMemberAccessImplicit') === 'true' ? true : false;
+    var staticMemberAccessTarget = formData.get('staticMemberAccessTarget') === 'true' ? true : false;
+    store.dispatch(toggleDependency('staticAccess', staticMemberAccess, staticMemberAccessImplicit, staticMemberAccessTarget));
   });
 
   // Init
