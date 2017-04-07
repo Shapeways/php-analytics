@@ -112,9 +112,11 @@
   // Build node index, init start positions and visibility
   var nodeIndex;
   var treeData;
+  var roadRunnerNodes;
+  var implementsIndex;
 
   // Actions
-  function initTree(classInheritanceEdges, nodes) {
+  function initTree(classInheritanceEdges, nodes, edges) {
     root = d3.stratify()
         .id(function (d) {
           return d.source;
@@ -124,8 +126,8 @@
         (classInheritanceEdges);
 
     root.sort(function (a, b) {
-      var nodeA = roadRunnerDeps.nodes[a.id].name.toLowerCase();
-      var nodeB = roadRunnerDeps.nodes[b.id].name.toLowerCase();
+      var nodeA = nodes[a.id].name.toLowerCase();
+      var nodeB = nodes[b.id].name.toLowerCase();
 
       return nodeA.localeCompare(nodeB);
     });
@@ -133,6 +135,16 @@
     nodeIndex = {};
     root.each(function (d) {
       nodeIndex[d.id] = d;
+    });
+
+    roadRunnerNodes = nodes;
+
+    implementsIndex = {};
+    _.each(edges, function (edge, edgeKey) {
+
+      if (edge.type === 'implements') {
+        implementsIndex[edgeKey] = edge;
+      }
     });
 
     return {
@@ -389,14 +401,6 @@
 
   // Begin App
   var nodeRadius = 10;
-
-  var implementsIndex = {};
-  _.each(roadRunnerDeps.edges, function (edge, edgeKey) {
-
-    if (edge.type === 'implements') {
-      implementsIndex[edgeKey] = edge;
-    }
-  });
 
   function findImplementsEdges(sourceNode, includeSourceDeps, includeAncestors, includeTarget) {
 
@@ -749,7 +753,7 @@
     nodeUpdate.select('circle.node')
         .attr('r', nodeRadius)
         .style('stroke', function (d) {
-          var nodeData = roadRunnerDeps.nodes[d.id];
+          var nodeData = roadRunnerNodes[d.id];
 
           if (nodeData && nodeData.extraData && nodeData.extraData.externalOrigin) {
             return "#67757B";
@@ -768,7 +772,7 @@
           }
         })
         .style("fill", function (d) {
-          var nodeData = roadRunnerDeps.nodes[d.id];
+          var nodeData = roadRunnerNodes[d.id];
 
           if (!d._children) {
             return "#fff";
@@ -895,7 +899,7 @@
   observeStoreChanges(updateGraph);
 
   function updateLegend(previousState, nextState) {
-    var sourceNode = roadRunnerDeps.nodes[nextState.selectedNode.nodeId];
+    var sourceNode = roadRunnerNodes[nextState.selectedNode.nodeId];
 
     document.querySelectorAll('.legend--selected-node').forEach(function (domNode) {
       domNode.innerHTML = '';
@@ -1029,7 +1033,13 @@
   });
 
   // Init
-  store.dispatch(initTree(roadRunnerDeps.classInheritanceEdges));
+  d3.json('js/class-hierarchy.json', function(error, hierarchy) {
+    d3.json('js/class-nodes.json', function(error, nodes) {
+      d3.json('js/class-edges.json', function(error, edges) {
+        store.dispatch(initTree(hierarchy, nodes, edges));
+      });
+    });
+  });
 </script>
 </body>
 </html>
