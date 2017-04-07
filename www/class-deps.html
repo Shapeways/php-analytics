@@ -152,11 +152,17 @@
   }
 
   function toggleImplements(toggleImplements, toggleImplementsImplicit, toggleImplementsTarget) {
+
+    var showImplements = {
+      dependencyType: 'implements',
+      showSource: toggleImplements,
+      showImplicit: toggleImplementsImplicit,
+      showTargets: toggleImplementsTarget
+    };
+
     return {
       type: 'TOGGLE_IMPLEMENTS',
-      toggleImplements: toggleImplements,
-      toggleImplementsImplicit: toggleImplementsImplicit,
-      toggleImplementsTarget: toggleImplementsTarget
+      showImplements: showImplements
     };
   }
 
@@ -172,18 +178,15 @@
   function showImplements(state, action) {
 
     if (action.type === 'TOGGLE_IMPLEMENTS') {
-      return {
-        showImplements: action.toggleImplements,
-        showImplementsImplicit: action.toggleImplementsImplicit,
-        showImplementsTarget: action.toggleImplementsTarget
-      };
+      return action.showImplements;
     }
 
     if (state === undefined) {
       return {
-        showImplements: false,
-        showImplementsImplicit: false,
-        showImplementsTarget: false
+        dependencyType: 'implements',
+        showSource: false,
+        showImplicit: false,
+        showTargets: false
       };
     }
 
@@ -290,81 +293,79 @@
                   doRecompute = true;
                 }
 
+
+                var newSource;
+                if (action.type === 'SELECT_NODE') {
+                  newSource = nodeIndex[action.nodeId];
+                } else if (store.getState().selectedNode.nodeId) {
+                  newSource = nodeIndex[store.getState().selectedNode.nodeId];
+                }
+
                 // Only recompute when expanding.
                 // Optimizes performance cost of selecting nodes.
                 if (action.type === 'SELECT_NODE') {
-
-                  var newSource = nodeIndex[action.nodeId];
-                  if (newSource && !isLeaf(newSource) && ((action.expanded && isCollapsed(newSource)) || (!action.expanded && isExpanded(newSource)))) {
-
-                    doRecompute = true;
-
-                    if (action.expanded) {
-                      expand(newSource);
-                    }
-                    else {
-                      collapse(newSource);
-                    }
+                  if (action.expanded) {
+                    expand(newSource);
+                  }
+                  else {
+                    collapse(newSource);
                   }
                 }
 
-                if ((action.type === 'TOGGLE_IMPLEMENTS') && ((action.toggleImplements === true) || (action.toggleImplementsImplicit === true) || (action.toggleImplementsTarget === true))
-                    || ((store.getState().showImplements.showImplements === true) || (store.getState().showImplements.showImplementsImplicit === true) || (store.getState().showImplements.showImplementsTarget === true))) {
-                  var newSource = root;
 
-                  if (action.type === 'SELECT_NODE') {
-                    newSource = nodeIndex[action.nodeId];
-                  } else if (store.getState().selectedNode.nodeId) {
-                    newSource = nodeIndex[store.getState().selectedNode.nodeId];
-                  }
+                var showImplementsValue = store.getState().showImplements;
+                if (action.type === 'TOGGLE_IMPLEMENTS') {
+                  showImplementsValue = action.showImplements;
+                }
 
-                  var implementsEdges = findImplementsEdges(
-                      newSource,
-                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplements : store.getState().showImplements.showImplements,
-                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplementsImplicit : store.getState().showImplements.showImplementsImplicit,
-                      (action.type === 'TOGGLE_IMPLEMENTS')? action.toggleImplementsTarget : store.getState().showImplements.showImplementsTarget
-                  );
+                if (showImplementsValue.showSource || showImplementsValue.showImplicit || showImplementsValue.showTargets) {
+
+                  var implementsEdges = findImplementsEdges(newSource, showImplementsValue.showSource, showImplementsValue.showImplicit, showImplementsValue.showTargets);
 
                   _.each(implementsEdges, function(edge) {
-                    var destination = nodeIndex[edge.edge.target];
+                    var destination;
+                    if (edge.target) {
+                      destination = nodeIndex[edge.edge.source];
+                    }
+                    else {
+                      destination = nodeIndex[edge.edge.target];
+                    }
 
                     if (destination) {
                       showTree(destination);
-                      doRecompute = true;
                     }
                   });
                 }
 
-                if (doRecompute) {
-                  console.log('RECOMPUTING NODE POSITIONS');
 
-                  recomputeTree();
+                console.log('RECOMPUTING NODE POSITIONS');
+                recomputeTree();
 
-                  action.treeData = _.map(nodeIndex, function (node) {
+                action.treeData = _.map(nodeIndex, function (node) {
 
-                    if (node.x && node.y) {
-                      return {
-                        id: node.id,
-                        x: node.x,
-                        y: node.y
-                      };
-                    }
-
-                    if (node.parent) {
-                      return {
-                        id: node.id,
-                        x: node.parent.x,
-                        y: node.parent.y
-                      };
-                    }
-
+                  if (node.x && node.y) {
                     return {
                       id: node.id,
-                      x: 0,
-                      y: 0
+                      x: node.x,
+                      y: node.y
                     };
-                  });
-                }
+                  }
+
+                  if (node.parent) {
+                    return {
+                      id: node.id,
+                      x: node.parent.x,
+                      y: node.parent.y
+                    };
+                  }
+
+                  return {
+                    id: node.id,
+                    x: 0,
+                    y: 0
+                  };
+                });
+
 
                 next(action);
               }
@@ -402,6 +403,11 @@
   var nodeRadius = 10;
 
   function findImplementsEdges(sourceNode, includeSourceDeps, includeAncestors, includeTarget) {
+    var dependencyEdges = {};
+
+    if (!sourceNode) {
+      return dependencyEdges;
+    }
 
     var ancestorIds = [];
     sourceNode.ancestors().forEach(function (a) {
@@ -411,7 +417,7 @@
       ancestorIds.push(a.id);
     });
 
-    var dependencyEdges = {};
+
     _.each(implementsIndex, function (edge) {
 
       var id = sourceNode.id + ':' + edge.id;
@@ -438,6 +444,16 @@
           target: false,
           ancestor: true,
           actualSource: sourceNode
+        };
+      }
+      else if (includeTarget && (edge.target === sourceNode.id)) {
+        dependencyEdges[id] = {
+          id: id,
+          edge: edge,
+          source: false,
+          target: true,
+          ancestor: false,
+          actualSource: nodeIndex[edge.source]
         };
       }
     });
@@ -910,7 +926,7 @@
       });
     }
 
-    if (nextState.showImplements.showImplements) {
+    if (nextState.showImplements.showSource) {
       var checkbox = document.querySelector('input[name="toggleImplements"]');
       if (checkbox) {
         checkbox.checked = 'checked';
@@ -934,12 +950,12 @@
     var paths = [];
 
     if (
-        nextState.showImplements.showImplements
-        || nextState.showImplements.showImplementsImplicit
-        || nextState.showImplements.showImplementsTarget
+        nextState.showImplements.showSource
+        || nextState.showImplements.showImplicit
+        || nextState.showImplements.showTargets
     ) {
 
-      paths = _.values(findImplementsEdges(sourceNode, nextState.showImplements.showImplements, nextState.showImplements.showImplementsImplicit, nextState.showImplements.showImplementsTarget));
+      paths = _.values(findImplementsEdges(sourceNode, nextState.showImplements.showSource, nextState.showImplements.showImplicit, nextState.showImplements.showTargets));
     }
 
     var selection = g.selectAll('path.implements')
@@ -957,10 +973,14 @@
               classList.push('dependency--ancestor');
             }
 
+            if (d.target) {
+              classList.push('dependency--target');
+            }
+
             return classList.join(' ');
           })
           .attr('d', function (d) {
-            var pos = previousNodePosition(sourceNode);
+            var pos = previousNodePosition(d.actualSource);
             return diagonal(pos, pos);
           })
           .transition()
@@ -971,18 +991,16 @@
           .attr('d', function (d) {
 
             var dependencyNode = nodeIndex[d.edge.target];
-            var localSource = sourceNode;
 
             if (d.target) {
-              dependencyNode = localSource;
-              localSource = nodeIndex[d.edge.source];
+              dependencyNode = nodeIndex[d.edge.target];
             }
 
-            if (dependencyNode.depth === localSource.depth) {
-              return exaggeratedDiagonal(localSource, dependencyNode);
+            if (d.actualSource.depth === dependencyNode.depth) {
+              return exaggeratedDiagonal(d.actualSource, dependencyNode);
             }
 
-            return diagonal(localSource, dependencyNode);
+            return diagonal(d.actualSource, dependencyNode);
           });
 
       selection.exit()
