@@ -27,6 +27,15 @@
       font-size: 8pt;
     }
 
+    fieldset {
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
     circle.leaf {
       stroke: black;
       stroke-width: 3px;
@@ -65,6 +74,8 @@
       width: 420px;
 
       padding: 10px;
+
+      background: #e5f7ff;
     }
 
     .dependency {
@@ -1236,50 +1247,54 @@
     <fieldset>
       <legend>Implements</legend>
       <div>
-        <label><input type="checkbox" name="toggleImplements" value="true"/> Show dependencies</label>
+        <label><input type="checkbox" name="toggleImplements" value="true"/>Show dependencies</label>
       </div>
       <div>
-        <label><input type="checkbox" name="toggleImplementsImplicit" value="true"/> Show implicit dependencies</label>
+        <label><input type="checkbox" name="toggleImplementsImplicit" value="true"/>Show implicit dependencies</label>
       </div>
       <div>
-        <label><input type="checkbox" name="toggleImplementsTarget" value="true"/> Show dependent nodes</label>
+        <label><input type="checkbox" name="toggleImplementsTarget" value="true"/>Show dependent nodes</label>
       </div>
     </fieldset>
 
     <fieldset>
       <legend>Traits</legend>
       <div>
-        <label><input type="checkbox" name="toggleShowTraits" value="true"/> Show traits</label>
+        <label><input type="checkbox" name="toggleShowTraits" value="true"/>Show traits</label>
       </div>
       <div>
-        <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/> Show trait dependencies</label>
+        <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/>Show trait dependencies</label>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Class Instantiations</legend>
-      <div>
-        <label><input type="checkbox" name="toggleShowInstantiates" value="true"/> Show instantiates</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleShowInstantiatesImplicit" value="true"/> Show implicit instantiates</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleShowInstantiatesTarget" value="true"/> Show instantiates dependencies</label>
-      </div>
-    </fieldset>
+      <legend>Tight Couplings</legend>
 
-    <fieldset>
-      <legend>Class Static Member Access</legend>
-      <div>
-        <label><input type="checkbox" name="staticMemberAccess" value="true"/>Show Static Member Access </label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="staticMemberAccessImplicit" value="true"/>Show implicit Static Member Access </label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="staticMemberAccessTarget" value="true"/>Static Member Access dependencies</label>
-      </div>
+      <fieldset>
+        <legend>Class Instantiations</legend>
+        <div>
+          <label><input type="checkbox" name="toggleShowInstantiates" value="true"/>Show instantiates</label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="toggleShowInstantiatesImplicit" value="true"/>Show implicit instantiates</label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="toggleShowInstantiatesTarget" value="true"/>Show instantiates dependencies</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Class Static Member Access</legend>
+        <div>
+          <label><input type="checkbox" name="staticMemberAccess" value="true"/>Show Static Member Access </label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="staticMemberAccessImplicit" value="true"/>Show implicit Static Member Access </label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="staticMemberAccessTarget" value="true"/>Static Member Access dependencies</label>
+        </div>
+      </fieldset>
     </fieldset>
   </form>
 </div>
