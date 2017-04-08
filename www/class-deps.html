@@ -132,17 +132,19 @@
 
   // Bootstrap
   var root;
-
-  // Build node index, init start positions and visibility
   var nodeIndex;
   var treeData;
   var roadRunnerNodes;
-  var implementsIndex;
-  var traitsIndex;
-  var instantiatesIndex;
-  var staticAccessIndex;
+  var enabledDependencies = [
+    'implements',
+    'traitUse',
+    'instantiates',
+    'staticAccess'
+  ];
 
   // Actions
+
+  // Build node index, init start positions and visibility
   function initTree(classInheritanceEdges, nodes, edges) {
     root = d3.stratify()
         .id(function (d) {
@@ -166,83 +168,11 @@
 
     roadRunnerNodes = nodes;
 
-    implementsIndex = {};
-    _.each(edges, function (edge, edgeKey) {
-
-      if (edge.type === 'implements') {
-        implementsIndex[edgeKey] = edge;
-      }
-    });
-
-    traitsIndex = {};
-    _.each(edges, function (edge, edgeKey) {
-
-      if (edge.type === 'traitUse') {
-        traitsIndex[edgeKey] = edge;
-      }
-    });
-
-    instantiatesIndex = {};
-    _.each(edges, function (edge, edgeKey) {
-
-      if (edge.type === 'instantiates') {
-        instantiatesIndex[edgeKey] = edge;
-      }
-    });
-
-    staticAccessIndex = {};
-    _.each(edges, function (edge, edgeKey) {
-
-      if (edge.type === 'staticAccess') {
-        staticAccessIndex[edgeKey] = edge;
-      }
-    });
-
     return {
-      type: 'INIT_TREE'
-    };
-  }
-
-  function toggleImplements(toggleImplements, toggleImplementsImplicit, toggleImplementsTarget) {
-
-    var showDependency = {
-      dependencyType: 'implements',
-      showSource: toggleImplements,
-      showImplicit: toggleImplementsImplicit,
-      showTargets: toggleImplementsTarget
-    };
-
-    return {
-      type: 'TOGGLE_IMPLEMENTS',
-      showDependency: showDependency
-    };
-  }
-
-  function toggleTraits(showSource, showTargets) {
-    var showDependency = {
-      dependencyType: 'traitUse',
-      showSource: showSource,
-      showImplicit: false,
-      showTargets: showTargets || false
-    };
-
-    return {
-      type: 'TOGGLE_TRAITS',
-      showDependency: showDependency
-    };
-  }
-
-  function toggleInstantiates(showSource, showImplicit, showTargets) {
-    var showDependency = {
-      dependencyType: 'instantiates',
-      showSource: showSource || false,
-      showImplicit: showImplicit || false,
-      showTargets: showTargets || false
-    };
-
-    return {
-      type: 'TOGGLE_INSTANTIATES',
-      showDependency: showDependency
+      type: 'INIT_TREE',
+      nodes: nodes,
+      edges: edges,
+      inheritanceHierarchy: classInheritanceEdges
     };
   }
 
@@ -254,24 +184,9 @@
       showTargets: showTargets || false
     };
 
-    var actionType;
-    switch (dependencyType) {
-      case 'implements':
-        actionType = 'TOGGLE_IMPLEMENTS';
-        break;
-      case 'traitUse':
-        actionType = 'TOGGLE_TRAITS';
-        break;
-      case 'instantiates':
-        actionType = 'TOGGLE_INSTANTIATES';
-        break;
-      case 'staticAccess':
-        actionType = 'TOGGLE_STATIC_ACCESS';
-        break;
-    }
-
     return {
-      type: actionType,
+      type: 'TOGGLE_DEPENDENCY',
+      dependencyType: dependencyType,
       showDependency: showDependency
     }
   }
@@ -285,73 +200,46 @@
   }
 
   // Reducers
-  function showImplements(state, action) {
+  function dependencySettings(state, action) {
 
-    if (action.type === 'TOGGLE_IMPLEMENTS') {
-      return action.showDependency;
+    if ((state === undefined) || (action.type === 'INIT_TREE')) {
+
+      var newState = {};
+
+      enabledDependencies.forEach(function(dependencyType) {
+        newState[dependencyType] = {
+          edgeType: dependencyType,
+          index: {},
+          viewSettings: {
+            showSource: false,
+            showImplicit: false,
+            showTargets: false
+          }
+        }
+      });
+
+      // Initialize Indices
+      if (action.type === 'INIT_TREE') {
+        _.each(action.edges, function(edge, edgeKey) {
+          if (enabledDependencies.indexOf(edge.type) >= 0) {
+            newState[edge.type].index[edgeKey] = edge;
+          }
+        });
+      }
+
+      return newState;
     }
 
-    if (state === undefined) {
-      return {
-        dependencyType: 'implements',
-        showSource: false,
-        showImplicit: false,
-        showTargets: false
+    if (action.type === 'TOGGLE_DEPENDENCY') {
+      var clonedState = JSON.parse(JSON.stringify(state));
+
+      clonedState[action.showDependency.dependencyType].viewSettings = {
+        showSource: action.showDependency.showSource,
+        showImplicit: action.showDependency.showImplicit,
+        showTargets: action.showDependency.showTargets,
       };
-    }
 
-    return state;
-  }
-
-  function showTraits(state, action) {
-
-    if (action.type === 'TOGGLE_TRAITS') {
-      return action.showDependency;
-    }
-
-    if (state === undefined) {
-      return {
-        dependencyType: 'traitUse',
-        showSource: false,
-        showImplicit: false,
-        showTargets: false
-      };
-    }
-
-    return state;
-  }
-
-  function showInstantiates(state, action) {
-
-    if (action.type === 'TOGGLE_INSTANTIATES') {
-      return action.showDependency;
-    }
-
-    if (state === undefined) {
-      return {
-        dependencyType: 'instantiates',
-        showSource: false,
-        showImplicit: false,
-        showTargets: false
-      };
-    }
-
-    return state;
-  }
-
-  function showStaticAccess(state, action) {
-
-    if (action.type === 'TOGGLE_STATIC_ACCESS') {
-      return action.showDependency;
-    }
-
-    if (state === undefined) {
-      return {
-        dependencyType: 'staticAccess',
-        showSource: false,
-        showImplicit: false,
-        showTargets: false
-      };
+      return clonedState;
     }
 
     return state;
@@ -407,12 +295,9 @@
   }
 
   var reducer = Redux.combineReducers({
-    showImplements,
-    showTraits,
-    showInstantiates,
-    showStaticAccess,
     selectedNode,
-    nodePositions
+    nodePositions,
+    dependencySettings
   });
 
   // Store
@@ -477,31 +362,15 @@
                   }
                 }
 
+                enabledDependencies.forEach(function(dependencyType) {
+                  var viewSettings = store.getState().dependencySettings[dependencyType].viewSettings;
 
-                var showImplementsValue = store.getState().showImplements;
-                if (action.type === 'TOGGLE_IMPLEMENTS') {
-                  showImplementsValue = action.showDependency;
-                }
-                expandDependencyTrees(newSource, showImplementsValue);
+                  if ((action.type === 'TOGGLE_DEPENDENCY') && (action.dependencyType === dependencyType)) {
+                    viewSettings = action.showDependency;
+                  }
 
-                var showTraitsValue = store.getState().showTraits;
-                if (action.type === 'TOGGLE_TRAITS') {
-                  showTraitsValue = action.showDependency;
-                }
-                expandDependencyTrees(newSource, showTraitsValue);
-
-                var showInstantiatesValue = store.getState().showInstantiates;
-                if (action.type === 'TOGGLE_INSTANTIATES') {
-                  showInstantiatesValue = action.showDependency;
-                }
-                expandDependencyTrees(newSource, showInstantiatesValue);
-
-                var showStaticAccessValue = store.getState().showStaticAccess;
-                if (action.type === 'TOGGLE_STATIC_ACCESS') {
-                  showStaticAccessValue = action.showDependency;
-                }
-                expandDependencyTrees(newSource, showStaticAccessValue);
-
+                  expandDependencyTrees(newSource, dependencyType, viewSettings);
+                });
 
                 console.log('RECOMPUTING NODE POSITIONS');
                 recomputeTree();
@@ -568,22 +437,13 @@
   var nodeRadius = 10;
 
   function getDependencyIndex(dependencyType) {
-    switch (dependencyType) {
-      case 'implements':
-        return implementsIndex;
-      case 'traitUse':
-        return traitsIndex;
-      case 'instantiates':
-        return instantiatesIndex;
-      case 'staticAccess':
-        return staticAccessIndex;
-    }
+    return store.getState().dependencySettings[dependencyType].index;
   }
 
-  function expandDependencyTrees(sourceNode, dependencyToggles) {
+  function expandDependencyTrees(sourceNode, dependencyType, dependencyToggles) {
     if (dependencyToggles.showSource || dependencyToggles.showImplicit || dependencyToggles.showTargets) {
 
-      var dependencyEdges = findDependencyEdges(sourceNode, dependencyToggles.dependencyType, dependencyToggles.showSource, dependencyToggles.showImplicit, dependencyToggles.showTargets);
+      var dependencyEdges = findDependencyEdges(sourceNode, dependencyType, dependencyToggles.showSource, dependencyToggles.showImplicit, dependencyToggles.showTargets);
 
       _.each(dependencyEdges, function(edge) {
         var destination;
@@ -757,7 +617,7 @@
   svg.attr('height', height);
   var g = svg.append('g');
 
-  //    var tree = d3.tree();
+//      var tree = d3.tree();
   var tree = d3.cluster();
   tree.separation(function (a, b) {
     return a.parent == b.parent ? 0.25 : 0.5;
@@ -1131,18 +991,6 @@
         domNode.appendChild(document.createTextNode(' ' + sourceNode.name));
       });
     }
-
-    if (nextState.showImplements.showSource) {
-      var checkbox = document.querySelector('input[name="toggleImplements"]');
-      if (checkbox) {
-        checkbox.checked = 'checked';
-      }
-    } else {
-      var checkbox = document.querySelector('input[name="toggleImplements"]');
-      if (checkbox) {
-        checkbox.checked = false;
-      }
-    }
   }
   observeStoreChanges(updateLegend);
 
@@ -1163,21 +1011,7 @@
 
       var paths = [];
 
-      var dependencyState = {};
-      switch (dependencyType) {
-        case 'implements':
-          dependencyState = nextState.showImplements;
-          break;
-        case 'traitUse':
-          dependencyState = nextState.showTraits;
-          break;
-        case 'instantiates':
-          dependencyState = nextState.showInstantiates;
-          break;
-        case 'staticAccess':
-          dependencyState = nextState.showStaticAccess;
-          break;
-      }
+      var dependencyState = nextState.dependencySettings[dependencyType].viewSettings;
 
       if (
           dependencyState.showSource
@@ -1233,10 +1067,12 @@
           .remove();
     }
   }
-  observeStoreChanges(drawDependencyEdges('implements'));
-  observeStoreChanges(drawDependencyEdges('traitUse'));
-  observeStoreChanges(drawDependencyEdges('instantiates'));
-  observeStoreChanges(drawDependencyEdges('staticAccess'));
+  enabledDependencies.forEach(function(dependencyType) {
+    observeStoreChanges(drawDependencyEdges(dependencyType));
+    observeStoreChanges(drawDependencyEdges(dependencyType));
+    observeStoreChanges(drawDependencyEdges(dependencyType));
+    observeStoreChanges(drawDependencyEdges(dependencyType));
+  });
 </script>
 
 <div class="info-box">
@@ -1259,6 +1095,9 @@
       <legend>Traits</legend>
       <div>
         <label><input type="checkbox" name="toggleShowTraits" value="true"/>Show traits</label>
+      </div>
+      <div>
+        <label><input type="checkbox" name="toggleShowTraitsImplicit" value="true"/>Show traits implicit</label>
       </div>
       <div>
         <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/>Show trait dependencies</label>
@@ -1307,16 +1146,17 @@
     var toggleImplementsValue = formData.get('toggleImplements') === 'true' ? true : false;
     var toggleImplementsImplicit = formData.get('toggleImplementsImplicit') === 'true' ? true : false;
     var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false;
-    store.dispatch(toggleImplements(toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
+    store.dispatch(toggleDependency('implements', toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
 
     var toggleShowTraits = formData.get('toggleShowTraits') === 'true' ? true : false;
+    var toggleShowTraitsImplicit = formData.get('toggleShowTraitsImplicit') === 'true' ? true : false;
     var toggleShowTraitsTarget = formData.get('toggleShowTraitsTarget') === 'true' ? true : false;
-    store.dispatch(toggleTraits(toggleShowTraits, toggleShowTraitsTarget));
+    store.dispatch(toggleDependency('traitUse', toggleShowTraits, toggleShowTraitsImplicit, toggleShowTraitsTarget));
 
     var toggleShowInstantiates = formData.get('toggleShowInstantiates') === 'true' ? true : false;
     var toggleShowInstantiatesImplicit = formData.get('toggleShowInstantiatesImplicit') === 'true' ? true : false;
     var toggleShowInstantiatesTarget = formData.get('toggleShowInstantiatesTarget') === 'true' ? true : false;
-    store.dispatch(toggleInstantiates(toggleShowInstantiates, toggleShowInstantiatesImplicit, toggleShowInstantiatesTarget));
+    store.dispatch(toggleDependency('instantiates', toggleShowInstantiates, toggleShowInstantiatesImplicit, toggleShowInstantiatesTarget));
 
     var staticMemberAccess = formData.get('staticMemberAccess') === 'true' ? true : false;
     var staticMemberAccessImplicit = formData.get('staticMemberAccessImplicit') === 'true' ? true : false;
