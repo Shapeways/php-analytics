@@ -14,7 +14,7 @@ use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolverVisitor;
-use RoadRunnerAnalytics\Visitors\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
 use RoadRunnerAnalytics\Visitors\SelfResolver;
 
 
@@ -31,7 +31,7 @@ $parsedFiles = [];
 $codeEdges = array();
 $codeNodes = array();
 
-$nodeBuilder = new NodeBuilder(new ClassNameHelper(), $logger);
+$nodeBuilder = new NodeBuilderVisitor(new ClassNameHelper(), $logger);
 
 $filesToAnalyze = array();
 

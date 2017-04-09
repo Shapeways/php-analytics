@@ -26,7 +26,7 @@ use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
-class NodeBuilder extends NodeVisitorAbstract
+class NodeBuilderVisitor extends NodeVisitorAbstract
 {
 
   const NODE_TYPE_FILE      = 'sourcefile';
@@ -67,13 +67,13 @@ class NodeBuilder extends NodeVisitorAbstract
    * @var string[][]
    */
   private $seenClassLikeNames = [
-    NodeBuilder::NODE_TYPE_CLASS => [],
-    NodeBuilder::NODE_TYPE_INTERFACE => [],
-    NodeBuilder::NODE_TYPE_TRAIT => []
+    NodeBuilderVisitor::NODE_TYPE_CLASS => [],
+    NodeBuilderVisitor::NODE_TYPE_INTERFACE => [],
+    NodeBuilderVisitor::NODE_TYPE_TRAIT => []
   ];
 
   /**
-   * NodeBuilder constructor.
+   * NodeBuilderVisitor constructor.
    * @param ClassNameHelper $classNameHelper
    */
   public function __construct(ClassNameHelper $classNameHelper, LoggerInterface $logger)
@@ -92,10 +92,10 @@ class NodeBuilder extends NodeVisitorAbstract
   private function addNode($nodeId, $nodeName, $nodeType, $extraData = array()): array {
 
     $this->nodes[$nodeId] = array(
-      NodeBuilder::NODE_ID => $nodeId,
-      NodeBuilder::NODE_NAME => $nodeName,
-      NodeBuilder::NODE_TYPE => $nodeType,
-      NodeBuilder::NODE_EXTRA_DATA => $extraData
+      NodeBuilderVisitor::NODE_ID => $nodeId,
+      NodeBuilderVisitor::NODE_NAME => $nodeName,
+      NodeBuilderVisitor::NODE_TYPE => $nodeType,
+      NodeBuilderVisitor::NODE_EXTRA_DATA => $extraData
     );
 
     return $this->nodes[$nodeId];
@@ -119,14 +119,14 @@ class NodeBuilder extends NodeVisitorAbstract
   private function enterClass(Class_ $node) {
     $classId = $this->classNameHelper->getClassId($node);
     $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
-    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_CLASS);
+    $this->addNode($classId, $classname, NodeBuilderVisitor::NODE_TYPE_CLASS);
 
     if ($node->extends) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $this->classNameHelper->getQualifiedName($node->extends);
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $this->classNameHelper->getQualifiedName($node->extends);
     }
 
     foreach ($node->implements as $name) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
     }
   }
 
@@ -136,10 +136,10 @@ class NodeBuilder extends NodeVisitorAbstract
   private function enterInterface(Interface_ $node) {
     $classId = $this->classNameHelper->getClassId($node);
     $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
-    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_INTERFACE);
+    $this->addNode($classId, $classname, NodeBuilderVisitor::NODE_TYPE_INTERFACE);
 
     foreach ($node->extends as $name) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_INTERFACE][] = $this->classNameHelper->getQualifiedName($name);
     }
   }
 
@@ -149,7 +149,7 @@ class NodeBuilder extends NodeVisitorAbstract
   private function enterTrait(Trait_ $node) {
     $classId = $this->classNameHelper->getClassId($node);
     $classname = $this->classNameHelper->getQualifiedNameForClassLike($node);
-    $this->addNode($classId, $classname, NodeBuilder::NODE_TYPE_TRAIT);
+    $this->addNode($classId, $classname, NodeBuilderVisitor::NODE_TYPE_TRAIT);
   }
 
   private function enterClassLike(ClassLike $node) {
@@ -173,10 +173,10 @@ class NodeBuilder extends NodeVisitorAbstract
     $class = $node->class;
 
     if ($node instanceof ResolvedKeywordsNew) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->getResolvedClass()->toString();
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->getResolvedClass()->toString();
     }
     else if (($class instanceof Name)) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $class->toString();
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $class->toString();
     }
     else if ($class instanceof Variable) {
 //      $this->logger->warning(basename($this->filename) . ':' . $node->getLine() . ' New instance instantiation from variable: $' . $class->name);
@@ -203,14 +203,14 @@ class NodeBuilder extends NodeVisitorAbstract
       $this->enterNew($node);
     }
     else if ($node instanceof StaticCall) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
     else if ($node instanceof Instanceof_) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
     else if ($node instanceof ClassConstFetch) {
       if ($node->class instanceof Name) {
-        $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+        $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
       }
       else if ($node->class instanceof Variable) {
         $currentFilename = basename($this->filename);
@@ -221,7 +221,7 @@ class NodeBuilder extends NodeVisitorAbstract
       }
     }
     else if ($node instanceof StaticPropertyFetch) {
-      $this->seenClassLikeNames[NodeBuilder::NODE_TYPE_CLASS][] = $node->class->toString();
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
 
   }
@@ -244,7 +244,7 @@ class NodeBuilder extends NodeVisitorAbstract
   public function addExternalNodesForUnvisitedReferences() {
 
     $visitedNodeNames = array_map(function($node) {
-      return $node[NodeBuilder::NODE_NAME];
+      return $node[NodeBuilderVisitor::NODE_NAME];
     }, $this->nodes);
 
     foreach ($this->seenClassLikeNames as $typeString => $typeArray) {

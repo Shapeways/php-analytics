@@ -23,7 +23,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
-use RoadRunnerAnalytics\Visitors\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
 
 /**
  * Class ClassNameHelper
@@ -153,7 +153,7 @@ class ClassNameHelper
     $currentlyIncludedFiles = $this->getCurrentIncludedFiles();
 
     $filteredNodes = array_filter($nodes, function($node) use($qualifiedName) {
-      return $node[NodeBuilder::NODE_NAME] === $qualifiedName;
+      return $node[NodeBuilderVisitor::NODE_NAME] === $qualifiedName;
     });
 
     if (empty($filteredNodes)) {
@@ -162,17 +162,17 @@ class ClassNameHelper
 
     if (count($filteredNodes) === 1) {
       $firstNode = current($filteredNodes);
-      return $firstNode[NodeBuilder::NODE_ID];
+      return $firstNode[NodeBuilderVisitor::NODE_ID];
     }
 
     $currentFilename = $this->currentFilename;
     $ownFileMatch = array_filter($filteredNodes, function($node) use ($currentFilename) {
-      return stristr($node[NodeBuilder::NODE_ID], $currentFilename);
+      return stristr($node[NodeBuilderVisitor::NODE_ID], $currentFilename);
     });
 
     if (count($ownFileMatch) === 1) {
       $firstNode = current($ownFileMatch);
-      return $firstNode[NodeBuilder::NODE_ID];
+      return $firstNode[NodeBuilderVisitor::NODE_ID];
     }
 
 
@@ -187,7 +187,7 @@ class ClassNameHelper
     foreach ($currentlyIncludedFiles as $partialFilename) {
       $finalMatch = array_filter($filteredNodes, function($node) use ($partialFilename) {
 
-        return stristr($node[NodeBuilder::NODE_ID], $partialFilename);
+        return stristr($node[NodeBuilderVisitor::NODE_ID], $partialFilename);
       });
     }
 
@@ -203,7 +203,7 @@ class ClassNameHelper
 
     $finalMatchSingle = current($finalMatch);
 
-    return $finalMatchSingle[NodeBuilder::NODE_ID];
+    return $finalMatchSingle[NodeBuilderVisitor::NODE_ID];
   }
 
   /**

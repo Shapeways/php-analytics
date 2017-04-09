@@ -10,7 +10,7 @@ namespace RoadRunnerAnalytics\GraphFormatters;
 
 
 use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
-use RoadRunnerAnalytics\Visitors\NodeBuilder;
+use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
 
 class InheritanceHierarchyFormatter
 {
@@ -18,11 +18,11 @@ class InheritanceHierarchyFormatter
   const ROOT = '\\';
 
   /**
-   * @param \RoadRunnerAnalytics\Visitors\NodeBuilder $nodeBuilder
+   * @param \RoadRunnerAnalytics\Visitors\NodeBuilderVisitor $nodeBuilder
    * @param \RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor $edgeBuilder
    * @return array
    */
-  public function format(NodeBuilder $nodeBuilder, EdgeBuilderVisitor $edgeBuilder) {
+  public function format(NodeBuilderVisitor $nodeBuilder, EdgeBuilderVisitor $edgeBuilder) {
     $graph = array(
       array(
         EdgeBuilderVisitor::EDGE_SOURCE => self::ROOT,
@@ -39,9 +39,9 @@ class InheritanceHierarchyFormatter
     $inheritanceEdges = array();
 
     $allowedNodeTypes = array(
-      NodeBuilder::NODE_TYPE_INTERFACE,
-      NodeBuilder::NODE_TYPE_CLASS,
-      NodeBuilder::NODE_TYPE_TRAIT
+      NodeBuilderVisitor::NODE_TYPE_INTERFACE,
+      NodeBuilderVisitor::NODE_TYPE_CLASS,
+      NodeBuilderVisitor::NODE_TYPE_TRAIT
     );
 
     // catalog all inheritance edges
@@ -51,8 +51,8 @@ class InheritanceHierarchyFormatter
         $targetNode = $nodes[$edge[EdgeBuilderVisitor::EDGE_TARGET]];
 
         if (
-          in_array($sourceNode[NodeBuilder::NODE_TYPE], $allowedNodeTypes)
-          && in_array($targetNode[NodeBuilder::NODE_TYPE], $allowedNodeTypes)
+          in_array($sourceNode[NodeBuilderVisitor::NODE_TYPE], $allowedNodeTypes)
+          && in_array($targetNode[NodeBuilderVisitor::NODE_TYPE], $allowedNodeTypes)
         ) {
           $inheritanceEdges[] = $edge;
         }
