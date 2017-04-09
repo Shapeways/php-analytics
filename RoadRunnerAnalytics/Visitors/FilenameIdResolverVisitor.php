@@ -14,7 +14,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 
-class FilenameIdResolver extends NodeVisitorAbstract
+class FilenameIdResolverVisitor extends NodeVisitorAbstract
 {
 
   /**
@@ -38,9 +38,9 @@ class FilenameIdResolver extends NodeVisitorAbstract
 
   /**
    * @param mixed $filename
-   * @return FilenameIdResolver
+   * @return FilenameIdResolverVisitor
    */
-  public function setFilename($filename): FilenameIdResolver
+  public function setFilename($filename): FilenameIdResolverVisitor
   {
 
     $this->filename = $filename;

@@ -13,7 +13,7 @@ use PhpParser\NodeTraverser;
 use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
-use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
+use RoadRunnerAnalytics\Visitors\FilenameIdResolverVisitor;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 use RoadRunnerAnalytics\Visitors\SelfResolver;
 
@@ -82,7 +82,7 @@ foreach ($filesToAnalyze as $absolutePath) {
   $traverser = new NodeTraverser();
   $nodeBuilder->setFilename($absolutePath);
   $traverser->addVisitor(new NameResolver());
-  $traverser->addVisitor(new FilenameIdResolver($absolutePath));
+  $traverser->addVisitor(new FilenameIdResolverVisitor($absolutePath));
   $traverser->addVisitor(new SelfResolver(new ClassNameHelper()));
   $traverser->addVisitor($nodeBuilder);
 
