@@ -27,6 +27,7 @@ use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsClassConstFetch;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
@@ -253,7 +254,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
   private function enterNew(New_ $node) {
     $class = $node->class;
 
-    if ($node instanceof ResolvedKeywordsNew) {
+    if ($node instanceof ResolvedKeywordsNode) {
       $currentClass = end($this->currentClass);
       if ($currentClass) {
         $resolvedName   = $node->getResolvedClass();
@@ -290,7 +291,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
     $class = $staticCall->class;
     $currentClass = end($this->currentClass);
 
-    if ($staticCall instanceof ResolvedKeywordsStaticCall) {
+    if ($staticCall instanceof ResolvedKeywordsNode) {
 
       if ($currentClass) {
         $resolvedName   = $staticCall->getResolvedClass();
@@ -317,7 +318,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
     $class = $staticPropertyFetch->class;
     $currentClass = end($this->currentClass);
 
-    if ($staticPropertyFetch instanceof ResolvedKeywordsStaticPropertyFetch) {
+    if ($staticPropertyFetch instanceof ResolvedKeywordsNode) {
 
       if ($currentClass) {
         $resolvedName   = $staticPropertyFetch->getResolvedClass();
@@ -343,7 +344,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
     $class = $node->class;
     $currentClass = end($this->currentClass);
 
-    if ($node instanceof ResolvedKeywordsStaticPropertyFetch) {
+    if ($node instanceof ResolvedKeywordsNode) {
 
       if ($currentClass) {
         $resolvedName   = $node->getResolvedClass();
