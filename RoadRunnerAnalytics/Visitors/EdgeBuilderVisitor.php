@@ -316,7 +316,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
 
     $class = $staticPropertyFetch->class;
     $currentClass = end($this->currentClass);
-    
+
     if ($staticPropertyFetch instanceof ResolvedKeywordsStaticPropertyFetch) {
 
       if ($currentClass) {
@@ -333,6 +333,36 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
         $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
         $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
       }
+    }
+  }
+
+  /**
+   * @param ClassConstFetch $node
+   */
+  private function enterClassConstantFetch(ClassConstFetch $node) {
+    $class = $node->class;
+    $currentClass = end($this->currentClass);
+
+    if ($node instanceof ResolvedKeywordsStaticPropertyFetch) {
+
+      if ($currentClass) {
+        $resolvedName   = $node->getResolvedClass();
+
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+    else if ($class instanceof Name) {
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+    else if ($node->class instanceof Variable) {
+//        $currentFilename = basename($this->filename);
+//        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch to variable: \${$node->class->name}");
     }
   }
 
@@ -373,21 +403,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
       }
     }
     else if ($node instanceof ClassConstFetch) {
-      if ($node->class instanceof Name) {
-        $currentClass = end($this->currentClass);
-        if ($currentClass) {
-          $currentClassId = $this->classNameHelper->getClassId($currentClass);
-          $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-          $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH);
-        }
-      }
-      else if ($node->class instanceof Variable) {
-        $currentFilename = basename($this->filename);
-//        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch to variable: \${$node->class->name}");
-      }
-      else {
-        $node->class->toString();
-      }
+      $this->enterClassConstantFetch($node);
     }
     else if ($node instanceof StaticPropertyFetch) {
       $this->enterStaticPropertyFetch($node);
