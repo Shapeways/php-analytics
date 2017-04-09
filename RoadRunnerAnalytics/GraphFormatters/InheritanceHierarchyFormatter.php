@@ -9,7 +9,7 @@
 namespace RoadRunnerAnalytics\GraphFormatters;
 
 
-use RoadRunnerAnalytics\Visitors\EdgeBuilder;
+use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
 use RoadRunnerAnalytics\Visitors\NodeBuilder;
 
 class InheritanceHierarchyFormatter
@@ -19,15 +19,15 @@ class InheritanceHierarchyFormatter
 
   /**
    * @param \RoadRunnerAnalytics\Visitors\NodeBuilder $nodeBuilder
-   * @param \RoadRunnerAnalytics\Visitors\EdgeBuilder $edgeBuilder
+   * @param \RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor $edgeBuilder
    * @return array
    */
-  public function format(NodeBuilder $nodeBuilder, EdgeBuilder $edgeBuilder) {
+  public function format(NodeBuilder $nodeBuilder, EdgeBuilderVisitor $edgeBuilder) {
     $graph = array(
       array(
-        EdgeBuilder::EDGE_SOURCE => self::ROOT,
-        EdgeBuilder::EDGE_TARGET => '',
-        EdgeBuilder::EDGE_TYPE => EdgeBuilder::EDGE_TYPE_EXTENDS
+        EdgeBuilderVisitor::EDGE_SOURCE => self::ROOT,
+        EdgeBuilderVisitor::EDGE_TARGET => '',
+        EdgeBuilderVisitor::EDGE_TYPE => EdgeBuilderVisitor::EDGE_TYPE_EXTENDS
       )
     );
 
@@ -46,9 +46,9 @@ class InheritanceHierarchyFormatter
 
     // catalog all inheritance edges
     foreach ($edges as $edge) {
-      if ($edge[EdgeBuilder::EDGE_TYPE] === EdgeBuilder::EDGE_TYPE_EXTENDS) {
-        $sourceNode = $nodes[$edge[EdgeBuilder::EDGE_SOURCE]];
-        $targetNode = $nodes[$edge[EdgeBuilder::EDGE_TARGET]];
+      if ($edge[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_EXTENDS) {
+        $sourceNode = $nodes[$edge[EdgeBuilderVisitor::EDGE_SOURCE]];
+        $targetNode = $nodes[$edge[EdgeBuilderVisitor::EDGE_TARGET]];
 
         if (
           in_array($sourceNode[NodeBuilder::NODE_TYPE], $allowedNodeTypes)
@@ -62,8 +62,8 @@ class InheritanceHierarchyFormatter
 
     // catalog all source nodes
     foreach ($inheritanceEdges as $edge) {
-      $sources[] = $edge[EdgeBuilder::EDGE_SOURCE];
-      $targets[] = $edge[EdgeBuilder::EDGE_TARGET];
+      $sources[] = $edge[EdgeBuilderVisitor::EDGE_SOURCE];
+      $targets[] = $edge[EdgeBuilderVisitor::EDGE_TARGET];
     }
 
     // Find nodes that hav no parent
@@ -71,9 +71,9 @@ class InheritanceHierarchyFormatter
 
     foreach ($leftovers as $leftover) {
       $graph[] = array(
-        EdgeBuilder::EDGE_SOURCE  => $leftover,
-        EdgeBuilder::EDGE_TARGET  => self::ROOT,
-        EdgeBuilder::EDGE_TYPE    => EdgeBuilder::EDGE_TYPE_EXTENDS
+        EdgeBuilderVisitor::EDGE_SOURCE  => $leftover,
+        EdgeBuilderVisitor::EDGE_TARGET  => self::ROOT,
+        EdgeBuilderVisitor::EDGE_TYPE    => EdgeBuilderVisitor::EDGE_TYPE_EXTENDS
       );
     }
 

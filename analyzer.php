@@ -10,7 +10,7 @@ use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
 
 
-use RoadRunnerAnalytics\Visitors\EdgeBuilder;
+use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolver;
@@ -105,7 +105,7 @@ $logger->info("Creating external nodes complete in " . ($nodeTime - $passOneTime
 
 $logger->info("Pass two:");
 $logger->info("\tAnalyzing edges...");
-$edgeBuilder = new EdgeBuilder($nodeBuilder->getNodes(), new ClassNameHelper(), $logger);
+$edgeBuilder = new EdgeBuilderVisitor($nodeBuilder->getNodes(), new ClassNameHelper(), $logger);
 foreach ($filesToAnalyze as $absolutePath) {
   $stmts = $parsedFiles[$absolutePath];
 

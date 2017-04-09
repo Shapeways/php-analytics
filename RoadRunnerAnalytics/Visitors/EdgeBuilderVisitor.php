@@ -29,7 +29,7 @@ use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
-class EdgeBuilder extends NodeVisitorAbstract
+class EdgeBuilderVisitor extends NodeVisitorAbstract
 {
 
   const EDGE_TYPE_NAMESPACE     = 'namespace';
@@ -82,7 +82,7 @@ class EdgeBuilder extends NodeVisitorAbstract
   private $logger;
 
   /**
-   * EdgeBuilder constructor.
+   * EdgeBuilderVisitor constructor.
    */
   public function __construct(array $nodes, ClassNameHelper $classNameHelper, LoggerInterface $logger)
   {
@@ -152,12 +152,12 @@ class EdgeBuilder extends NodeVisitorAbstract
     $edgeId = "$edgeSource.$edgeDestination.$edgeType";
 
     $this->edges[$edgeId] = array(
-      EdgeBuilder::EDGE_ID => $edgeId,
-      EdgeBuilder::EDGE_SOURCE => $edgeSource,
-      EdgeBuilder::EDGE_TARGET => $edgeDestination,
-      EdgeBuilder::EDGE_TYPE => $edgeType,
-      EdgeBuilder::EDGE_WEIGHT => $edgeWeight,
-      EdgeBuilder::EDGE_LABEL => $edgeLabel
+      EdgeBuilderVisitor::EDGE_ID => $edgeId,
+      EdgeBuilderVisitor::EDGE_SOURCE => $edgeSource,
+      EdgeBuilderVisitor::EDGE_TARGET => $edgeDestination,
+      EdgeBuilderVisitor::EDGE_TYPE => $edgeType,
+      EdgeBuilderVisitor::EDGE_WEIGHT => $edgeWeight,
+      EdgeBuilderVisitor::EDGE_LABEL => $edgeLabel
     );
   }
 
@@ -189,7 +189,7 @@ class EdgeBuilder extends NodeVisitorAbstract
     $currentClassId = $this->classNameHelper->getClassId(end($this->currentClass));
     foreach ($node->traits as $trait) {
       $traitId = $this->classNameHelper->findClassId($trait, $this->nodes);
-      $this->addEdge($currentClassId, $traitId, EdgeBuilder::EDGE_TYPE_TRAIT_USE);
+      $this->addEdge($currentClassId, $traitId, EdgeBuilderVisitor::EDGE_TYPE_TRAIT_USE);
     }
 
   }
@@ -216,7 +216,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
       $parentClassId = $this->classNameHelper->findClassId($node->extends, $this->nodes);
 
-      $this->addEdge($classId, $parentClassId, EdgeBuilder::EDGE_TYPE_EXTENDS);
+      $this->addEdge($classId, $parentClassId, EdgeBuilderVisitor::EDGE_TYPE_EXTENDS);
     }
 
     foreach ($node->implements as $name) {
@@ -257,7 +257,7 @@ class EdgeBuilder extends NodeVisitorAbstract
 
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANTIATES);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_INSTANTIATES);
       }
     }
     else if ($class instanceof Name) {
@@ -265,7 +265,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANTIATES);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_INSTANTIATES);
       }
       else {
         //echo $this->filename . ': Instantiation of class ' . $class->toString() . "\n";
@@ -306,7 +306,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_STATIC_ACCESS);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
       }
       else {
         $currentFilename = basename($this->filename);
@@ -318,7 +318,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_INSTANCEOF);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_INSTANCEOF);
       }
       else {
         $currentFilename = basename($this->filename);
@@ -331,7 +331,7 @@ class EdgeBuilder extends NodeVisitorAbstract
         if ($currentClass) {
           $currentClassId = $this->classNameHelper->getClassId($currentClass);
           $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-          $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_CONST_FETCH);
+          $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH);
         }
       }
       else if ($node->class instanceof Variable) {
@@ -347,7 +347,7 @@ class EdgeBuilder extends NodeVisitorAbstract
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilder::EDGE_TYPE_STATIC_ACCESS);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
       }
       else {
         $currentFilename = basename($this->filename);
