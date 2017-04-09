@@ -28,6 +28,8 @@ use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
 
 class EdgeBuilderVisitor extends NodeVisitorAbstract
 {
@@ -280,6 +282,37 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
   }
 
   /**
+   * @param StaticCall $staticCall
+   */
+  private function enterStaticCall(StaticCall $staticCall) {
+
+    $class = $staticCall->class;
+    $currentClass = end($this->currentClass);
+
+    if (stristr($currentClass->name, 'RoadRunnerAppInit')) {
+      var_dump($staticCall);
+    }
+
+    if ($staticCall instanceof ResolvedKeywordsStaticCall) {
+
+      if ($currentClass) {
+        $resolvedName   = $staticCall->getResolvedClass();
+
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+    else if ($class instanceof Name) {
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+  }
+
+  /**
    * @param Node $node
    */
   public function enterNode(Node $node) {
@@ -301,17 +334,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
       $this->enterNew($node);
     }
     else if ($node instanceof StaticCall) {
-
-      $currentClass = end($this->currentClass);
-      if ($currentClass) {
-        $currentClassId = $this->classNameHelper->getClassId($currentClass);
-        $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
-      }
-      else {
-        $currentFilename = basename($this->filename);
-//        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static call to class: {$node->class}");
-      }
+      $this->enterStaticCall($node);
     }
     else if ($node instanceof Instanceof_) {
       $currentClass = end($this->currentClass);

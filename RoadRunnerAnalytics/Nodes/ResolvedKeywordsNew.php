@@ -12,13 +12,8 @@ namespace RoadRunnerAnalytics\Nodes;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
 
-class ResolvedKeywordsNew extends New_
+class ResolvedKeywordsNew extends New_ implements ResolvedKeywordsNode
 {
-
-  const KEYWORD_SELF    = 'self';
-  const KEYWORD_PARENT  = 'parent';
-  const KEYWORD_STATIC  = 'static';
-
   /**
    * @var string
    */
@@ -46,7 +41,7 @@ class ResolvedKeywordsNew extends New_
    * @param string $resolvedKeyword
    * @return ResolvedKeywordsNew
    */
-  public function setResolvedKeyword(string $resolvedKeyword): ResolvedKeywordsNew
+  public function setResolvedKeyword(string $resolvedKeyword): ResolvedKeywordsNode
   {
 
     $this->resolvedKeyword = $resolvedKeyword;
@@ -67,7 +62,7 @@ class ResolvedKeywordsNew extends New_
    * @param Name $resolvedClass
    * @return ResolvedKeywordsNew
    */
-  public function setResolvedClass(Name $resolvedClass): ResolvedKeywordsNew
+  public function setResolvedClass(Name $resolvedClass): ResolvedKeywordsNode
   {
 
     $this->resolvedClass = $resolvedClass;
