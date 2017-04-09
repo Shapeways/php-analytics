@@ -928,7 +928,8 @@
         });
 
     // Enter any new links at the parent's previous position.
-    var linkEnter = link.enter().insert('path', 'g')
+    var linkEnter = link.enter()
+        .insert('path', 'g')
         .attr('class', 'link')
         .attr('d', function (d) {
           var o = previousNodePosition(d);
@@ -1036,7 +1037,7 @@
           });
 
 
-      selection.enter()
+      var selectionEnter = selection.enter()
           .insert('path', 'g')
           .attr('class', function (d) {
             var classList = ['dependency', dependencyType];
@@ -1054,7 +1055,11 @@
           .attr('d', function (d) {
             var pos = previousNodePosition(d.actualSource);
             return diagonal(pos, pos);
-          })
+          });
+
+      var selectionUpdate = selectionEnter.merge(selection);
+
+      selectionUpdate
           .transition()
           .duration(duration)
           .attr('d', function (d) {
