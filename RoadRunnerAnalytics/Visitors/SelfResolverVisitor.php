@@ -9,6 +9,7 @@
 namespace RoadRunnerAnalytics\Visitors;
 
 
+use Monolog\Logger;
 use PhpParser\Node;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
@@ -17,6 +18,7 @@ use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
+use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsClassConstFetch;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
@@ -37,9 +39,21 @@ class SelfResolverVisitor extends NodeVisitorAbstract
    */
   private $classNameHelper;
 
-  public function __construct(ClassNameHelper $classNameHelper)
+  /**
+   * @var string
+   */
+  private $filename;
+
+  /**
+   * @var LoggerInterface
+   */
+  private $logger;
+
+  public function __construct(ClassNameHelper $classNameHelper, LoggerInterface $logger, string $filename)
   {
     $this->classNameHelper = $classNameHelper;
+    $this->filename = $filename;
+    $this->logger = $logger;
   }
 
   /**
@@ -72,6 +86,9 @@ class SelfResolverVisitor extends NodeVisitorAbstract
               ->setResolvedKeyword($class->toString())
               ->setResolvedClass($this->currentClass->namespacedName);
           }
+          else {
+            $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' instantiation outside of class context');
+          }
         }
       }
     }
@@ -83,6 +100,9 @@ class SelfResolverVisitor extends NodeVisitorAbstract
             ->setResolvedKeyword($class->toString())
             ->setResolvedClass($this->currentClass->namespacedName);
         }
+        else {
+          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static call outside of class context');
+        }
       }
     }
     else if ($node instanceof StaticPropertyFetch) {
@@ -93,6 +113,9 @@ class SelfResolverVisitor extends NodeVisitorAbstract
             ->setResolvedKeyword($class->toString())
             ->setResolvedClass($this->currentClass->namespacedName);
         }
+        else {
+          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static property fetch outside of class context');
+        }
       }
     }
     else if ($node instanceof ClassConstFetch) {
@@ -102,6 +125,9 @@ class SelfResolverVisitor extends NodeVisitorAbstract
           return ResolvedKeywordsClassConstFetch::fromClassConstFetch($node)
             ->setResolvedKeyword($class->toString())
             ->setResolvedClass($this->currentClass->namespacedName);
+        }
+        else {
+          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' reference outside of class context');
         }
       }
     }

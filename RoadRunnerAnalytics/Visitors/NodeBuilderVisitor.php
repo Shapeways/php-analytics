@@ -25,6 +25,7 @@ use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
 
 class NodeBuilderVisitor extends NodeVisitorAbstract
 {
@@ -202,14 +203,21 @@ class NodeBuilderVisitor extends NodeVisitorAbstract
     else if ($node instanceof New_) {
       $this->enterNew($node);
     }
+    else if ($node instanceof ResolvedKeywordsNode) {
+      $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->getResolvedClass()->toString();
+    }
     else if ($node instanceof StaticCall) {
+
       $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
     else if ($node instanceof Instanceof_) {
+
       $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
     else if ($node instanceof ClassConstFetch) {
+
       if ($node->class instanceof Name) {
+
         $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
       }
       else if ($node->class instanceof Variable) {
@@ -221,6 +229,7 @@ class NodeBuilderVisitor extends NodeVisitorAbstract
       }
     }
     else if ($node instanceof StaticPropertyFetch) {
+
       $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
     }
 
