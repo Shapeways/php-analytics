@@ -16,6 +16,7 @@ use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
@@ -67,6 +68,43 @@ class SelfResolverVisitor extends NodeVisitorAbstract
   }
 
   /**
+   *
+   * Get resolved string name
+   *
+   * @param Name $name
+   * @return null|Name
+   */
+  private function getResolvedString(Name $name) {
+
+    if (($this->isSelfOrStatic($name) || $this->isParent($name)) && empty($this->currentClass)) {
+      return null;
+    }
+
+    if ($this->isSelfOrStatic($name) && !empty($this->currentClass)) {
+      return $this->currentClass->namespacedName;
+    }
+
+    if ($this->isParent($name) && !empty($this->currentClass)) {
+      if (($this->currentClass instanceof Class_) && ($this->currentClass->extends)) {
+        return $this->currentClass->extends;
+      }
+    }
+
+    return $name;
+  }
+
+  /**
+   *
+   * Returns true if name matches `parent` keyword
+   *
+   * @param Name $name
+   * @return bool
+   */
+  private function isParent(Name $name) {
+    return $name->toString() === ResolvedKeywordsNode::KEYWORD_PARENT;
+  }
+
+  /**
    * @param Node $node
    * @return Node
    */
@@ -80,51 +118,49 @@ class SelfResolverVisitor extends NodeVisitorAbstract
       $class = $node->class;
 
       if ($class instanceof Name) {
-        if ($this->isSelfOrStatic($class)) {
-          if ($this->currentClass) {
-            return ResolvedKeywordsNew::fromNew_($node)
-              ->setResolvedKeyword($class->toString())
-              ->setResolvedClass($this->currentClass->namespacedName);
-          }
-          else {
-            $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' instantiation outside of class context');
-          }
+        $resolvedName = $this->getResolvedString($class);
+        if (!empty($resolvedName)) {
+          return ResolvedKeywordsNew::fromNew_($node)
+            ->setResolvedKeyword($class->toString())
+            ->setResolvedClass($resolvedName);
+        }
+        else {
+          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' instantiation outside of class context');
         }
       }
     }
     else if ($node instanceof StaticCall) {
       $class = $node->class;
-      if ($this->isSelfOrStatic($class)) {
-        if ($this->currentClass) {
-          return ResolvedKeywordsStaticCall::fromStaticCall($node)
-            ->setResolvedKeyword($class->toString())
-            ->setResolvedClass($this->currentClass->namespacedName);
-        }
-        else {
-          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static call outside of class context');
-        }
+      $resolvedName = $this->getResolvedString($class);
+      if (!empty($resolvedName)) {
+        return ResolvedKeywordsStaticCall::fromStaticCall($node)
+          ->setResolvedKeyword($class->toString())
+          ->setResolvedClass($resolvedName);
+      }
+      else {
+        $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static call outside of class context');
       }
     }
     else if ($node instanceof StaticPropertyFetch) {
       $class = $node->class;
-      if ($this->isSelfOrStatic($class)) {
-        if ($this->currentClass) {
-          return ResolvedKeywordsStaticPropertyFetch::fromStaticPropertyFetch($node)
-            ->setResolvedKeyword($class->toString())
-            ->setResolvedClass($this->currentClass->namespacedName);
-        }
-        else {
-          $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static property fetch outside of class context');
-        }
+      $resolvedName = $this->getResolvedString($class);
+      if (!empty($resolvedName)) {
+        return ResolvedKeywordsStaticPropertyFetch::fromStaticPropertyFetch($node)
+          ->setResolvedKeyword($class->toString())
+          ->setResolvedClass($resolvedName);
+      }
+      else {
+        $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' static property fetch outside of class context');
       }
     }
     else if ($node instanceof ClassConstFetch) {
       $class = $node->class;
-      if (($class instanceof Name) && $this->isSelfOrStatic($class)) {
-        if ($this->currentClass) {
+      if ($class instanceof Name) {
+        $resolvedName = $this->getResolvedString($class);
+        if (!empty($resolvedName)) {
           return ResolvedKeywordsClassConstFetch::fromClassConstFetch($node)
             ->setResolvedKeyword($class->toString())
-            ->setResolvedClass($this->currentClass->namespacedName);
+            ->setResolvedClass($resolvedName);
         }
         else {
           $this->logger->warning($this->filename . ':' . $node->getLine() . ' ' . $class->toString() . ' reference outside of class context');
