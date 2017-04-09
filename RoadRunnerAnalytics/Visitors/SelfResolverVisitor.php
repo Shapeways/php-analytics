@@ -17,7 +17,7 @@ use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 
-class SelfResolver extends NodeVisitorAbstract
+class SelfResolverVisitor extends NodeVisitorAbstract
 {
 
   /**

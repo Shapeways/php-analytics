@@ -15,7 +15,7 @@ use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolverVisitor;
 use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
-use RoadRunnerAnalytics\Visitors\SelfResolver;
+use RoadRunnerAnalytics\Visitors\SelfResolverVisitor;
 
 
 $logger = new Logger('', [
@@ -83,7 +83,7 @@ foreach ($filesToAnalyze as $absolutePath) {
   $nodeBuilder->setFilename($absolutePath);
   $traverser->addVisitor(new NameResolver());
   $traverser->addVisitor(new FilenameIdResolverVisitor($absolutePath));
-  $traverser->addVisitor(new SelfResolver(new ClassNameHelper()));
+  $traverser->addVisitor(new SelfResolverVisitor(new ClassNameHelper()));
   $traverser->addVisitor($nodeBuilder);
 
   try {
