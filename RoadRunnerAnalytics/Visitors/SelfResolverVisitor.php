@@ -10,6 +10,7 @@ namespace RoadRunnerAnalytics\Visitors;
 
 
 use PhpParser\Node;
+use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\StaticPropertyFetch;
@@ -17,6 +18,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsClassConstFetch;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
@@ -88,6 +90,16 @@ class SelfResolverVisitor extends NodeVisitorAbstract
       if ($this->isSelfOrStatic($class)) {
         if ($this->currentClass) {
           return ResolvedKeywordsStaticPropertyFetch::fromStaticPropertyFetch($node)
+            ->setResolvedKeyword($class->toString())
+            ->setResolvedClass($this->currentClass->namespacedName);
+        }
+      }
+    }
+    else if ($node instanceof ClassConstFetch) {
+      $class = $node->class;
+      if (($class instanceof Name) && $this->isSelfOrStatic($class)) {
+        if ($this->currentClass) {
+          return ResolvedKeywordsClassConstFetch::fromClassConstFetch($node)
             ->setResolvedKeyword($class->toString())
             ->setResolvedClass($this->currentClass->namespacedName);
         }

@@ -351,14 +351,14 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
 
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH);
       }
     }
     else if ($class instanceof Name) {
       if ($currentClass) {
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH);
       }
     }
     else if ($node->class instanceof Variable) {
