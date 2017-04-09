@@ -61,7 +61,7 @@
     .link {
       fill: none;
       stroke: #ccc;
-      stroke-width: 2px;
+      stroke-width: 4px;
     }
 
     .info-box {
@@ -74,6 +74,10 @@
       padding: 10px;
 
       background: #e5f7ff;
+    }
+
+    .form-row {
+      padding: 1px;
     }
 
     .dependency {
@@ -178,19 +182,23 @@
     };
   }
 
-  function toggleDependency(dependencyType, showSource, showImplicit, showTargets) {
-    var showDependency = {
-      dependencyType: dependencyType,
-      showSource: showSource || false,
-      showImplicit: showImplicit || false,
-      showTargets: showTargets || false
-    };
+  function updateViewSettings(formData) {
+    var viewSettings = {};
+
+    enabledDependencies.forEach(function(dependencyType) {
+      viewSettings[dependencyType] = {
+        showSource: formData.get(dependencyType + '-showSource')? true : false,
+        showImplicit: formData.get(dependencyType + '-showImplicit')? true : false,
+        showTargets: formData.get(dependencyType + '-showTargets')? true : false
+      }
+    });
+
+    debugger;
 
     return {
-      type: 'TOGGLE_DEPENDENCY',
-      dependencyType: dependencyType,
-      showDependency: showDependency
-    }
+      type: 'UPDATE_VIEW_SETTINGS',
+      viewSettings: viewSettings
+    };
   }
 
   function selectNode(nodeId, expanded) {
@@ -232,14 +240,12 @@
       return newState;
     }
 
-    if (action.type === 'TOGGLE_DEPENDENCY') {
+    if (action.type === 'UPDATE_VIEW_SETTINGS') {
       var clonedState = JSON.parse(JSON.stringify(state));
 
-      clonedState[action.showDependency.dependencyType].viewSettings = {
-        showSource: action.showDependency.showSource,
-        showImplicit: action.showDependency.showImplicit,
-        showTargets: action.showDependency.showTargets,
-      };
+      enabledDependencies.forEach(function(dependencyType) {
+        clonedState[dependencyType].viewSettings = action.viewSettings[dependencyType];
+      });
 
       return clonedState;
     }
@@ -367,8 +373,8 @@
                 enabledDependencies.forEach(function(dependencyType) {
                   var viewSettings = store.getState().dependencySettings[dependencyType].viewSettings;
 
-                  if ((action.type === 'TOGGLE_DEPENDENCY') && (action.dependencyType === dependencyType)) {
-                    viewSettings = action.showDependency;
+                  if (action.type === 'UPDATE_VIEW_SETTINGS') {
+                    viewSettings = action.viewSettings[dependencyType];
                   }
 
                   expandDependencyTrees(newSource, dependencyType, viewSettings);
@@ -1078,29 +1084,32 @@
   Selected node:<span class="legend--selected-node"></span>
   <form id="graph-controls" name="legend" action="#" method="GET">
     <fieldset>
-      <legend>Implements</legend>
-      <div>
-        <label><input type="checkbox" name="toggleImplements" value="true"/>Show dependencies</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleImplementsImplicit" value="true"/>Show implicit dependencies</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleImplementsTarget" value="true"/>Show dependent nodes</label>
-      </div>
-    </fieldset>
+      <legend>Inheritance and Traits</legend>
+      <fieldset>
+        <legend>Implements</legend>
+        <div class="form-row">
+          <label><input type="checkbox" name="implements-showSource" value="true"/>Show dependencies</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="implements-showImplicit" value="true"/>Show implicit dependencies</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="implements-showTargets" value="true"/>Show dependent nodes</label>
+        </div>
+      </fieldset>
 
-    <fieldset>
-      <legend>Traits</legend>
-      <div>
-        <label><input type="checkbox" name="toggleShowTraits" value="true"/>Show traits</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleShowTraitsImplicit" value="true"/>Show traits implicit</label>
-      </div>
-      <div>
-        <label><input type="checkbox" name="toggleShowTraitsTarget" value="true"/>Show trait dependencies</label>
-      </div>
+      <fieldset>
+        <legend>Traits</legend>
+        <div class="form-row">
+          <label><input type="checkbox" name="useTrait-showSource" value="true"/>Show traits</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="useTrait-showImplicit" value="true"/>Show traits implicit</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="useTrait-showTargets" value="true"/>Show trait dependencies</label>
+        </div>
+      </fieldset>
     </fieldset>
 
     <fieldset>
@@ -1108,40 +1117,40 @@
 
       <fieldset>
         <legend>Class Instantiations</legend>
-        <div>
-          <label><input type="checkbox" name="toggleShowInstantiates" value="true"/>Show instantiates</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="instantiates-showSource" value="true"/>Show instantiates</label>
         </div>
-        <div>
-          <label><input type="checkbox" name="toggleShowInstantiatesImplicit" value="true"/>Show implicit instantiates</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="instantiates-showImplicit" value="true"/>Show implicit instantiates</label>
         </div>
-        <div>
-          <label><input type="checkbox" name="toggleShowInstantiatesTarget" value="true"/>Show instantiates dependencies</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="instantiates-showTargets" value="true"/>Show instantiates dependencies</label>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Class Static Member Access</legend>
-        <div>
-          <label><input type="checkbox" name="staticMemberAccess" value="true"/>Show Static Member Access </label>
+        <div class="form-row">
+          <label><input type="checkbox" name="staticAccess-showSource" value="true"/>Show Static Member Access </label>
         </div>
-        <div>
-          <label><input type="checkbox" name="staticMemberAccessImplicit" value="true"/>Show implicit Static Member Access </label>
+        <div class="form-row">
+          <label><input type="checkbox" name="staticAccess-showImplicit" value="true"/>Show implicit Static Member Access </label>
         </div>
-        <div>
-          <label><input type="checkbox" name="staticMemberAccessTarget" value="true"/>Static Member Access dependencies</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="staticAccess-showTargets" value="true"/>Static Member Access dependencies</label>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Class Constant Fetch</legend>
-        <div>
-          <label><input type="checkbox" name="constantFetch" value="true"/>Show Class Constant Fetch</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="constantFetch-showSource" value="true"/>Show Class Constant Fetch</label>
         </div>
-        <div>
-          <label><input type="checkbox" name="constantFetchImplicit" value="true"/>Show implicit Class Constant Fetch</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="constantFetch-showImplicit" value="true"/>Show implicit Class Constant Fetch</label>
         </div>
-        <div>
-          <label><input type="checkbox" name="constantFetchTarget" value="true"/>Class Constant Fetch dependencies</label>
+        <div class="form-row">
+          <label><input type="checkbox" name="constantFetch-showTargets" value="true"/>Class Constant Fetch dependencies</label>
         </div>
       </fieldset>
     </fieldset>
@@ -1153,32 +1162,7 @@
 
   var form = document.getElementById('graph-controls');
   form.addEventListener('change', function () {
-    var formData = new FormData(form);
-
-    var toggleImplementsValue = formData.get('toggleImplements') === 'true' ? true : false;
-    var toggleImplementsImplicit = formData.get('toggleImplementsImplicit') === 'true' ? true : false;
-    var toggleImplementsTarget = formData.get('toggleImplementsTarget') === 'true' ? true : false;
-    store.dispatch(toggleDependency('implements', toggleImplementsValue, toggleImplementsImplicit, toggleImplementsTarget));
-
-    var toggleShowTraits = formData.get('toggleShowTraits') === 'true' ? true : false;
-    var toggleShowTraitsImplicit = formData.get('toggleShowTraitsImplicit') === 'true' ? true : false;
-    var toggleShowTraitsTarget = formData.get('toggleShowTraitsTarget') === 'true' ? true : false;
-    store.dispatch(toggleDependency('traitUse', toggleShowTraits, toggleShowTraitsImplicit, toggleShowTraitsTarget));
-
-    var toggleShowInstantiates = formData.get('toggleShowInstantiates') === 'true' ? true : false;
-    var toggleShowInstantiatesImplicit = formData.get('toggleShowInstantiatesImplicit') === 'true' ? true : false;
-    var toggleShowInstantiatesTarget = formData.get('toggleShowInstantiatesTarget') === 'true' ? true : false;
-    store.dispatch(toggleDependency('instantiates', toggleShowInstantiates, toggleShowInstantiatesImplicit, toggleShowInstantiatesTarget));
-
-    var staticMemberAccess = formData.get('staticMemberAccess') === 'true' ? true : false;
-    var staticMemberAccessImplicit = formData.get('staticMemberAccessImplicit') === 'true' ? true : false;
-    var staticMemberAccessTarget = formData.get('staticMemberAccessTarget') === 'true' ? true : false;
-    store.dispatch(toggleDependency('staticAccess', staticMemberAccess, staticMemberAccessImplicit, staticMemberAccessTarget));
-
-    var staticMemberAccess = formData.get('constantFetch') === 'true' ? true : false;
-    var staticMemberAccessImplicit = formData.get('constantFetchImplicit') === 'true' ? true : false;
-    var staticMemberAccessTarget = formData.get('constantFetchTarget') === 'true' ? true : false;
-    store.dispatch(toggleDependency('constantFetch', staticMemberAccess, staticMemberAccessImplicit, staticMemberAccessTarget));
+    store.dispatch(updateViewSettings(new FormData(form)));
   });
 
   // Init
