@@ -103,6 +103,7 @@
       stroke: #EC3737;
     }
 
+    .constantFetch,
     .staticAccess {
       stroke: #db6200;
     }
@@ -139,7 +140,8 @@
     'implements',
     'traitUse',
     'instantiates',
-    'staticAccess'
+    'staticAccess',
+    'constantFetch'
   ];
 
   // Actions
@@ -1069,9 +1071,6 @@
   }
   enabledDependencies.forEach(function(dependencyType) {
     observeStoreChanges(drawDependencyEdges(dependencyType));
-    observeStoreChanges(drawDependencyEdges(dependencyType));
-    observeStoreChanges(drawDependencyEdges(dependencyType));
-    observeStoreChanges(drawDependencyEdges(dependencyType));
   });
 </script>
 
@@ -1132,6 +1131,19 @@
           <label><input type="checkbox" name="staticMemberAccessTarget" value="true"/>Static Member Access dependencies</label>
         </div>
       </fieldset>
+
+      <fieldset>
+        <legend>Class Constant Fetch</legend>
+        <div>
+          <label><input type="checkbox" name="constantFetch" value="true"/>Show Class Constant Fetch</label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="constantFetchImplicit" value="true"/>Show implicit Class Constant Fetch</label>
+        </div>
+        <div>
+          <label><input type="checkbox" name="constantFetchTarget" value="true"/>Class Constant Fetch dependencies</label>
+        </div>
+      </fieldset>
     </fieldset>
   </form>
 </div>
@@ -1162,6 +1174,11 @@
     var staticMemberAccessImplicit = formData.get('staticMemberAccessImplicit') === 'true' ? true : false;
     var staticMemberAccessTarget = formData.get('staticMemberAccessTarget') === 'true' ? true : false;
     store.dispatch(toggleDependency('staticAccess', staticMemberAccess, staticMemberAccessImplicit, staticMemberAccessTarget));
+
+    var staticMemberAccess = formData.get('constantFetch') === 'true' ? true : false;
+    var staticMemberAccessImplicit = formData.get('constantFetchImplicit') === 'true' ? true : false;
+    var staticMemberAccessTarget = formData.get('constantFetchTarget') === 'true' ? true : false;
+    store.dispatch(toggleDependency('constantFetch', staticMemberAccess, staticMemberAccessImplicit, staticMemberAccessTarget));
   });
 
   // Init
