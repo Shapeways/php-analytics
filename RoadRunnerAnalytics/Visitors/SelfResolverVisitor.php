@@ -12,6 +12,7 @@ namespace RoadRunnerAnalytics\Visitors;
 use PhpParser\Node;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
@@ -19,6 +20,7 @@ use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticPropertyFetch;
 
 class SelfResolverVisitor extends NodeVisitorAbstract
 {
@@ -76,6 +78,16 @@ class SelfResolverVisitor extends NodeVisitorAbstract
       if ($this->isSelfOrStatic($class)) {
         if ($this->currentClass) {
           return ResolvedKeywordsStaticCall::fromStaticCall($node)
+            ->setResolvedKeyword($class->toString())
+            ->setResolvedClass($this->currentClass->namespacedName);
+        }
+      }
+    }
+    else if ($node instanceof StaticPropertyFetch) {
+      $class = $node->class;
+      if ($this->isSelfOrStatic($class)) {
+        if ($this->currentClass) {
+          return ResolvedKeywordsStaticPropertyFetch::fromStaticPropertyFetch($node)
             ->setResolvedKeyword($class->toString())
             ->setResolvedClass($this->currentClass->namespacedName);
         }

@@ -25,6 +25,10 @@ class ResolvedKeywordsStaticCall extends StaticCall implements ResolvedKeywordsN
    */
   private $resolvedClass;
 
+  /**
+   * @param StaticCall $node
+   * @return ResolvedKeywordsStaticCall
+   */
   public static function fromStaticCall(StaticCall $node): ResolvedKeywordsStaticCall {
     return new ResolvedKeywordsStaticCall($node->class, $node->name, $node->args, $node->attributes);
   }

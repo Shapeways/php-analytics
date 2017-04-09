@@ -30,6 +30,7 @@ use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticPropertyFetch;
 
 class EdgeBuilderVisitor extends NodeVisitorAbstract
 {
@@ -289,14 +290,37 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
     $class = $staticCall->class;
     $currentClass = end($this->currentClass);
 
-    if (stristr($currentClass->name, 'RoadRunnerAppInit')) {
-      var_dump($staticCall);
-    }
-
     if ($staticCall instanceof ResolvedKeywordsStaticCall) {
 
       if ($currentClass) {
         $resolvedName   = $staticCall->getResolvedClass();
+
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+    else if ($class instanceof Name) {
+      if ($currentClass) {
+        $currentClassId = $this->classNameHelper->getClassId($currentClass);
+        $targetClassId = $this->classNameHelper->findClassId($class, $this->nodes);
+        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
+      }
+    }
+  }
+
+  /**
+   * @param StaticPropertyFetch $staticPropertyFetch
+   */
+  private function enterStaticPropertyFetch(StaticPropertyFetch $staticPropertyFetch) {
+
+    $class = $staticPropertyFetch->class;
+    $currentClass = end($this->currentClass);
+    
+    if ($staticPropertyFetch instanceof ResolvedKeywordsStaticPropertyFetch) {
+
+      if ($currentClass) {
+        $resolvedName   = $staticPropertyFetch->getResolvedClass();
 
         $currentClassId = $this->classNameHelper->getClassId($currentClass);
         $targetClassId  = $this->classNameHelper->findClassId($resolvedName, $this->nodes);
@@ -366,16 +390,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
       }
     }
     else if ($node instanceof StaticPropertyFetch) {
-      $currentClass = end($this->currentClass);
-      if ($currentClass) {
-        $currentClassId = $this->classNameHelper->getClassId($currentClass);
-        $targetClassId = $this->classNameHelper->findClassId($node->class, $this->nodes);
-        $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS);
-      }
-      else {
-        $currentFilename = basename($this->filename);
-//        $this->logger->warning("{$currentFilename}:{$node->getLine()} procedural static property access to class: {$node->class}");
-      }
+      $this->enterStaticPropertyFetch($node);
     }
 
   }

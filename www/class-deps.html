@@ -103,7 +103,8 @@
       stroke: #ffc545;
     }
 
-    .instantiates {
+    .instantiates,
+    .instanceOf {
       stroke: #EC3737;
     }
 
@@ -145,7 +146,8 @@
     'traitUse',
     'instantiates',
     'staticAccess',
-    'constantFetch'
+    'constantFetch',
+    'instanceOf'
   ];
 
   // Actions
@@ -1151,6 +1153,19 @@
         </div>
         <div class="form-row">
           <label><input type="checkbox" name="constantFetch-showTargets" value="true"/>Class Constant Fetch dependencies</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Instance of</legend>
+        <div class="form-row">
+          <label><input type="checkbox" name="instanceOf-showSource" value="true"/>Show sources</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="instanceOf-showImplicit" value="true"/>Show implicit</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="instanceOf-showTargets" value="true"/>Show targets</label>
         </div>
       </fieldset>
     </fieldset>
