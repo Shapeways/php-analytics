@@ -24,8 +24,8 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNew;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
 
 class NodeBuilderVisitor extends NodeVisitorAbstract
 {

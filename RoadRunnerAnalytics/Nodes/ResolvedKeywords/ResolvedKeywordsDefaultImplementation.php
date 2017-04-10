@@ -6,11 +6,12 @@
  * Time: 12:24 PM
  */
 
-namespace RoadRunnerAnalytics\Nodes;
+namespace RoadRunnerAnalytics\Nodes\ResolvedKeywords;
 
 
 use Exception;
 use PhpParser\Node\Name;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
 
 trait ResolvedKeywordsDefaultImplementation
 {

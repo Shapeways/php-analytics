@@ -5,7 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Bramus\Monolog\Formatter\ColoredLineFormatter;
-use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PhpParser\NodeTraverser;
 
@@ -14,6 +13,7 @@ use RoadRunnerAnalytics\Visitors\EdgeBuilderVisitor;
 use RoadRunnerAnalytics\GraphFormatters\InheritanceHierarchyFormatter;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
 use RoadRunnerAnalytics\Visitors\FilenameIdResolverVisitor;
+use RoadRunnerAnalytics\Visitors\NameResolverSubclasserVisitor;
 use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
 use RoadRunnerAnalytics\Visitors\SelfResolverVisitor;
 
@@ -32,6 +32,8 @@ $codeEdges = array();
 $codeNodes = array();
 
 $nodeBuilder = new NodeBuilderVisitor(new ClassNameHelper(), $logger);
+$nameResolver = new NameResolverSubclasserVisitor();
+$nameResolver->setLogger($logger);
 
 $filesToAnalyze = array();
 
@@ -81,7 +83,7 @@ foreach ($filesToAnalyze as $absolutePath) {
 
   $traverser = new NodeTraverser();
   $nodeBuilder->setFilename($absolutePath);
-  $traverser->addVisitor(new NameResolver());
+  $traverser->addVisitor($nameResolver);
   $traverser->addVisitor(new FilenameIdResolverVisitor($absolutePath));
   $traverser->addVisitor(new SelfResolverVisitor(new ClassNameHelper(), $logger, $absolutePath));
   $traverser->addVisitor($nodeBuilder);

@@ -7,10 +7,12 @@
  */
 
 
-namespace RoadRunnerAnalytics\Nodes;
+namespace RoadRunnerAnalytics\Nodes\ResolvedKeywords;
 
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsDefaultImplementation;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
 
 class ResolvedKeywordsNew extends New_ implements ResolvedKeywordsNode
 {

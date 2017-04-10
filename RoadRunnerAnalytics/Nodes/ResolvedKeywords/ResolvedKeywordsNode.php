@@ -6,7 +6,7 @@
  * Time: 10:21 AM
  */
 
-namespace RoadRunnerAnalytics\Nodes;
+namespace RoadRunnerAnalytics\Nodes\ResolvedKeywords;
 
 
 use PhpParser\Node\Name;

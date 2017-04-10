@@ -6,10 +6,12 @@
  * Time: 12:23 PM
  */
 
-namespace RoadRunnerAnalytics\Nodes;
+namespace RoadRunnerAnalytics\Nodes\ResolvedKeywords;
 
 
 use PhpParser\Node\Expr\ClassConstFetch;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsDefaultImplementation;
 
 class ResolvedKeywordsClassConstFetch extends ClassConstFetch implements ResolvedKeywordsNode
 {

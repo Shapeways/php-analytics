@@ -21,11 +21,11 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsClassConstFetch;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNew;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsNode;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticCall;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywordsStaticPropertyFetch;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsClassConstFetch;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNew;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsStaticCall;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsStaticPropertyFetch;
 
 class SelfResolverVisitor extends NodeVisitorAbstract
 {

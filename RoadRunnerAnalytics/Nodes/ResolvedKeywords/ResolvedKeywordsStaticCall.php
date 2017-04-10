@@ -6,11 +6,13 @@
  * Time: 10:19 AM
  */
 
-namespace RoadRunnerAnalytics\Nodes;
+namespace RoadRunnerAnalytics\Nodes\ResolvedKeywords;
 
 
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsDefaultImplementation;
+use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
 
 class ResolvedKeywordsStaticCall extends StaticCall implements ResolvedKeywordsNode
 {
