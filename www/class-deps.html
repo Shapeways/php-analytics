@@ -113,6 +113,10 @@
       stroke: #FF8300;
     }
 
+    .methodParam {
+      stroke: #77FF00;
+    }
+
   </style>
 
 </head>
@@ -147,7 +151,8 @@
     'instantiates',
     'staticAccess',
     'constantFetch',
-    'instanceOf'
+    'instanceOf',
+    'methodParam'
   ];
 
   // Actions
@@ -1169,6 +1174,24 @@
         </div>
         <div class="form-row">
           <label><input type="checkbox" name="instanceOf-showTargets" value="true"/>Show targets</label>
+        </div>
+      </fieldset>
+    </fieldset>
+
+    <fieldset>
+      <legend>Loose couplings</legend>
+
+      <fieldset>
+        <legend>Method Param</legend>
+
+        <div class="form-row">
+          <label><input type="checkbox" name="methodParam-showSource" value="true"/>Show sources</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="methodParam-showImplicit" value="true"/>Show implicit</label>
+        </div>
+        <div class="form-row">
+          <label><input type="checkbox" name="methodParam-showTargets" value="true"/>Show targets</label>
         </div>
       </fieldset>
     </fieldset>

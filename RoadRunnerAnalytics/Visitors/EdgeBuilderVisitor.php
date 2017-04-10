@@ -21,6 +21,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUse;
@@ -49,6 +50,7 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
   const EDGE_TYPE_CONSUMER      = 'consumer';
   const EDGE_SOURCE             = 'source';
   const EDGE_TYPE_STATIC_ACCESS = 'staticAccess';
+  const EDGE_TYPE_METHOD_PARAM  = 'methodParam';
   const EDGE_TYPE_CONST_FETCH   = 'constantFetch';
   const EDGE_TYPE_INSTANCEOF    = 'instanceOf';
   const EDGE_WEIGHT             = 'weight';
@@ -408,6 +410,19 @@ class EdgeBuilderVisitor extends NodeVisitorAbstract
     }
     else if ($node instanceof StaticPropertyFetch) {
       $this->enterStaticPropertyFetch($node);
+    }
+    else if ($node instanceof ClassMethod) {
+
+      $currentClass = end($this->currentClass);
+      $currentClassId = $this->classNameHelper->getClassId($currentClass);
+      if ($currentClass) {
+        foreach ($node->params as $param) {
+          if ($param->type instanceof Name) {
+            $targetClassId = $this->classNameHelper->findClassId($param->type, $this->nodes);
+            $this->addEdge($currentClassId, $targetClassId, EdgeBuilderVisitor::EDGE_TYPE_METHOD_PARAM);
+          }
+        }
+      }
     }
 
   }
