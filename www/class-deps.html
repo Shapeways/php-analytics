@@ -1039,6 +1039,16 @@
 
       var selectionEnter = selection.enter()
           .insert('path', 'g')
+          .attr('d', function (d) {
+            var pos = previousNodePosition(d.actualSource);
+            return diagonal(pos, pos);
+          });
+
+      var selectionUpdate = selectionEnter.merge(selection);
+
+      selectionUpdate
+          .transition()
+          .duration(duration)
           .attr('class', function (d) {
             var classList = ['dependency', dependencyType];
 
@@ -1052,16 +1062,6 @@
 
             return classList.join(' ');
           })
-          .attr('d', function (d) {
-            var pos = previousNodePosition(d.actualSource);
-            return diagonal(pos, pos);
-          });
-
-      var selectionUpdate = selectionEnter.merge(selection);
-
-      selectionUpdate
-          .transition()
-          .duration(duration)
           .attr('d', function (d) {
 
             if (d.actualSource.depth === d.actualTarget.depth) {
