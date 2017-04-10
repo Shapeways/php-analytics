@@ -23,6 +23,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\ClassLike;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameNode;
 use RoadRunnerAnalytics\Visitors\NodeBuilderVisitor;
 
 /**
@@ -64,6 +65,11 @@ class ClassNameHelper
    * @return string
    */
   public function getQualifiedNameForClassLike(ClassLike $node): string {
+
+    if ($node instanceof NamespacedNameNode) {
+      return $node->getNamespacedName()->toString();
+    }
+
     if (!empty($node->namespacedName)) {
       return $node->namespacedName->toString();
     }

@@ -10,8 +10,18 @@ namespace RoadRunnerAnalytics\Visitors;
 
 
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitor\NameResolver;
 use Psr\Log\LoggerInterface;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameClass;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameConst;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameFunction;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameInterface;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameTrait;
 
 class NameResolverSubclasserVisitor extends NameResolver
 {
@@ -20,8 +30,6 @@ class NameResolverSubclasserVisitor extends NameResolver
    * @var LoggerInterface
    */
   private $logger;
-
-  private $uniqueClasses = [];
 
   /**
    * @param LoggerInterface $logger
@@ -48,33 +56,29 @@ class NameResolverSubclasserVisitor extends NameResolver
 
     if (!empty($node->namespacedName)) {
 
-      $className = get_class($node);
+      if ($node instanceof Class_) {
+        return NamespacedNameClass::fromClass($node)->setNamespacedName($node->namespacedName);
+      }
 
-      $this->uniqueClasses[$className] = $className;
+      if ($node instanceof Interface_) {
+        return NamespacedNameInterface::fromInterface($node)->setNamespacedName($node->namespacedName);
+      }
+
+      if ($node instanceof Trait_) {
+        return NamespacedNameTrait::fromTrait($node)->setNamespacedName($node->namespacedName);
+      }
+
+      if ($node instanceof Function_) {
+        return NamespacedNameFunction::fromFunction($node)->setNamespacedName($node->namespacedName);
+      }
+
+      if ($node instanceof Const_) {
+        return NamespacedNameConst::fromConst($node)->setNamespacedName($node->namespacedName);
+      }
+
     }
 
     return $returnValue;
-  }
-
-  /**
-   * PHP 5 introduces a destructor concept similar to that of other object-oriented languages, such as C++.
-   * The destructor method will be called as soon as all references to a particular object are removed or
-   * when the object is explicitly destroyed or in any order in shutdown sequence.
-   *
-   * Like constructors, parent destructors will not be called implicitly by the engine.
-   * In order to run a parent destructor, one would have to explicitly call parent::__destruct() in the destructor body.
-   *
-   * Note: Destructors called during the script shutdown have HTTP headers already sent.
-   * The working directory in the script shutdown phase can be different with some SAPIs (e.g. Apache).
-   *
-   * Note: Attempting to throw an exception from a destructor (called in the time of script termination) causes a fatal error.
-   *
-   * @return void
-   * @link http://php.net/manual/en/language.oop5.decon.php
-   */
-  function __destruct()
-  {
-    var_dump(array_keys($this->uniqueClasses));
   }
 
 

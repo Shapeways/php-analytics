@@ -13,6 +13,7 @@ use PhpParser\Node;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameNode;
 
 class FilenameIdResolverVisitor extends NodeVisitorAbstract
 {
@@ -53,11 +54,20 @@ class FilenameIdResolverVisitor extends NodeVisitorAbstract
    */
   public function enterNode(Node $node) {
 
+
+
     if ($node instanceof ClassLike) {
+
+      if ($node instanceof NamespacedNameNode) {
+        $classLikeName = $node->getNamespacedName();
+      }
+      else {
+        $classLikeName = $node->name;
+      }
+
       /**
        * @var $classLikeName Name
        */
-      $classLikeName = $node->namespacedName?? $node->name;
 
       $node->filenameId =  $this->filename . ':' . $classLikeName->toString();
     }

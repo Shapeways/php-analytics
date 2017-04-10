@@ -21,6 +21,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
+use RoadRunnerAnalytics\Nodes\NamespacedName\NamespacedNameNode;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsClassConstFetch;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
@@ -81,7 +82,12 @@ class SelfResolverVisitor extends NodeVisitorAbstract
     }
 
     if ($this->isSelfOrStatic($name) && !empty($this->currentClass)) {
-      return $this->currentClass->namespacedName;
+      if ($this->currentClass instanceof NamespacedNameNode) {
+        return $this->currentClass->getNamespacedName();
+      }
+      else if (!empty($this->currentClass)) {
+        $this->logger->error('No namespaced name found for ClassLike: ' . $this->currentClass->name);
+      }
     }
 
     if ($this->isParent($name) && !empty($this->currentClass)) {
