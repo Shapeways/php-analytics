@@ -217,11 +217,10 @@ class NodeBuilderVisitor extends NodeVisitorAbstract
     else if ($node instanceof ClassConstFetch) {
 
       if ($node->class instanceof Name) {
-
         $this->seenClassLikeNames[NodeBuilderVisitor::NODE_TYPE_CLASS][] = $node->class->toString();
       }
       else if ($node->class instanceof Variable) {
-        $currentFilename = basename($this->filename);
+//        $currentFilename = basename($this->filename);
 //        $this->logger->warning("{$currentFilename}:{$node->getLine()} constant fetch from variable: \${$node->class->name}");
       }
       else {
