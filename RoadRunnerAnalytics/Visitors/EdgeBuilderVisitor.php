@@ -28,11 +28,7 @@ use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeVisitorAbstract;
 use Psr\Log\LoggerInterface;
 use RoadRunnerAnalytics\Helpers\ClassNameHelper;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsClassConstFetch;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNew;
 use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsNode;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsStaticCall;
-use RoadRunnerAnalytics\Nodes\ResolvedKeywords\ResolvedKeywordsStaticPropertyFetch;
 
 class EdgeBuilderVisitor extends NodeVisitorAbstract
 {
