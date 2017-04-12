@@ -47,8 +47,8 @@ function humanReadable($size)
 $logger->info("Building file list...");
 while ($f = fgets(STDIN)) {
 
-  $filename     = str_replace(PHP_EOL, '', $f);
-  $filePath     = dirname(__FILE__) . '/' . $filename;
+  $filePath = $filename     = str_replace(PHP_EOL, '', $f);
+//  $filePath     = dirname(__FILE__) . '/' . $filename;
   $absolutePath = realpath($filePath);
 
   $filesToAnalyze[] = $absolutePath;
@@ -120,10 +120,24 @@ foreach ($filesToAnalyze as $absolutePath) {
 $passTwoTime = microtime(true);
 $logger->info("Pass two complete in " . ($passTwoTime - $nodeTime) . " seconds.");
 
+$nodesBasename = 'class-nodes.json';
+$edgesBasename = 'class-edges.json';
+$hierarchyBasename = 'class-hierarchy.json';
 
-$nodesJsonFilename = dirname(__FILE__) . '/www/js/class-nodes.json';
-$edgeJsonFilename = dirname(__FILE__) . '/www/js/class-edges.json';
-$hierarchyJsonFilename = dirname(__FILE__) . '/www/js/class-hierarchy.json';
+$options = getopt('', array(
+  'outputdir::'
+));
+
+if (isset($options['outputdir'])) {
+  $nodesJsonFilename = $options['outputdir'] . '/' . $nodesBasename;
+  $edgeJsonFilename = $options['outputdir'] . '/' . $edgesBasename;
+  $hierarchyJsonFilename = $options['outputdir'] . '/' . $hierarchyBasename;
+} else {
+  $nodesJsonFilename = dirname(__FILE__) . '/www/js/' . $nodesBasename;
+  $edgeJsonFilename = dirname(__FILE__) . '/www/js/' . $edgesBasename;
+  $hierarchyJsonFilename = dirname(__FILE__) . '/www/js/' . $hierarchyBasename;
+}
+
 file_put_contents($nodesJsonFilename, json_encode($nodeBuilder->getNodes()));
 file_put_contents($edgeJsonFilename, json_encode($edgeBuilder->getEdges()));
 file_put_contents($hierarchyJsonFilename, json_encode((new InheritanceHierarchyFormatter())->format($nodeBuilder, $edgeBuilder)));
