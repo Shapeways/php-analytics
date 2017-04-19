@@ -8,8 +8,8 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Bramus\Monolog\Formatter\ColoredLineFormatter;
 use RoadRunnerAnalytics\GraphFormatters\CouplingTypeSummaryFormatter;
 
@@ -28,7 +28,7 @@ $options = getopt('', [
  * Set up logger
  */
 $logger = new Logger('', [
-  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter())
+  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter(null, "%level_name%\t%message%\n", null, false, true))
 ]);
 
 $logger->info('Comparing ' . $options['branchdir'] . ' to ' . $options['masterdir']);

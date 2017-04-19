@@ -19,7 +19,7 @@ use RoadRunnerAnalytics\Visitors\SelfResolverVisitor;
 
 
 $logger = new Logger('', [
-  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter())
+  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter(null, "%level_name%\t%message%\n", null, false, true))
 ]);
 
 ini_set('memory_limit','2G');
