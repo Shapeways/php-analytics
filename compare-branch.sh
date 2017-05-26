@@ -6,7 +6,7 @@ if hash greadlink 2>/dev/null; then
   READLINK_COMMAND="greadlink";
 fi
 
-echo "USING $READLINK_COMMAND";
+echo "USING $READLINK_COMMAND" 1>&2;
 
 BRANCHNAME=$1;
 
@@ -22,22 +22,22 @@ COMPARER_COMMAND="php $ROOT_DIR/comparer.php --masterdir=$OUTPUT_MASTER_DIR --br
 
 #ANALYSIS_COMMAND="find $ANALYSIS_DIR/portal/www/roadrunner -path \"$ANALYSIS_DIR/portal/www/roadrunner/apps/libraries\" -prune -o -path \"$ANALYSIS_DIR/portal/www/roadrunner/vendor\" -prune -o -path \"$ANALYSIS_DIR/portal/www/roadrunner/core/libraries\" -prune -o -type f -name '*.php' -print | $ANALYZER_COMMAND"
 
-echo "Root directory: $ROOT_DIR";
-echo "Analysis directory: $ANALYSIS_DIR";
-echo "Comparer command: $COMPARER_COMMAND";
-echo "Analysis command: $ANALYSIS_COMMAND";
+echo "Root directory: $ROOT_DIR" 1>&2;
+echo "Analysis directory: $ANALYSIS_DIR" 1>&2;
+echo "Comparer command: $COMPARER_COMMAND" 1>&2;
+echo "Analysis command: $ANALYSIS_COMMAND" 1>&2;
 
 # initialize analysis dir and clone from git
-mkdir -p $ANALYSIS_DIR;
-mkdir -p $OUTPUT_DIR;
-mkdir -p $OUTPUT_MASTER_DIR;
-mkdir -p $OUTPUT_BRANCH_DIR;
+mkdir -p $ANALYSIS_DIR 1>&2;
+mkdir -p $OUTPUT_DIR 1>&2;
+mkdir -p $OUTPUT_MASTER_DIR 1>&2;
+mkdir -p $OUTPUT_BRANCH_DIR 1>&2;
 
 cd $ANALYSIS_DIR;
-git clone git@github.com:Shapeways/portal.git;
+git clone git@github.com:Shapeways/portal.git 1>&2;
 cd portal;
-git checkout master;
-git pull origin master;
+git checkout master 1>&2;
+git pull origin master 1>&2;
 
 # analyze master
 cd $ROOT_DIR;
@@ -45,10 +45,10 @@ find $ANALYSIS_DIR/portal/www/roadrunner -path "$ANALYSIS_DIR/portal/www/roadrun
 
 # switch to new branch
 cd $ANALYSIS_DIR/portal;
-git fetch;
-git checkout $BRANCHNAME;
-git pull origin $BRANCHNAME;
-git branch;
+git fetch 1>&2;
+git checkout $BRANCHNAME 1>&2;
+git pull origin $BRANCHNAME 1>&2;
+git branch 1>&2;
 
 # Analyze branch
 cd $ROOT_DIR;
