@@ -55,25 +55,32 @@ class CouplingTypeSummaryFormatter
 
     }
 
-
-    $this->logger->info('Classes:');
-    foreach ($classes as $class) {
-      $this->logger->info("\t" . $class[NodeBuilderVisitor::NODE_NAME]);
+    if (!empty($classes)) {
+      $this->logger->info('Classes:');
+      foreach ($classes as $class) {
+        $this->logger->info("\t" . $class[NodeBuilderVisitor::NODE_NAME]);
+      }
     }
 
-    $this->logger->info('Interfaces:');
-    foreach ($interfaces as $interface) {
-      $this->logger->info("\t" . $interface[NodeBuilderVisitor::NODE_NAME]);
+    if (!empty($interfaces)) {
+      $this->logger->info('Interfaces:');
+      foreach ($interfaces as $interface) {
+        $this->logger->info("\t" . $interface[NodeBuilderVisitor::NODE_NAME]);
+      }
     }
 
-    $this->logger->info('Traits:');
-    foreach ($traits as $trait) {
-      $this->logger->info("\t" . $trait[NodeBuilderVisitor::NODE_NAME]);
+    if (!empty($traits)) {
+      $this->logger->info('Traits:');
+      foreach ($traits as $trait) {
+        $this->logger->info("\t" . $trait[NodeBuilderVisitor::NODE_NAME]);
+      }
     }
 
-    $this->logger->info('External references:');
-    foreach ($externalDeps as $external) {
-      $this->logger->info("\t" . $external[NodeBuilderVisitor::NODE_NAME]);
+    if (!empty($externalDeps)) {
+      $this->logger->info('External references:');
+      foreach ($externalDeps as $external) {
+        $this->logger->info("\t" . $external[NodeBuilderVisitor::NODE_NAME]);
+      }
     }
 
   }
@@ -103,57 +110,64 @@ class CouplingTypeSummaryFormatter
       }
     }
 
+    if (!empty($tightCouplings)) {
+      $this->logger->info("\tTight couplings:");
+      foreach ($tightCouplings as $tightCoupling) {
+        $verb = 'is tightly coupled to';
 
-    $this->logger->info("\tTight couplings:");
-    foreach ($tightCouplings as $tightCoupling) {
-      $verb = 'is tightly coupled to';
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_EXTENDS) {
+          $verb = 'extends';
+        }
 
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_EXTENDS) {
-        $verb = 'extends';
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_TRAIT_USE) {
+          $verb = 'uses trait';
+        }
+
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS) {
+          $verb = 'accesses static properties of';
+        }
+
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_INSTANCEOF) {
+          $verb = 'instance of type comparison';
+        }
+
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH) {
+          $verb = 'accesses class constants of';
+        }
+
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_IMPLEMENTS) {
+          $verb = 'implements interface';
+        }
+
+        if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_INSTANTIATES) {
+          $verb = 'instantiates class';
+        }
+
+        $sourceNode = $nodes[$tightCoupling[EdgeBuilderVisitor::EDGE_SOURCE]];
+        $targetNode = $nodes[$tightCoupling[EdgeBuilderVisitor::EDGE_TARGET]];
+
+        $this->logger->info(
+          "\t\t" . $sourceNode[NodeBuilderVisitor::NODE_NAME] . '(' . $sourceNode[NodeBuilderVisitor::NODE_TYPE] . ") $verb " . $targetNode[NodeBuilderVisitor::NODE_NAME] . '(' . $targetNode[NodeBuilderVisitor::NODE_TYPE] . ')'
+        );
       }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_TRAIT_USE) {
-        $verb = 'uses trait';
-      }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_STATIC_ACCESS) {
-        $verb = 'accesses static properties of';
-      }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_INSTANCEOF) {
-        $verb = 'instance of type comparison';
-      }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_CONST_FETCH) {
-        $verb = 'accesses class constants of';
-      }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_IMPLEMENTS) {
-        $verb = 'implements interface';
-      }
-
-      if ($tightCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_INSTANTIATES) {
-        $verb = 'instantiates class';
-      }
-
-      $sourceNode = $nodes[$tightCoupling[EdgeBuilderVisitor::EDGE_SOURCE]];
-      $targetNode = $nodes[$tightCoupling[EdgeBuilderVisitor::EDGE_TARGET]];
-
-      $this->logger->info("\t\t" . $sourceNode[NodeBuilderVisitor::NODE_NAME] . '(' . $sourceNode[NodeBuilderVisitor::NODE_TYPE] . ") $verb " . $targetNode[NodeBuilderVisitor::NODE_NAME] . '(' . $targetNode[NodeBuilderVisitor::NODE_TYPE] . ')');
     }
 
-    $this->logger->info("\tLoose couplings:");
-    foreach ($looseCouplings as $looseCoupling) {
-      $verb = 'is loosely coupled to';
+    if (!empty($looseCouplings)) {
+      $this->logger->info("\tLoose couplings:");
+      foreach ($looseCouplings as $looseCoupling) {
+        $verb = 'is loosely coupled to';
 
-      if ($looseCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_METHOD_PARAM) {
-        $verb = 'accepts as a method parameter';
+        if ($looseCoupling[EdgeBuilderVisitor::EDGE_TYPE] === EdgeBuilderVisitor::EDGE_TYPE_METHOD_PARAM) {
+          $verb = 'accepts as a method parameter';
+        }
+
+        $sourceNode = $nodes[$looseCoupling[EdgeBuilderVisitor::EDGE_SOURCE]];
+        $targetNode = $nodes[$looseCoupling[EdgeBuilderVisitor::EDGE_TARGET]];
+
+        $this->logger->info(
+          "\t\t" . $sourceNode[NodeBuilderVisitor::NODE_NAME] . '(' . $sourceNode[NodeBuilderVisitor::NODE_TYPE] . ") $verb " . $targetNode[NodeBuilderVisitor::NODE_NAME] . '(' . $targetNode[NodeBuilderVisitor::NODE_TYPE] . ')'
+        );
       }
-
-      $sourceNode = $nodes[$looseCoupling[EdgeBuilderVisitor::EDGE_SOURCE]];
-      $targetNode = $nodes[$looseCoupling[EdgeBuilderVisitor::EDGE_TARGET]];
-
-      $this->logger->info("\t\t" . $sourceNode[NodeBuilderVisitor::NODE_NAME] . '(' . $sourceNode[NodeBuilderVisitor::NODE_TYPE] . ") $verb " . $targetNode[NodeBuilderVisitor::NODE_NAME] . '(' . $targetNode[NodeBuilderVisitor::NODE_TYPE] . ')');
     }
 
   }

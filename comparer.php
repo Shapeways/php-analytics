@@ -70,22 +70,28 @@ $edgesDifference2 = array_diff_assoc($branchEdges, $masterEdges);
 
 $formatter = new CouplingTypeSummaryFormatter($logger);
 
-echo "\n\n";
+if (!empty($nodesDifference)) {
+  echo "\n\n";
+  $logger->info('Removed from master:');
+  $formatter->outputNodes($nodesDifference);
+}
 
-$logger->info('Removed from master:');
-$formatter->outputNodes($nodesDifference);
+if (!empty($masterNodes)) {
+  echo "\n";
+  $logger->info('Couplings removed from master:');
+  $formatter->outputEdges($edgesDifference, $masterNodes);
+}
 
-echo "\n";
+if (!empty($nodesDifference2)) {
+  echo "\n\n";
+  $logger->info('Dependencies added to branch:');
+  $formatter->outputNodes($nodesDifference2);
+}
 
-$logger->info('Couplings removed from master:');
-$formatter->outputEdges($edgesDifference, $masterNodes);
 
-echo "\n\n";
+if (!empty($branchNodes)) {
+  echo "\n";
+  $logger->info('Couplings added to branch:');
+  $formatter->outputEdges($edgesDifference2, $branchNodes);
+}
 
-$logger->info('Dependencies added to branch:');
-$formatter->outputNodes($nodesDifference2);
-
-echo "\n";
-
-$logger->info('Couplings added to branch:');
-$formatter->outputEdges($edgesDifference2, $branchNodes);

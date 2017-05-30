@@ -41,7 +41,7 @@ git pull origin master 1>&2;
 
 # analyze master
 cd $ROOT_DIR;
-find $ANALYSIS_DIR/portal/www/roadrunner -path "$ANALYSIS_DIR/portal/www/roadrunner/apps/libraries" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/vendor" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/core/libraries" -prune -o -type f -name '*.php' -print | $MASTER_ANALYZER_COMMAND
+find $ANALYSIS_DIR/portal/www/roadrunner -path "$ANALYSIS_DIR/portal/www/roadrunner/apps/libraries" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/vendor" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/core/libraries" -prune -o -type f -name '*.php' -print | $MASTER_ANALYZER_COMMAND 1>&2
 
 # switch to new branch
 cd $ANALYSIS_DIR/portal;
@@ -52,7 +52,7 @@ git branch 1>&2;
 
 # Analyze branch
 cd $ROOT_DIR;
-find $ANALYSIS_DIR/portal/www/roadrunner -path "$ANALYSIS_DIR/portal/www/roadrunner/apps/libraries" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/vendor" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/core/libraries" -prune -o -type f -name '*.php' -print | $BRANCH_ANALYZER_COMMAND
+find $ANALYSIS_DIR/portal/www/roadrunner -path "$ANALYSIS_DIR/portal/www/roadrunner/apps/libraries" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/vendor" -prune -o -path "$ANALYSIS_DIR/portal/www/roadrunner/core/libraries" -prune -o -type f -name '*.php' -print | $BRANCH_ANALYZER_COMMAND 1>&2
 
 # Compare
 cd $ROOT_DIR;
@@ -60,4 +60,4 @@ $COMPARER_COMMAND;
 
 # cleanup and exit
 cd $ROOT_DIR;
-#rm -rf $ANALYSIS_DIR
+rm -rf $ANALYSIS_DIR
