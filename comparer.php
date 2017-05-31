@@ -76,7 +76,7 @@ if (!empty($nodesDifference)) {
   $formatter->outputNodes($nodesDifference);
 }
 
-if (!empty($masterNodes)) {
+if (!empty($edgesDifference)) {
   echo "\n";
   $logger->info('Couplings removed from master:');
   $formatter->outputEdges($edgesDifference, $masterNodes);
@@ -89,7 +89,7 @@ if (!empty($nodesDifference2)) {
 }
 
 
-if (!empty($branchNodes)) {
+if (!empty($edgesDifference2)) {
   echo "\n";
   $logger->info('Couplings added to branch:');
   $formatter->outputEdges($edgesDifference2, $branchNodes);
