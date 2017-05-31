@@ -133,9 +133,9 @@ if (isset($options['outputdir'])) {
   $edgeJsonFilename = $options['outputdir'] . '/' . $edgesBasename;
   $hierarchyJsonFilename = $options['outputdir'] . '/' . $hierarchyBasename;
 } else {
-  $nodesJsonFilename = dirname(__FILE__) . '/www/js/' . $nodesBasename;
-  $edgeJsonFilename = dirname(__FILE__) . '/www/js/' . $edgesBasename;
-  $hierarchyJsonFilename = dirname(__FILE__) . '/www/js/' . $hierarchyBasename;
+  $nodesJsonFilename = dirname(__FILE__) . '/www/js/json/' . $nodesBasename;
+  $edgeJsonFilename = dirname(__FILE__) . '/www/js/json/' . $edgesBasename;
+  $hierarchyJsonFilename = dirname(__FILE__) . '/www/js/json/' . $hierarchyBasename;
 }
 
 file_put_contents($nodesJsonFilename, json_encode($nodeBuilder->getNodes()));

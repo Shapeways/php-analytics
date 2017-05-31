@@ -1207,9 +1207,9 @@
   });
 
   // Init
-  d3.json('js/class-hierarchy.json', function(error, hierarchy) {
-    d3.json('js/class-nodes.json', function(error, nodes) {
-      d3.json('js/class-edges.json', function(error, edges) {
+  d3.json('js/json/class-hierarchy.json', function(error, hierarchy) {
+    d3.json('js/json/class-nodes.json', function(error, nodes) {
+      d3.json('js/json/class-edges.json', function(error, edges) {
         store.dispatch(initTree(hierarchy, nodes, edges));
       });
     });
