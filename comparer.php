@@ -28,10 +28,10 @@ $options = getopt('', [
  * Set up logger
  */
 $logger = new Logger('', [
-  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter(null, "%message%\n", null, false, true))
+  (new StreamHandler('php://stdout', Logger::INFO))->setFormatter(new ColoredLineFormatter(null, "%level_name%\t%message%\n", null, false, true))
 ]);
 
-$logger->info("\n\nComparing " . $options['branchdir'] . ' to ' . $options['masterdir']);
+$logger->info('Comparing ' . $options['branchdir'] . ' to ' . $options['masterdir']);
 
 $masterNodesFile = $options['masterdir'] . '/class-nodes.json';
 $branchNodesFile = $options['branchdir'] . '/class-nodes.json';
